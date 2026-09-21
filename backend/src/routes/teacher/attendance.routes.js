@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/teacher/attendanceController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const teacher = [protect, requireRole('TEACHER')];
+router.post('/session', ...teacher, c.createSession);
+router.get('/history', ...teacher, c.getHistory);
+router.get('/:sessionId', ...teacher, c.getSession);
+router.put('/:sessionId', ...teacher, c.saveAttendance);
+module.exports = router;

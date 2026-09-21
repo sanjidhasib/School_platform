@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/teacher/homeworkController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const teacher = [protect, requireRole('TEACHER')];
+router.get('/', ...teacher, c.list);
+router.post('/', ...teacher, c.create);
+router.get('/:id/submissions', ...teacher, c.getSubmissions);
+router.patch('/submissions/:id', ...teacher, c.gradeSubmission);
+module.exports = router;

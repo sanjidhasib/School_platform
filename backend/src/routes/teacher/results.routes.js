@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/teacher/resultsController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const teacher = [protect, requireRole('TEACHER')];
+router.get('/assessments', ...teacher, c.listAssessments);
+router.post('/assessments', ...teacher, c.createAssessment);
+router.put('/assessments/:id/marks', ...teacher, c.saveMarks);
+router.put('/grades', ...teacher, c.saveGrades);
+module.exports = router;

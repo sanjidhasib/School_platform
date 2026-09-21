@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html><head><title>Login Test</title></head>
+<body>
+<h1>SchoolOS Login Test</h1>
+<div id="status">idle</div>
+<div id="result"></div>
+<form id="f">
+  <input id="u" value="admin" /><br/>
+  <input id="p" type="password" value="Admin@123" /><br/>
+  <button type="submit" id="b">Login</button>
+</form>
+<script>
+const f=document.getElementById('f'),u=document.getElementById('u'),p=document.getElementById('p'),s=document.getElementById('status'),r=document.getElementById('result');
+s.textContent='ready';
+f.onsubmit=async e=>{
+  e.preventDefault();
+  s.textContent='clicked';
+  try{
+    const res=await fetch('http://localhost:5000/api/auth/login',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:u.value,password:p.value})});
+    s.textContent='status:'+res.status;
+    const j=await res.json();
+    r.textContent=JSON.stringify(j);
+    const me=await fetch('http://localhost:5000/api/auth/me',{credentials:'include'});
+    r.textContent+='\nME:'+me.status+' '+await me.text();
+  }catch(err){s.textContent='ERR:'+err.message;r.textContent=err.stack}
+};
+</script>
+</body></html>

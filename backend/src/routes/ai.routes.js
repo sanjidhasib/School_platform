@@ -1,0 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../controllers/aiController');
+const { protect } = require('../middleware/auth');
+const { requireRole } = require('../middleware/rbac');
+const { aiLimiter } = require('../middleware/rateLimiter');
+const student = [protect, requireRole('STUDENT')];
+router.post('/sessions', ...student, c.createSession);
+router.get('/sessions', ...student, c.listSessions);
+router.get('/sessions/:id', ...student, c.getSession);
+router.post('/sessions/:id/messages', ...student, aiLimiter, c.sendMessage);
+module.exports = router;

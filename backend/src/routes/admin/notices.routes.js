@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/admin/noticeController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const admin = [protect, requireRole('ADMIN')];
+router.get('/', ...admin, c.list);
+router.post('/', ...admin, c.create);
+router.patch('/:id', ...admin, c.update);
+router.delete('/:id', ...admin, c.remove);
+module.exports = router;

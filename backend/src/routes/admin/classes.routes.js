@@ -1,0 +1,13 @@
+const express = require('express');
+const router = express.Router();
+const cc = require('../../controllers/admin/classController');
+const sc = require('../../controllers/admin/studentController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const admin = [protect, requireRole('ADMIN')];
+router.get('/', ...admin, cc.list);
+router.post('/', ...admin, cc.create);
+router.patch('/:id', ...admin, cc.update);
+router.get('/:id/students', ...admin, sc.getClassStudents);
+router.post('/:id/enroll', ...admin, sc.enroll);
+module.exports = router;

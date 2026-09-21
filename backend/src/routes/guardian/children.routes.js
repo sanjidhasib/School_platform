@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/guardian/childrenController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const guardian = [protect, requireRole('GUARDIAN')];
+router.get('/', ...guardian, c.list);
+router.get('/:id/attendance', ...guardian, c.getAttendance);
+router.get('/:id/homework', ...guardian, c.getHomework);
+router.get('/:id/results', ...guardian, c.getResults);
+module.exports = router;

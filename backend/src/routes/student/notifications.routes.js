@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/student/notificationController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const auth = [protect, requireRole('STUDENT', 'GUARDIAN')];
+router.get('/', ...auth, c.list);
+router.patch('/:id/read', ...auth, c.markRead);
+router.patch('/read-all', ...auth, c.markAllRead);
+module.exports = router;
