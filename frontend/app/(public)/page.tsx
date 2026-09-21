@@ -150,7 +150,7 @@ export default async function HomePage() {
         <section className="max-w-7xl mx-auto px-4 py-12">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">School Achievements</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {achievements.map((a) => (
+            {achievements.map((a: any) => (
               <div
                 key={a._id}
                 className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow"
@@ -172,7 +172,7 @@ export default async function HomePage() {
         <section className="max-w-7xl mx-auto px-4 py-12">
           <h2 className="text-2xl font-bold text-slate-900 mb-6">Upcoming Events</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {upcoming.slice(0, 6).map((n) => (
+            {upcoming.slice(0, 6).map((n: any) => (
               <div
                 key={n._id}
                 className="flex items-start gap-4 bg-white rounded-xl border border-slate-200 p-5"

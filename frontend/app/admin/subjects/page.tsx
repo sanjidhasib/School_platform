@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, BookOpen, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -41,7 +41,7 @@ export default function SubjectsPage() {
       )}
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent><DialogHeader><DialogTitle>Add Subject</DialogTitle></DialogHeader>
-          <form onSubmit={handleSubmit}><DialogBody className="space-y-3"><div><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} required className="mt-1" /></div><div><Label>Code</Label><Input value={form.code} onChange={e => setForm(f => ({...f, code: e.target.value}))} required className="mt-1" /></div><div><Label>Description</Label><Input value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} className="mt-1" /></div></DialogBody><DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Save</Button></DialogFooter></form>
+          <form onSubmit={handleSubmit}><DialogBody className="space-y-3"><div><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} required className="mt-1" /></div><div><Label>Code</Label><Input value={form.code} onChange={e => setForm(f => ({...f, code: e.target.value}))} required className="mt-1" /></div><div><Label>Description</Label><Input value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} className="mt-1" /></div></DialogBody><DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Save</Button></DialogFooter></form>
         </DialogContent>
       </Dialog>
       <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
@@ -49,7 +49,7 @@ export default function SubjectsPage() {
           <DialogHeader><DialogTitle>Delete Subject</DialogTitle></DialogHeader>
           <DialogBody><p className="text-sm text-slate-600">Delete subject <strong>{deleting?.name}</strong> ({deleting?.code})? Linked assessments and assignments may be affected.</p></DialogBody>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleting(null)}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button>
             <Button type="button" variant="destructive" onClick={async () => { try { await adminAPI.deleteSubject(deleting._id); toast.success('Subject deleted'); setDeleting(null); load(); } catch (err: any) { toast.error(err.response?.data?.error || 'Delete failed'); } }}>Delete</Button>
           </DialogFooter>
         </DialogContent>

@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFoo
 import { Label } from '@/components/ui/label';
 import { getInitials, formatDate } from '@/lib/utils';
 import { Plus, Search, Pencil, Trash2, Users } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const emptyForm = { username: '', email: '', password: '', fullName: '', teacherId: '', degree: '', specialization: '', phone: '', joiningDate: '', status: 'ACTIVE' };
 
@@ -87,7 +87,7 @@ export default function TeachersPage() {
                 <div><Label>Joining Date</Label><Input type="date" value={form.joiningDate} onChange={e => setForm(f => ({...f, joiningDate: e.target.value}))} className="mt-1" /></div>
               </div>
             </DialogBody>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Teacher'}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Teacher'}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -96,7 +96,7 @@ export default function TeachersPage() {
           <DialogHeader><DialogTitle>Delete Teacher</DialogTitle></DialogHeader>
           <DialogBody><p className="text-sm text-slate-600">Are you sure you want to delete <strong>{deleting?.fullName}</strong>? This will remove their user account and assignments. This cannot be undone.</p></DialogBody>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleting(null)}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button>
             <Button type="button" variant="destructive" onClick={async () => { try { await adminAPI.deleteTeacher(deleting._id); toast.success('Teacher deleted'); setDeleting(null); load(); } catch (err: any) { toast.error(err.response?.data?.error || 'Delete failed'); } }}>Delete</Button>
           </DialogFooter>
         </DialogContent>

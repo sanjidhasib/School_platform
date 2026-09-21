@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function GuardianReportsPage() {
   const [children, setChildren] = useState<any[]>([]);

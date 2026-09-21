@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { getInitials } from '@/lib/utils';
 import { DAYS } from '@/lib/constants';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function TeacherAttendancePage() {
   const [schedule, setSchedule] = useState<any[]>([]);
@@ -58,7 +58,7 @@ export default function TeacherAttendancePage() {
     return (
       <div className="space-y-6">
         <PageHeader title="Take Attendance" description={`${sessionData.session?.classId?.name} · ${sessionData.session?.subjectId?.name}`}
-          actions={<><Button variant="outline" onClick={() => setStep('select')}>Back</Button><Button onClick={saveAttendance} disabled={saving}>{saving ? 'Saving...' : 'Save Attendance'}</Button></>}
+          actions={<><Button variant="secondary" onClick={() => setStep('select')}>Back</Button><Button onClick={saveAttendance} disabled={saving}>{saving ? 'Saving...' : 'Save Attendance'}</Button></>}
         />
         <div className="flex gap-4 text-sm">
           <span className="text-green-600 font-medium">Present: {counts['PRESENT'] || 0}</span>

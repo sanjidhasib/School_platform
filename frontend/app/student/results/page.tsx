@@ -4,9 +4,9 @@ import { studentAPI } from '@/lib/api/student';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
-import { getGradeColor } from '@/lib/utils';
+import { gradeTone } from '@/lib/utils';
 import { BarChart3 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function StudentResultsPage() {
   const [data, setData] = useState<any>(null);
@@ -22,7 +22,7 @@ export default function StudentResultsPage() {
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b"><tr><th className="px-4 py-3 text-left text-xs uppercase text-slate-500">Subject</th><th className="px-4 py-3 text-left text-xs uppercase text-slate-500">Term</th><th className="px-4 py-3 text-left text-xs uppercase text-slate-500">%</th><th className="px-4 py-3 text-left text-xs uppercase text-slate-500">Grade</th><th className="px-4 py-3 text-left text-xs uppercase text-slate-500">GPA</th></tr></thead>
             <tbody className="divide-y divide-slate-100">
-              {data.grades.map((g: any) => (<tr key={g._id}><td className="px-4 py-3 font-medium">{g.subjectId?.name}</td><td className="px-4 py-3 text-slate-500">{g.term}</td><td className="px-4 py-3">{g.percentage?.toFixed(1)}%</td><td className="px-4 py-3"><span className={`font-bold px-2 py-0.5 rounded text-xs ${getGradeColor(g.grade)}`}>{g.grade}</span></td><td className="px-4 py-3 text-slate-600">{g.gradePoint}</td></tr>))}
+              {data.grades.map((g: any) => (<tr key={g._id}><td className="px-4 py-3 font-medium">{g.subjectId?.name}</td><td className="px-4 py-3 text-slate-500">{g.term}</td><td className="px-4 py-3">{g.percentage?.toFixed(1)}%</td><td className="px-4 py-3"><span className={`font-bold px-2 py-0.5 rounded text-xs ${gradeTone(g.grade)}`}>{g.grade}</span></td><td className="px-4 py-3 text-slate-600">{g.gradePoint}</td></tr>))}
             </tbody>
           </table>
         )}

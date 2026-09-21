@@ -1,19 +1,61 @@
 'use client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
+
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
-interface ConfirmDialogProps { open: boolean; onOpenChange: (v: boolean) => void; title: string; description: string; consequence?: string; onConfirm: () => void; isLoading?: boolean; confirmLabel?: string; variant?: 'destructive' | 'default'; }
-export function ConfirmDialog({ open, onOpenChange, title, description, consequence, onConfirm, isLoading, confirmLabel = 'Confirm', variant = 'destructive' }: ConfirmDialogProps) {
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+
+/**
+ * A confirm always names the record it is about, so nobody deletes the wrong
+ * row because the dialog only said "this item".
+ */
+export function ConfirmDialog({
+  open,
+  onOpenChange,
+  title,
+  description,
+  confirmLabel = 'Confirm',
+  cancelLabel = 'Cancel',
+  destructive,
+  loading,
+  onConfirm,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  description: React.ReactNode;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  destructive?: boolean;
+  loading?: boolean;
+  onConfirm: () => void | Promise<void>;
+}) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader><DialogTitle>{title}</DialogTitle></DialogHeader>
-        <DialogBody>
-          <p className="text-slate-600">{description}</p>
-          {consequence && <div className="mt-3 p-3 bg-red-50 rounded-lg text-sm text-red-700 border border-red-200">{consequence}</div>}
-        </DialogBody>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription asChild>
+            <div>{description}</div>
+          </DialogDescription>
+        </DialogHeader>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button variant={variant} onClick={onConfirm} disabled={isLoading}>{isLoading ? 'Processing...' : confirmLabel}</Button>
+          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={loading}>
+            {cancelLabel}
+          </Button>
+          <Button
+            variant={destructive ? 'destructive' : 'primary'}
+            onClick={onConfirm}
+            loading={loading}
+          >
+            {confirmLabel}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

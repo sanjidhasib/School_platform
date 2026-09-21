@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Calendar, Clock, ClipboardCheck, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function TeacherDashboardPage() {
   const [data, setData] = useState<any>(null);

@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { formatDate, formatRelativeTime } from '@/lib/utils';
 import { BookMarked } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function StudentHomeworkPage() {
   const [homeworks, setHomeworks] = useState<any[]>([]);
@@ -50,7 +50,7 @@ export default function StudentHomeworkPage() {
                 <p className="text-sm text-slate-500 mt-1">{hw.description?.slice(0, 100)}</p>
                 <p className={`text-xs mt-2 ${isOverdue ? 'text-red-500 font-medium' : 'text-slate-400'}`}>Due: {formatDate(hw.dueAt)}{isOverdue ? ' (Overdue)' : ''} · {hw.maxMarks} marks</p>
               </div>
-              <Button size="sm" onClick={() => openSubmit(hw)} variant={isOverdue ? 'destructive' : 'default'}>Submit</Button>
+              <Button size="sm" onClick={() => openSubmit(hw)} variant={isOverdue ? 'destructive' : 'primary'}>Submit</Button>
             </div>
           );
         })}
@@ -77,7 +77,7 @@ export default function StudentHomeworkPage() {
             <p className="text-sm text-slate-500">{selected?.description}</p>
             <Textarea placeholder="Write your answer here..." value={answer} onChange={e => setAnswer(e.target.value)} rows={5} />
           </DialogBody>
-          <DialogFooter><Button variant="outline" onClick={() => setSubmitOpen(false)}>Cancel</Button><Button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Submitting...' : 'Submit'}</Button></DialogFooter>
+          <DialogFooter><Button variant="secondary" onClick={() => setSubmitOpen(false)}>Cancel</Button><Button onClick={handleSubmit} disabled={submitting}>{submitting ? 'Submitting...' : 'Submit'}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

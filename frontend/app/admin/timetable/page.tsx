@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Calendar as CalendarIcon, Plus } from 'lucide-react';
 import { DAYS, SHORT_DAYS, PERIODS } from '@/lib/constants';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function TimetablePage() {
   const [classes, setClasses] = useState<any[]>([]);
@@ -69,16 +69,16 @@ export default function TimetablePage() {
           <form onSubmit={handleSubmit}>
             <DialogBody className="space-y-3">
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Day</Label><Select value={form.dayOfWeek.toString()} onValueChange={v => setForm(f => ({...f, dayOfWeek: parseInt(v)}))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{[0,1,2,3,4].map(d => <SelectItem key={d} value={d.toString()}>{DAYS[d]}</SelectItem>)}</SelectContent></Select></div>
-                <div><Label>Room</Label><Input value={form.room} onChange={e => setForm(f => ({...f, room: e.target.value}))} className="mt-1" /></div>
+                <div><Label>Day</Label><Select value={form.dayOfWeek.toString()} onValueChange={v => setForm((f: any) => ({...f, dayOfWeek: parseInt(v)}))}><SelectTrigger className="mt-1"><SelectValue /></SelectTrigger><SelectContent>{[0,1,2,3,4].map(d => <SelectItem key={d} value={d.toString()}>{DAYS[d]}</SelectItem>)}</SelectContent></Select></div>
+                <div><Label>Room</Label><Input value={form.room} onChange={e => setForm((f: any) => ({...f, room: e.target.value}))} className="mt-1" /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><Label>Start Time</Label><Input type="time" value={form.startTime} onChange={e => setForm(f => ({...f, startTime: e.target.value}))} required className="mt-1" /></div>
-                <div><Label>End Time</Label><Input type="time" value={form.endTime} onChange={e => setForm(f => ({...f, endTime: e.target.value}))} required className="mt-1" /></div>
+                <div><Label>Start Time</Label><Input type="time" value={form.startTime} onChange={e => setForm((f: any) => ({...f, startTime: e.target.value}))} required className="mt-1" /></div>
+                <div><Label>End Time</Label><Input type="time" value={form.endTime} onChange={e => setForm((f: any) => ({...f, endTime: e.target.value}))} required className="mt-1" /></div>
               </div>
-              <div><Label>Teacher & Subject</Label><Select value={form.teacherAssignmentId} onValueChange={v => setForm(f => ({...f, teacherAssignmentId: v}))}><SelectTrigger className="mt-1"><SelectValue placeholder="Select assignment" /></SelectTrigger><SelectContent>{assignments.filter(a => a.classId?._id === selectedClass).map(a => <SelectItem key={a._id} value={a._id}>{a.subjectId?.name} ({a.teacherId?.fullName})</SelectItem>)}</SelectContent></Select></div>
+              <div><Label>Teacher & Subject</Label><Select value={form.teacherAssignmentId} onValueChange={v => setForm((f: any) => ({...f, teacherAssignmentId: v}))}><SelectTrigger className="mt-1"><SelectValue placeholder="Select assignment" /></SelectTrigger><SelectContent>{assignments.filter(a => a.classId?._id === selectedClass).map(a => <SelectItem key={a._id} value={a._id}>{a.subjectId?.name} ({a.teacherId?.fullName})</SelectItem>)}</SelectContent></Select></div>
             </DialogBody>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Entry'}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Save Entry'}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

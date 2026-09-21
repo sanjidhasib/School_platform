@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, Users, LayoutGrid } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function ClassesPage() {
   const [classes, setClasses] = useState<any[]>([]);
@@ -50,7 +50,7 @@ export default function ClassesPage() {
               <div className="grid grid-cols-2 gap-3"><div><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))} placeholder="e.g. Class 10" required className="mt-1" /></div><div><Label>Section</Label><Input value={form.section} onChange={e => setForm(f => ({...f, section: e.target.value}))} placeholder="e.g. A" required className="mt-1" /></div></div>
               <div className="grid grid-cols-2 gap-3"><div><Label>Room</Label><Input value={form.room} onChange={e => setForm(f => ({...f, room: e.target.value}))} className="mt-1" /></div><div><Label>Capacity</Label><Input type="number" value={form.capacity} onChange={e => setForm(f => ({...f, capacity: parseInt(e.target.value)}))} required className="mt-1" /></div></div>
             </DialogBody>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Add Class'}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : 'Add Class'}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

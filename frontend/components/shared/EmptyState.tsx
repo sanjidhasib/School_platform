@@ -1,14 +1,85 @@
-import { type LucideIcon, FolderOpen } from 'lucide-react';
-interface EmptyStateProps { icon?: LucideIcon; title: string; description?: string; action?: React.ReactNode; }
-export function EmptyState({ icon: Icon = FolderOpen, title, description, action }: EmptyStateProps) {
+import type { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+/**
+ * Every empty state names the thing that is missing and offers the one action
+ * that fixes it. The illustration is a plain outlined mark on a wash, specific
+ * to the subject — not a stock 3D graphic.
+ */
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  action,
+  className,
+  compact,
+}: {
+  icon?: LucideIcon;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+  className?: string;
+  compact?: boolean;
+}) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="h-16 w-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
-        <Icon className="h-8 w-8 text-slate-400" />
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center text-center',
+        compact ? 'gap-2 px-4 py-8' : 'gap-3 px-6 py-14',
+        className
+      )}
+    >
+      {Icon && (
+        <span
+          className={cn(
+            'flex items-center justify-center rounded-full bg-wash text-brand',
+            compact ? 'h-9 w-9' : 'h-11 w-11'
+          )}
+        >
+          <Icon className={compact ? 'h-4 w-4' : 'h-5 w-5'} strokeWidth={1.5} aria-hidden="true" />
+        </span>
+      )}
+      <div className="space-y-1">
+        <p className="text-dense font-medium text-ink">{title}</p>
+        {description && <p className="max-w-sm text-dense text-ink-muted">{description}</p>}
       </div>
-      <h3 className="text-base font-semibold text-slate-700">{title}</h3>
-      {description && <p className="text-sm text-slate-500 mt-1 max-w-sm">{description}</p>}
-      {action && <div className="mt-4">{action}</div>}
+      {action && <div className="pt-1">{action}</div>}
+    </div>
+  );
+}
+
+/** Says what failed and offers a retry, rather than a bare error string. */
+export function ErrorState({
+  title = 'Could not load this',
+  description,
+  onRetry,
+  className,
+}: {
+  title?: string;
+  description?: string;
+  onRetry?: () => void;
+  className?: string;
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center gap-3 rounded-card border border-line bg-surface px-6 py-12 text-center',
+        className
+      )}
+    >
+      <div className="space-y-1">
+        <p className="text-dense font-medium text-ink">{title}</p>
+        {description && <p className="max-w-sm text-dense text-ink-muted">{description}</p>}
+      </div>
+      {onRetry && (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="rounded-btn border border-line px-3 py-1.5 text-dense font-medium text-ink transition-colors hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        >
+          Try again
+        </button>
+      )}
     </div>
   );
 }

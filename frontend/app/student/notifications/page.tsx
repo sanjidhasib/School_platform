@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Bell, AlertCircle, BookMarked, Trophy } from 'lucide-react';
 import { formatRelativeTime, cn } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const typeIcons: Record<string, any> = { ABSENCE: AlertCircle, MISSING_HOMEWORK: BookMarked, HOMEWORK: BookMarked, NOTICE: Bell, DEFAULT: Bell };
 
@@ -22,7 +22,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Notifications" actions={<Button variant="outline" size="sm" onClick={markAllRead}>Mark all read</Button>} />
+      <PageHeader title="Notifications" actions={<Button variant="secondary" size="sm" onClick={markAllRead}>Mark all read</Button>} />
       {!notifications.length ? <EmptyState icon={Bell} title="No notifications" description="You're all caught up!" /> : (
         <div className="space-y-2">
           {notifications.map((n: any) => {

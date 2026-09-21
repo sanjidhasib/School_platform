@@ -7,7 +7,7 @@ import { CardSkeleton, TableSkeleton } from '@/components/shared/LoadingSkeleton
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Users, GraduationCap, BookOpen, Calendar } from 'lucide-react';
 import { DAYS } from '@/lib/constants';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<any>(null);

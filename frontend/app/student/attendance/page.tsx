@@ -8,7 +8,7 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Progress } from '@/components/ui/progress';
 import { formatDate, formatPercentage } from '@/lib/utils';
 import { CheckSquare } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function StudentAttendancePage() {
   const [data, setData] = useState<any>(null);

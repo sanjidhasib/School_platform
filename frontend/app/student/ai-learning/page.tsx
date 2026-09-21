@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Send, Plus, BookOpen, Bot, User, AlertCircle } from 'lucide-react';
 import { formatRelativeTime } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function AILearningPage() {
   const [subjects, setSubjects] = useState<any[]>([]);
@@ -76,8 +76,8 @@ export default function AILearningPage() {
         <div className="rounded-xl border border-slate-200 bg-white p-3 space-y-2">
           <Select value={selectedSubject} onValueChange={setSelectedSubject}><SelectTrigger><SelectValue placeholder="Select subject" /></SelectTrigger><SelectContent>{subjects.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}</SelectContent></Select>
           <div className="flex gap-2">
-            <Button size="sm" variant={language === 'EN' ? 'default' : 'outline'} onClick={() => setLanguage('EN')} className="flex-1 text-xs">EN</Button>
-            <Button size="sm" variant={language === 'BN' ? 'default' : 'outline'} onClick={() => setLanguage('BN')} className="flex-1 text-xs">বাংলা</Button>
+            <Button size="sm" variant={language === 'EN' ? 'primary' : 'secondary'} onClick={() => setLanguage('EN')} className="flex-1 text-xs">EN</Button>
+            <Button size="sm" variant={language === 'BN' ? 'primary' : 'secondary'} onClick={() => setLanguage('BN')} className="flex-1 text-xs">বাংলা</Button>
           </div>
           <Button size="sm" className="w-full" onClick={createSession} disabled={creating}><Plus className="h-3 w-3" />New Chat</Button>
         </div>

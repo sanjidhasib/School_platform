@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, ClipboardList, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -48,7 +48,7 @@ export default function AssignmentsPage() {
             <div><Label>Teacher</Label><Select value={form.teacherId} onValueChange={v => setForm(f => ({...f, teacherId: v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{teachers.map(t => <SelectItem key={t._id} value={t._id}>{t.fullName}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Class</Label><Select value={form.classId} onValueChange={v => setForm(f => ({...f, classId: v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{classes.map(c => <SelectItem key={c._id} value={c._id}>{c.name} {c.section}</SelectItem>)}</SelectContent></Select></div>
             <div><Label>Subject</Label><Select value={form.subjectId} onValueChange={v => setForm(f => ({...f, subjectId: v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{subjects.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
-          </DialogBody><DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Save</Button></DialogFooter></form>
+          </DialogBody><DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Save</Button></DialogFooter></form>
         </DialogContent>
       </Dialog>
       <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
@@ -56,7 +56,7 @@ export default function AssignmentsPage() {
           <DialogHeader><DialogTitle>Remove Assignment</DialogTitle></DialogHeader>
           <DialogBody><p className="text-sm text-slate-600">Remove <strong>{deleting?.teacherId?.fullName}</strong> from <strong>{deleting?.subjectId?.name}</strong> in <strong>{deleting?.classId?.name} {deleting?.classId?.section}</strong>?</p></DialogBody>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleting(null)}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button>
             <Button type="button" variant="destructive" onClick={async () => { try { await adminAPI.deleteAssignment(deleting._id); toast.success('Assignment removed'); setDeleting(null); load(); } catch (err: any) { toast.error(err.response?.data?.error || 'Delete failed'); } }}>Remove</Button>
           </DialogFooter>
         </DialogContent>

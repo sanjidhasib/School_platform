@@ -11,7 +11,7 @@ import { CheckSquare, BookMarked, BarChart3, Bell, Cpu, Clock } from 'lucide-rea
 import { formatDate, formatPercentage } from '@/lib/utils';
 import { DAYS } from '@/lib/constants';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function StudentDashboardPage() {
   const [data, setData] = useState<any>(null);

@@ -13,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getInitials, formatDate } from '@/lib/utils';
 import { Plus, Search, Pencil, Trash2, GraduationCap } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 const emptyForm = { username: '', email: '', password: '', fullName: '', studentId: '', classId: '', phone: '', status: 'ACTIVE' };
 
@@ -87,7 +87,7 @@ export default function StudentsPage() {
                 <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} className="mt-1" /></div>
               </div>
             </DialogBody>
-            <DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Student'}</Button></DialogFooter>
+            <DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Student'}</Button></DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -96,7 +96,7 @@ export default function StudentsPage() {
           <DialogHeader><DialogTitle>Delete Student</DialogTitle></DialogHeader>
           <DialogBody><p className="text-sm text-slate-600">Are you sure you want to delete <strong>{deleting?.fullName}</strong>? Their user account and related records will be removed.</p></DialogBody>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleting(null)}>Cancel</Button>
+            <Button type="button" variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button>
             <Button type="button" variant="destructive" onClick={async () => { try { await adminAPI.deleteStudent(deleting._id); toast.success('Student deleted'); setDeleting(null); load(); } catch (err: any) { toast.error(err.response?.data?.error || 'Delete failed'); } }}>Delete</Button>
           </DialogFooter>
         </DialogContent>

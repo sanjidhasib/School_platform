@@ -6,10 +6,10 @@ import { StatusBadge } from '@/components/shared/StatusBadge';
 import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { formatPercentage, getGradeColor } from '@/lib/utils';
+import { formatPercentage, gradeTone } from '@/lib/utils';
 import { FileText } from 'lucide-react';
 import Link from 'next/link';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function GuardianDashboardPage() {
   const [data, setData] = useState<any>(null);
@@ -25,7 +25,7 @@ export default function GuardianDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Guardian Dashboard" actions={<Link href="/guardian/reports"><Button variant="outline"><FileText className="h-4 w-4" />Download Report</Button></Link>} />
+      <PageHeader title="Guardian Dashboard" actions={<Link href="/guardian/reports"><Button variant="secondary"><FileText className="h-4 w-4" />Download Report</Button></Link>} />
       {data.children.length > 1 && (
         <div className="flex gap-2">
           {data.children.map((c: any, i: number) => (
@@ -58,7 +58,7 @@ export default function GuardianDashboardPage() {
               {child.grades.slice(0,4).map((g: any) => (
                 <div key={g._id} className="flex items-center justify-between text-sm">
                   <span className="text-slate-600">{g.subjectId?.name}</span>
-                  <span className={`font-bold px-2 py-0.5 rounded text-xs ${getGradeColor(g.grade)}`}>{g.grade}</span>
+                  <span className={`font-bold px-2 py-0.5 rounded text-xs ${gradeTone(g.grade)}`}>{g.grade}</span>
                 </div>
               ))}
             </div>

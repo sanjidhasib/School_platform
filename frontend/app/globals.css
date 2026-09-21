@@ -2,36 +2,195 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  SchoolOS design tokens.
+
+  Colours are stored as space-separated RGB channels so Tailwind can apply
+  opacity modifiers through `rgb(var(--token) / <alpha-value>)`. Every colour
+  used anywhere in the app resolves to one of these; no page hardcodes a hex
+  value or a stock Tailwind palette step.
+
+  Radii are deliberately different per level, so hierarchy reads without
+  shadows: chips/inputs 6px, buttons 8px, cards 12px, dialogs 16px.
+*/
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.75rem;
+    /* Surfaces */
+    --paper: 246 247 250; /* #F6F7FA - app background */
+    --surface: 255 255 255; /* #FFFFFF - cards, sheets, tables */
+    --surface-sunken: 241 243 248; /* table header, inset areas */
+    --wash: 238 240 250; /* #EEF0FA - selected rows, active nav */
+
+    /* Text */
+    --ink: 27 34 64; /* #1B2240 - primary text */
+    --ink-muted: 90 99 130; /* secondary text */
+    --ink-subtle: 132 140 166; /* meta, placeholders */
+
+    /* Lines */
+    --line: 227 230 238; /* #E3E6EE */
+    --line-strong: 205 210 224;
+
+    /* The one brand colour */
+    --brand: 36 70 201; /* #2446C9 */
+    --brand-hover: 29 58 172;
+    --brand-contrast: 255 255 255;
+    --brand-wash: 232 236 250;
+
+    /* Reserved strictly for "now" */
+    --highlighter: 244 197 66; /* #F4C542 */
+    --highlighter-wash: 253 245 224;
+
+    /* Status - always paired with an icon and a word, never colour alone */
+    --success: 15 123 87;
+    --success-bg: 231 245 239;
+    --danger: 180 36 60;
+    --danger-bg: 252 234 237;
+    --warning: 154 101 16;
+    --warning-bg: 253 243 226;
+    --info: 28 93 147;
+    --info-bg: 232 241 249;
+
+    /* Subject tints - keyed by subject code, carry --ink text */
+    --subj-ban: 243 232 228;
+    --subj-eng: 230 234 244;
+    --subj-mat: 228 237 242;
+    --subj-sci: 228 239 230;
+    --subj-ict: 233 230 242;
+    --subj-bgs: 242 237 226;
+    --subj-hss: 239 231 236;
+    --subj-rel: 231 239 239;
+
+    /* Radii */
+    --r-chip: 6px;
+    --r-btn: 8px;
+    --r-card: 12px;
+    --r-dialog: 16px;
+  }
+
+  .dark {
+    --paper: 18 22 43; /* #12162B - deep navy-slate, never near-black */
+    --surface: 26 31 56; /* #1A1F38 */
+    --surface-sunken: 22 27 49;
+    --wash: 35 42 72; /* #232A48 */
+
+    --ink: 232 234 242; /* #E8EAF2 */
+    --ink-muted: 163 170 194;
+    --ink-subtle: 124 133 161;
+
+    --line: 44 51 80; /* #2C3350 */
+    --line-strong: 60 68 102;
+
+    --brand: 92 125 234; /* #5C7DEA */
+    --brand-hover: 118 147 240;
+    --brand-contrast: 12 16 34;
+    --brand-wash: 34 44 82;
+
+    --highlighter: 224 180 58; /* #E0B43A */
+    --highlighter-wash: 54 46 26;
+
+    --success: 93 197 154;
+    --success-bg: 23 48 41;
+    --danger: 243 142 160;
+    --danger-bg: 57 27 35;
+    --warning: 226 175 95;
+    --warning-bg: 55 42 22;
+    --info: 126 181 232;
+    --info-bg: 23 42 62;
+
+    --subj-ban: 56 44 42;
+    --subj-eng: 35 42 68;
+    --subj-mat: 31 46 56;
+    --subj-sci: 35 53 42;
+    --subj-ict: 43 39 64;
+    --subj-bgs: 55 50 42;
+    --subj-hss: 53 42 49;
+    --subj-rel: 35 51 51;
   }
 }
 
 @layer base {
-  * { border-color: hsl(var(--border)); }
-  body { @apply bg-background text-foreground font-sans antialiased; }
+  * {
+    border-color: rgb(var(--line));
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: rgb(var(--paper));
+    color: rgb(var(--ink));
+    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+    Bangla gets its own stack and a taller line, rather than falling back to a
+    Latin face. The matra headline and the deeper descenders need the room.
+  */
+  :lang(bn),
+  .font-bn {
+    font-family: var(--font-bn), var(--font-ui), sans-serif;
+    line-height: 1.75;
+  }
+
+  /* Figures that sit in columns must align; prose must not look stiff. */
+  .tabular,
+  table tbody td,
+  table thead th {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid rgb(var(--brand));
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background-color: rgb(var(--brand) / 0.18);
+  }
 }
 
 @layer utilities {
-  .border-border { border-color: hsl(var(--border)); }
-  .bg-background { background-color: hsl(var(--background)); }
-  .text-foreground { color: hsl(var(--foreground)); }
+  /* Shape-matched skeletons; respects reduced motion via the media query below. */
+  .skeleton {
+    background-color: rgb(var(--line) / 0.7);
+    border-radius: var(--r-chip);
+    animation: skeleton-pulse 1.6s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--line-strong)) transparent;
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgb(var(--line-strong));
+    border-radius: 999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

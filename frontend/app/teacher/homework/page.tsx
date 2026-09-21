@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Plus, ClipboardCheck } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 export default function HomeworkPage() {
   const [homeworks, setHomeworks] = useState<any[]>([]);
@@ -62,7 +62,7 @@ export default function HomeworkPage() {
         )
       ) : (
         <div className="space-y-4">
-          <Button variant="outline" size="sm" onClick={() => setSelectedHw(null)}>Back</Button>
+          <Button variant="secondary" size="sm" onClick={() => setSelectedHw(null)}>Back</Button>
           <div className="rounded-xl border bg-white overflow-hidden">
             <div className="p-4 border-b bg-slate-50"><h2 className="font-bold">{selectedHw.title}</h2><p className="text-sm text-slate-500">{selectedHw.classId?.name} · {selectedHw.subjectId?.name}</p></div>
             <table className="w-full text-sm">
@@ -86,7 +86,7 @@ export default function HomeworkPage() {
             <div><Label>Title</Label><Input value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} required /></div>
             <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} required /></div>
             <div className="grid grid-cols-2 gap-3"><div><Label>Due Date</Label><Input type="date" value={form.dueAt} onChange={e => setForm(f => ({...f, dueAt: e.target.value}))} required /></div><div><Label>Max Marks</Label><Input type="number" value={form.maxMarks} onChange={e => setForm(f => ({...f, maxMarks: parseInt(e.target.value)}))} required /></div></div>
-          </DialogBody><DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Create</Button></DialogFooter></form>
+          </DialogBody><DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Create</Button></DialogFooter></form>
         </DialogContent>
       </Dialog>
     </div>

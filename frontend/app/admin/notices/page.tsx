@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Plus, Bell } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import { formatDate } from '@/lib/utils';
 
 export default function NoticesPage() {
@@ -45,7 +45,7 @@ export default function NoticesPage() {
             <div><Label>Title</Label><Input value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} required className="mt-1" /></div>
             <div><Label>Content</Label><Textarea value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} required className="mt-1" /></div>
             <div><Label>Publish Date</Label><Input type="date" value={form.publishDate} onChange={e => setForm(f => ({...f, publishDate: e.target.value}))} required className="mt-1" /></div>
-          </DialogBody><DialogFooter><Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Publish</Button></DialogFooter></form>
+          </DialogBody><DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Publish</Button></DialogFooter></form>
         </DialogContent>
       </Dialog>
     </div>
