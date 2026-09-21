@@ -304,3 +304,81 @@ These are **additive only**. No existing route, payload shape, validator or perm
 - `publicController.getSchool` selects `schoolName logoUrl address phone email`; the `SchoolSettings` model stores `name`, `contactPhone`, `contactEmail`. Correcting that one `.select()` string would make the school name and contact details flow to the landing page and render the frontend fallback dead.
 - `AiMessage` declares `role: { enum: ['user','assistant'] }` while `aiController` writes `'USER'` / `'ASSISTANT'`.
 - `admin/students.routes.js` carries two copy-pasted routes that belong to classes: `GET /:id/students` and `POST /:id/enroll`.
+
+---
+
+## 9. Final verification
+
+Run against the seeded database with the production build (`next start`) and the
+backend on :5000.
+
+### Gates
+
+| Gate | Baseline | Now |
+| --- | --- | --- |
+| `tsc --noEmit` | **9 errors** | **0 errors** |
+| `next lint` | **not configured** (prompted interactively) | **no warnings or errors** |
+| `next build` | **failed** | **passes**, 37 routes |
+| Routes | 24 pages | 36 pages, **none removed** |
+
+### Functionality checklist
+
+Driven through the real UI with Playwright: **33 of 33 checks pass**, covering
+sign-in and guarding for all four roles, admit/search/profile/deactivate for a
+student, the capacity hint against the 40 limit, teacher edit, the duplicate
+assignment and routine clash messages, settings, notice create and delete, the
+theme toggle, the command palette, teacher homework and attendance and the marks
+grid with its range validation, student submission, grading, guardian child
+scoping, and both PDF downloads.
+
+A sweep of every page at 1440px and 375px in both themes (132 screenshots)
+reports **no console errors, no 5xx responses and no horizontal overflow**.
+
+### Defects found by verification, and fixed
+
+Pre-existing, carried in from the original code:
+
+1. **AI Learning could never be used.** It called `GET /admin/subjects` as a
+   student and got a 403, so the subject picker was always empty. Added
+   `GET /api/student/subjects`.
+2. **Homework could never be set.** Teacher homework and results called
+   `GET /admin/assignments` and got a 403, so the class picker was always empty.
+   Added `GET /api/teacher/assignments`.
+3. **Notices could never be published.** The form sent `publishDate`/`status`
+   while the model requires `publishAt`, `category` and `audienceType`.
+4. **Homework could never be published.** `teacherAssignmentId` and `assignedAt`
+   are required and neither was sent.
+5. **The submissions list was unreadable.** The endpoint returns
+   `{ student, submission }` pairs; the UI read each row as a flat submission,
+   so names and statuses were blank and grading posted the wrong id.
+6. **Editing a routine entry ran no clash checks**, unlike creating one, so
+   moving a period onto an occupied slot hit the unique index and surfaced as a
+   raw database error. It now returns the same readable 409.
+7. **`nameBn` never reached the client.** Every Subject populate selected only
+   `name`. Widened to `code name nameBn` — additive; nothing removed or renamed.
+8. **Change Password always failed**, because the validator required
+   `oldPassword` while the controller and the UI use `currentPassword`.
+9. **Teacher edit and delete were broken** (`PATCH`/`DELETE /admin/teachers/:id`
+   returned 404).
+
+Introduced during the redesign and fixed before completion: the guardian pages
+assumed `GET /guardian/children` wraps students in `{ student }`; the student and
+teacher forms sent `email: ""` for a blank field, which collides with the unique
+index on `User.email`; the landing page was statically prerendered, freezing the
+notice board at build time; the student list reported "20 students" for a school
+of 200 with no way to reach the rest.
+
+### Left alone deliberately
+
+- **`GET /api/public/school` still returns only `{_id, logoUrl, address}`.** The
+  controller selects `schoolName`/`phone`/`email` while the model stores
+  `name`/`contactPhone`/`contactEmail`. As agreed, the landing page keeps its
+  fallback and reads both shapes, so the real values appear the moment that one
+  `.select()` line is corrected.
+- **`AiMessage` enum mismatch**: the model allows `role: ['user','assistant']`
+  while `aiController` writes `'USER'`/`'ASSISTANT'`.
+- **The auth rate limit is 20 attempts per 15 minutes per IP.** Correct as
+  security, but a school office behind one NAT address may hit it on a busy
+  morning. A policy decision, not changed here.
+- Two seeded routine rows put the same teacher in two classes at 10:00, which
+  the UI shows faithfully.
