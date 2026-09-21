@@ -1,124 +1,191 @@
 'use client';
+
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import { useSchool, SchoolProvider } from '@/lib/school-context';
+import { AuthSplit } from '@/components/layout/AuthSplit';
+import { LogoMark } from '@/components/layout/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { GraduationCap, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Field } from '@/components/ui/field';
+import { apiErrorMessage } from '@/lib/utils';
+
+const REDIRECTS: Record<string, string> = {
+  ADMIN: '/admin/dashboard',
+  TEACHER: '/teacher/dashboard',
+  STUDENT: '/student/dashboard',
+  GUARDIAN: '/guardian/dashboard',
+};
 
 export default function LoginPage() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
+  return (
+    <SchoolProvider>
+      <LoginScreen />
+    </SchoolProvider>
+  );
+}
+
+function LoginScreen() {
+  const school = useSchool();
   const { login } = useAuth();
   const router = useRouter();
+
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
-      toast.error('Please enter both username and password');
+      setError('Enter your username and password.');
       return;
     }
+    setError(null);
     setLoading(true);
     try {
       const user = await login({ username: username.trim(), password });
-      toast.success(`Welcome, ${user.username}!`);
-      const redirectMap: Record<string, string> = {
-        ADMIN: '/admin/dashboard',
-        TEACHER: '/teacher/dashboard',
-        STUDENT: '/student/dashboard',
-        GUARDIAN: '/guardian/dashboard',
-      };
-      router.push(redirectMap[user.role] || '/');
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.response?.data?.error ||
-        err?.message ||
-        'Login failed';
-      toast.error(message);
-      console.error('[Login] error:', err);
+      toast.success(`Signed in as ${user.username}`);
+      router.push(REDIRECTS[user.role] || '/');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not sign you in'));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="w-full max-w-md">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="h-10 w-10 rounded-xl bg-blue-600 flex items-center justify-center">
-            <GraduationCap className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-slate-900">SchoolOS</h1>
-            <p className="text-xs text-slate-500">Barishal Zilla School</p>
-          </div>
+    <AuthSplit schoolName={school.name}>
+      <div className="space-y-6">
+        <div className="lg:hidden">
+          <Link href="/" className="inline-flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-btn bg-brand text-brand-contrast">
+              <LogoMark />
+            </span>
+            <span className="text-dense font-semibold text-ink">SchoolOS</span>
+          </Link>
         </div>
 
-        <h2 className="text-2xl font-bold text-slate-900 mb-1">Welcome back</h2>
-        <p className="text-slate-500 text-sm mb-6">Sign in to your account</p>
+        <div className="space-y-1">
+          <h1 className="text-page text-ink">Sign in</h1>
+          <p className="text-body text-ink-muted">{school.name}</p>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <div>
-            <Label htmlFor="username">Username or Email</Label>
-            <Input
-              id="username"
-              name="username"
-              autoComplete="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="username or email"
-              required
-              disabled={loading}
-              className="mt-1"
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-              disabled={loading}
-              className="mt-1"
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={loading}
-            aria-busy={loading}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Signing in...
-              </>
-            ) : (
-              'Sign In'
+          {error && (
+            <div
+              role="alert"
+              className="flex items-start gap-2.5 rounded-card border border-danger/30 bg-danger-bg px-3 py-2.5"
+            >
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" strokeWidth={1.75} />
+              <p className="text-dense text-danger">{error}</p>
+            </div>
+          )}
+
+          <Field label="Username or email" required>
+            {(p) => (
+              <Input
+                {...p}
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  setError(null);
+                }}
+                autoComplete="username"
+                autoFocus
+                disabled={loading}
+                required
+              />
             )}
+          </Field>
+
+          <Field label="Password" required>
+            {(p) => (
+              <div className="relative">
+                <Input
+                  {...p}
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError(null);
+                  }}
+                  autoComplete="current-password"
+                  disabled={loading}
+                  className="pr-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  className="absolute right-1 top-1/2 flex h-7 w-8 -translate-y-1/2 items-center justify-center rounded-chip text-ink-subtle transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" strokeWidth={1.75} />
+                  ) : (
+                    <Eye className="h-4 w-4" strokeWidth={1.75} />
+                  )}
+                </button>
+              </div>
+            )}
+          </Field>
+
+          <div className="flex items-center justify-between gap-3">
+            <label className="flex cursor-pointer items-center gap-2 text-dense text-ink-muted">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="h-4 w-4 rounded border-line text-brand focus:ring-2 focus:ring-brand/25"
+              />
+              Keep me signed in
+            </label>
+            <span className="text-meta text-ink-subtle">
+              Forgot it? Ask the school office.
+            </span>
+          </div>
+
+          <Button type="submit" className="w-full" size="lg" loading={loading}>
+            Sign in
           </Button>
         </form>
 
-        <div className="mt-6 p-3 bg-slate-50 rounded-lg text-xs text-slate-500">
-          <p className="font-medium text-slate-700 mb-1">Demo credentials</p>
-          <p>Admin: <code>admin</code> / <code>Admin@123</code></p>
-          <p>Teacher: <code>teacher001</code> / <code>Teacher@123</code></p>
-          <p>Student: <code>student001</code> / <code>Student@123</code></p>
-          <p>Guardian: <code>guardian001</code> / <code>Guardian@123</code></p>
-        </div>
-
-        <p className="text-center text-xs text-slate-400 mt-6">
-          SchoolOS &copy; 2026 Barishal Zilla School
+        <p className="text-dense text-ink-muted">
+          Need an account?{' '}
+          <Link
+            href="/register"
+            className="font-medium text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            Register
+          </Link>
         </p>
+
+        <div className="rounded-card border border-line bg-surface p-3">
+          <p className="mb-1.5 text-meta font-medium text-ink">Demo accounts</p>
+          <dl className="space-y-0.5 text-meta text-ink-muted">
+            {[
+              ['Admin', 'admin', 'Admin@123'],
+              ['Teacher', 'teacher001', 'Teacher@123'],
+              ['Student', 'student001', 'Student@123'],
+              ['Guardian', 'guardian001', 'Guardian@123'],
+            ].map(([role, user, pass]) => (
+              <div key={role} className="flex gap-2">
+                <dt className="w-16 shrink-0">{role}</dt>
+                <dd className="tabular">
+                  {user} / {pass}
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </div>
       </div>
-    </div>
+    </AuthSplit>
   );
 }

@@ -1,116 +1,140 @@
 'use client';
+
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export interface CarouselSlide {
   src: string;
   alt: string;
-  caption?: string;
 }
 
-interface SchoolCarouselProps {
-  slides: CarouselSlide[];
-  autoPlay?: boolean;
-  intervalMs?: number;
-}
-
+/**
+ * Real photographs of the real campus. The caption overlay is gone — the
+ * pictures speak for themselves, and the old gradient scrim over every frame
+ * was the single heaviest piece of decoration on the page.
+ */
 export function SchoolCarousel({
   slides,
   autoPlay = true,
-  intervalMs = 5000,
-}: SchoolCarouselProps) {
+  intervalMs = 6000,
+}: {
+  slides: CarouselSlide[];
+  autoPlay?: boolean;
+  intervalMs?: number;
+}) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [imgErrors, setImgErrors] = useState<Record<number, boolean>>({});
+  const [failed, setFailed] = useState<Record<number, boolean>>({});
 
-  const next = useCallback(() => {
-    setIndex((i) => (i + 1) % slides.length);
-  }, [slides.length]);
-
-  const prev = useCallback(() => {
-    setIndex((i) => (i - 1 + slides.length) % slides.length);
-  }, [slides.length]);
+  const next = useCallback(() => setIndex((i) => (i + 1) % slides.length), [slides.length]);
+  const prev = useCallback(
+    () => setIndex((i) => (i - 1 + slides.length) % slides.length),
+    [slides.length]
+  );
 
   useEffect(() => {
-    if (!autoPlay || paused) return;
+    if (!autoPlay || paused || slides.length < 2) return;
     const t = setInterval(next, intervalMs);
     return () => clearInterval(t);
-  }, [autoPlay, paused, next, intervalMs]);
+  }, [autoPlay, paused, next, intervalMs, slides.length]);
 
-  if (!slides || slides.length === 0) return null;
+  if (!slides.length) return null;
 
   return (
     <div
-      className="relative w-full overflow-hidden rounded-2xl shadow-xl border border-slate-200 bg-slate-900 group"
+      className="group relative overflow-hidden rounded-card border border-line bg-surface-sunken"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
       aria-roledescription="carousel"
+      aria-label="Photographs of the school"
     >
-      <div
-        className="flex transition-transform duration-700 ease-out"
-        style={{ transform: `translateX(-${index * 100}%)` }}
-      >
+      <div className="relative" style={{ aspectRatio: '16 / 7' }}>
         {slides.map((slide, i) => (
           <div
-            key={i}
-            className="w-full flex-shrink-0 relative"
-            style={{ aspectRatio: '16 / 7' }}
+            key={slide.src}
+            className={cn(
+              'absolute inset-0 transition-opacity duration-500',
+              i === index ? 'opacity-100' : 'pointer-events-none opacity-0'
+            )}
             aria-hidden={i !== index}
           >
-            {imgErrors[i] ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-blue-700 via-indigo-700 to-purple-800 text-white p-6">
-                <div className="text-5xl font-bold mb-2">Barishal Zilla School</div>
-                <div className="text-sm opacity-80">{slide.caption || slide.alt}</div>
+            {failed[i] ? (
+              <div className="flex h-full items-center justify-center bg-surface-sunken">
+                <p className="text-dense text-ink-subtle">{slide.alt}</p>
               </div>
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <Image
                 src={slide.src}
                 alt={slide.alt}
-                className="w-full h-full object-cover"
-                onError={() => setImgErrors((e) => ({ ...e, [i]: true }))}
-                loading={i === 0 ? 'eager' : 'lazy'}
+                fill
+                sizes="(max-width: 1200px) 100vw, 1200px"
+                priority={i === 0}
+                className="object-cover"
+                onError={() => setFailed((e) => ({ ...e, [i]: true }))}
               />
-            )}
-            {slide.caption && (
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-6 text-white">
-                <p className="text-lg font-semibold drop-shadow">{slide.caption}</p>
-              </div>
             )}
           </div>
         ))}
       </div>
 
-      <button
-        type="button"
-        aria-label="Previous slide"
-        onClick={prev}
-        className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/80 hover:bg-white text-slate-900 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronLeft className="h-5 w-5" />
-      </button>
-      <button
-        type="button"
-        aria-label="Next slide"
-        onClick={next}
-        className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/80 hover:bg-white text-slate-900 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-      >
-        <ChevronRight className="h-5 w-5" />
-      </button>
+      {slides.length > 1 && (
+        <>
+          <CarouselButton side="left" onClick={prev} label="Previous photograph">
+            <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
+          </CarouselButton>
+          <CarouselButton side="right" onClick={next} label="Next photograph">
+            <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
+          </CarouselButton>
 
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            type="button"
-            aria-label={`Go to slide ${i + 1}`}
-            onClick={() => setIndex(i)}
-            className={`h-2 rounded-full transition-all ${
-              i === index ? 'w-8 bg-white' : 'w-2 bg-white/50 hover:bg-white/80'
-            }`}
-          />
-        ))}
-      </div>
+          <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5">
+            {slides.map((slide, i) => (
+              <button
+                key={slide.src}
+                type="button"
+                onClick={() => setIndex(i)}
+                aria-label={`Photograph ${i + 1} of ${slides.length}`}
+                aria-current={i === index}
+                className={cn(
+                  'h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
+                  i === index ? 'w-6 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'
+                )}
+              />
+            ))}
+          </div>
+        </>
+      )}
     </div>
+  );
+}
+
+function CarouselButton({
+  side,
+  onClick,
+  label,
+  children,
+}: {
+  side: 'left' | 'right';
+  onClick: () => void;
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className={cn(
+        'absolute top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full',
+        'bg-white/85 text-ink opacity-0 transition-opacity',
+        'group-hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white',
+        side === 'left' ? 'left-3' : 'right-3'
+      )}
+    >
+      {children}
+    </button>
   );
 }

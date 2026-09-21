@@ -1,81 +1,350 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { studentAPI } from '@/lib/api/student';
-import { StatCard } from '@/components/shared/StatCard';
-import { PageHeader } from '@/components/shared/PageHeader';
-import { StatusBadge } from '@/components/shared/StatusBadge';
-import { CardSkeleton } from '@/components/shared/LoadingSkeleton';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { Button } from '@/components/ui/button';
-import { CheckSquare, BookMarked, BarChart3, Bell, Cpu, Clock } from 'lucide-react';
-import { formatDate, formatPercentage } from '@/lib/utils';
-import { DAYS } from '@/lib/constants';
+
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import {
+  BookMarked,
+  CalendarClock,
+  MessageSquare,
+  Bell,
+  ArrowRight,
+  CheckSquare,
+} from 'lucide-react';
 import { toast } from 'sonner';
+import { studentAPI } from '@/lib/api/student';
+import { PageHeader, Section } from '@/components/shared/PageHeader';
+import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
+import { SubjectLabel } from '@/components/shared/SubjectLabel';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { subjectTint, subjectBn } from '@/lib/design/subjects';
+import {
+  cn,
+  firstName,
+  formatDate,
+  formatDateLong,
+  formatPercentage,
+  formatTime,
+  minutesFromMidnight,
+} from '@/lib/utils';
 
 export default function StudentDashboardPage() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [nowMinutes, setNowMinutes] = useState<number | null>(null);
 
-  useEffect(() => { studentAPI.getDashboard().then(r => setData(r.data.data)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false)); }, []);
+  const load = () => {
+    setLoading(true);
+    setFailed(false);
+    studentAPI
+      .getDashboard()
+      .then((r) => setData(r.data.data))
+      .catch(() => {
+        setFailed(true);
+        toast.error('Could not load your dashboard');
+      })
+      .finally(() => setLoading(false));
+  };
 
-  if (loading) return <div className="space-y-6"><div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{Array.from({length:4}).map((_,i) => <CardSkeleton key={i} />)}</div></div>;
+  useEffect(load, []);
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      setNowMinutes(d.getHours() * 60 + d.getMinutes());
+    };
+    tick();
+    const id = setInterval(tick, 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const schedule: any[] = useMemo(() => data?.todaySchedule ?? [], [data]);
+
+  const { current, next } = useMemo(() => {
+    if (nowMinutes === null) return { current: null, next: null };
+    let cur: any = null;
+    let nxt: any = null;
+    for (const slot of schedule) {
+      const s = minutesFromMidnight(slot.startTime);
+      const e = minutesFromMidnight(slot.endTime);
+      if (s === null || e === null) continue;
+      if (nowMinutes >= s && nowMinutes < e) cur = slot;
+      else if (nowMinutes < s && !nxt) nxt = slot;
+    }
+    return { current: cur, next: nxt };
+  }, [schedule, nowMinutes]);
+
+  const focus = current ?? next;
+  const focusIsNow = Boolean(current);
+
+  if (loading) return <DashboardSkeleton />;
+  if (failed) return <ErrorState description="Your dashboard did not load." onRetry={load} />;
+
+  const student = data?.student;
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  })();
+
+  const pending: any[] = data?.pendingHomework ?? [];
+  const attendancePct = data?.attendancePercentage;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">{greeting}, {data?.student?.fullName?.split(' ')[0]}! 👋</h1>
-        <p className="text-slate-500 text-sm mt-1">{data?.student?.classId?.name} {data?.student?.classId?.section} · {DAYS[new Date().getDay()]}</p>
-      </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Attendance" value={formatPercentage(data?.attendancePercentage ?? 0)} icon={CheckSquare} iconColor="text-green-600" iconBg="bg-green-50" />
-        <StatCard label="Pending Homework" value={data?.pendingHomework?.length ?? 0} icon={BookMarked} iconColor="text-orange-600" iconBg="bg-orange-50" />
-        <StatCard label="Unread Alerts" value={data?.unreadNotifications ?? 0} icon={Bell} iconColor="text-red-600" iconBg="bg-red-50" />
-        <Link href="/student/ai-learning"><div className="rounded-xl border border-blue-200 bg-blue-600 p-6 shadow-sm cursor-pointer hover:bg-blue-700 transition-colors"><div className="flex items-center gap-3"><div className="h-12 w-12 rounded-xl bg-blue-500 flex items-center justify-center"><Cpu className="h-6 w-6 text-white" /></div><div><p className="text-sm text-blue-100 font-medium">AI Learning</p><p className="text-white font-bold">Ask a question</p></div></div></div></Link>
-      </div>
-      <div className="grid lg:grid-cols-2 gap-6">
-        <div className="rounded-xl border border-slate-200 bg-white">
-          <div className="p-4 border-b border-slate-100"><h2 className="font-semibold text-slate-900">Today's Classes</h2></div>
-          {!data?.todaySchedule?.length ? <EmptyState title="No classes today" /> : (
-            <div className="divide-y divide-slate-100">
-              {data.todaySchedule.map((e: any) => (
-                <div key={e._id} className="flex items-center gap-3 p-4">
-                  <div className="flex items-center gap-1 text-slate-400 text-xs"><Clock className="h-3 w-3" />{e.startTime}</div>
-                  <div className="flex-1"><p className="font-medium text-sm text-slate-900">{e.teacherAssignmentId?.subjectId?.name}</p></div>
-                </div>
-              ))}
-            </div>
+    <div className="space-y-8">
+      <PageHeader
+        title={`${greeting}, ${firstName(student?.fullName) || 'there'}`}
+        description={`${student?.classId?.name ?? ''} ${student?.classId?.section ?? ''} · ${formatDateLong(new Date())}`.trim()}
+      />
+
+      {/* The one bold element: the class they are in, or the one coming up. */}
+      {focus && (
+        <section
+          className={cn(
+            'rounded-card border p-5',
+            focusIsNow ? 'border-highlighter bg-highlighter-wash' : 'border-line bg-surface'
           )}
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white">
-          <div className="p-4 border-b border-slate-100 flex items-center justify-between"><h2 className="font-semibold text-slate-900">Pending Homework</h2><Link href="/student/homework"><Button variant="ghost" size="sm">View all</Button></Link></div>
-          {!data?.pendingHomework?.length ? <EmptyState title="No pending homework" description="You're all caught up!" /> : (
-            <div className="divide-y divide-slate-100">
-              {data.pendingHomework.slice(0,4).map((hw: any) => (
-                <div key={hw._id} className="p-4 flex items-center gap-3">
-                  <div className="flex-1"><p className="font-medium text-sm text-slate-900">{hw.title}</p><p className="text-xs text-slate-500">{hw.subjectId?.name} · Due {formatDate(hw.dueAt)}</p></div>
-                </div>
-              ))}
+        >
+          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+            <div className="min-w-0 flex-1">
+              <Badge tone={focusIsNow ? 'warning' : 'neutral'}>
+                {focusIsNow ? 'Happening now' : 'Next class'}
+              </Badge>
+              <h2 className="mt-2 text-2xl font-semibold text-ink">
+                {focus.teacherAssignmentId?.subjectId?.name ?? 'Class'}
+              </h2>
+              {subjectBn(focus.teacherAssignmentId?.subjectId) && (
+                <p lang="bn" className="font-bn text-body text-ink-muted">
+                  {subjectBn(focus.teacherAssignmentId?.subjectId)}
+                </p>
+              )}
             </div>
-          )}
-        </div>
-      </div>
-      {data?.recentNotices?.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white">
-          <div className="p-4 border-b border-slate-100"><h2 className="font-semibold text-slate-900">School Notices</h2></div>
-          <div className="divide-y divide-slate-100">
-            {data.recentNotices.map((n: any) => (
-              <div key={n._id} className="p-4">
-                <p className="font-medium text-sm text-slate-900">{n.title}</p>
-                <p className="text-xs text-slate-500 mt-1">{n.description?.slice(0,100)}...</p>
+
+            <dl className="flex gap-x-8">
+              <div>
+                <dt className="text-meta text-ink-subtle">Time</dt>
+                <dd className="mt-0.5 text-dense font-medium text-ink tabular">
+                  {formatTime(focus.startTime)}
+                </dd>
               </div>
-            ))}
+              {focus.room && (
+                <div>
+                  <dt className="text-meta text-ink-subtle">Room</dt>
+                  <dd className="mt-0.5 text-dense font-medium text-ink">{focus.room}</dd>
+                </div>
+              )}
+            </dl>
           </div>
-        </div>
+        </section>
       )}
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Section
+          title="Due soon"
+          actions={
+            pending.length ? (
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/student/homework">See all</Link>
+              </Button>
+            ) : undefined
+          }
+        >
+          {!pending.length ? (
+            <div className="rounded-card border border-line bg-surface">
+              <EmptyState
+                icon={BookMarked}
+                title="Nothing due"
+                description="You have handed in everything that was set."
+                compact
+              />
+            </div>
+          ) : (
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+              {pending.slice(0, 4).map((hw: any) => {
+                const overdue = hw.dueAt && new Date(hw.dueAt) < new Date();
+                return (
+                  <li key={hw._id}>
+                    <Link
+                      href="/student/homework"
+                      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-wash/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+                    >
+                      <span
+                        className={cn('h-8 w-1 shrink-0 rounded-full', subjectTint(hw.subjectId))}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-dense font-medium text-ink">
+                          {hw.title}
+                        </span>
+                        <SubjectLabel
+                          subject={hw.subjectId}
+                          className="text-meta text-ink-muted"
+                          inline
+                        />
+                      </span>
+                      <span className="shrink-0 text-right">
+                        <span className="block text-meta text-ink-subtle">Due</span>
+                        <span
+                          className={cn(
+                            'block text-meta tabular',
+                            overdue ? 'font-medium text-danger' : 'text-ink'
+                          )}
+                        >
+                          {formatDate(hw.dueAt)}
+                        </span>
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Section>
+
+        <Section title="Your attendance">
+          <div className="rounded-card border border-line bg-surface p-5">
+            {attendancePct === undefined || attendancePct === null ? (
+              <EmptyState
+                icon={CheckSquare}
+                title="No attendance recorded yet"
+                description="It appears once your teachers start taking attendance."
+                compact
+              />
+            ) : (
+              <>
+                <p className="text-3xl font-semibold text-ink tabular">
+                  {formatPercentage(attendancePct)}
+                </p>
+                <Progress
+                  value={attendancePct}
+                  tone={attendancePct >= 90 ? 'success' : attendancePct >= 75 ? 'warning' : 'danger'}
+                  className="mt-3"
+                  label="Attendance"
+                />
+                <Button variant="ghost" size="sm" asChild className="mt-3 -ml-2">
+                  <Link href="/student/attendance">See your record</Link>
+                </Button>
+              </>
+            )}
+          </div>
+        </Section>
+      </div>
+
+      <Section title="Today's classes">
+        {!schedule.length ? (
+          <div className="rounded-card border border-line bg-surface">
+            <EmptyState icon={CalendarClock} title="No classes today" compact />
+          </div>
+        ) : (
+          <ol className="divide-y divide-line rounded-card border border-line bg-surface">
+            {schedule.map((slot: any) => {
+              const s = minutesFromMidnight(slot.startTime);
+              const e = minutesFromMidnight(slot.endTime);
+              const live =
+                nowMinutes !== null && s !== null && e !== null && nowMinutes >= s && nowMinutes < e;
+              const done = nowMinutes !== null && e !== null && nowMinutes >= e;
+
+              return (
+                <li
+                  key={slot._id}
+                  className={cn('flex items-center gap-4 px-4 py-3', live && 'bg-highlighter-wash')}
+                >
+                  <div className="w-20 shrink-0">
+                    <p
+                      className={cn(
+                        'text-dense tabular',
+                        done ? 'text-ink-subtle' : 'font-medium text-ink'
+                      )}
+                    >
+                      {formatTime(slot.startTime)}
+                    </p>
+                    {live && <p className="text-meta font-medium text-warning">Now</p>}
+                  </div>
+                  <span
+                    className={cn(
+                      'h-8 w-1 shrink-0 rounded-full',
+                      subjectTint(slot.teacherAssignmentId?.subjectId)
+                    )}
+                    aria-hidden="true"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <SubjectLabel
+                      subject={slot.teacherAssignmentId?.subjectId}
+                      className={cn('text-dense', done ? 'text-ink-muted' : 'font-medium text-ink')}
+                    />
+                  </div>
+                  {slot.room && (
+                    <span className="shrink-0 text-meta text-ink-subtle">{slot.room}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
+        )}
+      </Section>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* A plain section with a normal button — not a gradient banner. */}
+        <Section
+          title="Ask about your textbook"
+          description="Stuck on something? Ask a question about what you are studying."
+        >
+          <div className="rounded-card border border-line bg-surface p-5">
+            <Button asChild>
+              <Link href="/student/ai-learning">
+                <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
+                Start a question
+              </Link>
+            </Button>
+          </div>
+        </Section>
+
+        <Section
+          title="From the school"
+          actions={
+            <Button variant="ghost" size="sm" asChild>
+              <Link href="/student/notifications">All notifications</Link>
+            </Button>
+          }
+        >
+          {!data?.recentNotices?.length ? (
+            <div className="rounded-card border border-line bg-surface">
+              <EmptyState icon={Bell} title="Nothing new" compact />
+            </div>
+          ) : (
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+              {data.recentNotices.slice(0, 4).map((n: any) => (
+                <li key={n._id} className="px-4 py-3">
+                  <p className="text-dense font-medium text-ink">{n.title}</p>
+                  {n.description && (
+                    <p className="mt-0.5 line-clamp-2 text-meta text-ink-muted">{n.description}</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Section>
+      </div>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-4 w-48" />
+      </div>
+      <Skeleton className="h-32 w-full rounded-card" />
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Skeleton className="h-52 rounded-card" />
+        <Skeleton className="h-52 rounded-card" />
+      </div>
     </div>
   );
 }

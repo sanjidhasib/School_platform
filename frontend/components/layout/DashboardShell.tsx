@@ -1,42 +1,97 @@
 'use client';
-import { useState } from 'react';
-import { Sidebar } from './Sidebar';
-import { Header } from './Header';
-import { usePathname } from 'next/navigation';
 
-const titleMap: Record<string, string> = {
-  '/admin/dashboard': 'Dashboard', '/admin/teachers': 'Teachers', '/admin/students': 'Students',
-  '/admin/classes': 'Classes', '/admin/subjects': 'Subjects', '/admin/assignments': 'Teacher Assignments',
-  '/admin/timetable': 'Timetable', '/admin/notices': 'Notices', '/admin/achievements': 'Achievements',
-  '/teacher/dashboard': 'Dashboard', '/teacher/attendance': 'Attendance',
-  '/teacher/homework': 'Homework', '/teacher/results': 'Results',
-  '/student/dashboard': 'Dashboard', '/student/attendance': 'Attendance',
-  '/student/homework': 'Homework', '/student/results': 'Results',
-  '/student/notifications': 'Notifications', '/student/ai-learning': 'AI Learning',
-  '/guardian/dashboard': 'Dashboard', '/guardian/reports': 'Reports',
-  '/profile': 'Profile',
-};
+import * as React from 'react';
+import { usePathname } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import * as DialogPrimitive from '@radix-ui/react-dialog';
+import { TooltipProvider } from '@/components/ui/tooltip';
+import { useAuth } from '@/hooks/useAuth';
+import { SchoolProvider } from '@/lib/school-context';
+import { titleForPath } from '@/lib/nav';
+import { AppSidebar } from './AppSidebar';
+import { Topbar } from './Topbar';
+import { MobileNav } from './MobileNav';
+import { CommandPalette, useCommandPalette } from './CommandPalette';
+
+const COLLAPSE_KEY = 'schoolos.sidebar.collapsed';
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const pathname = usePathname();
-  const title = titleMap[pathname] || 'SchoolOS';
+  const { user } = useAuth();
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(false);
+  const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
+
+  // Remember the collapsed state, but read it after mount so the server and
+  // client render the same markup.
+  React.useEffect(() => {
+    try {
+      setCollapsed(window.localStorage.getItem(COLLAPSE_KEY) === '1');
+    } catch {
+      /* private mode, blocked storage - the default is fine */
+    }
+  }, []);
+
+  const toggleCollapse = React.useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(COLLAPSE_KEY, next ? '1' : '0');
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
+  const title = titleForPath(user?.role, pathname);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
-      {/* Desktop sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0"><Sidebar /></div>
-      {/* Mobile sidebar overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex h-full w-60"><Sidebar onClose={() => setSidebarOpen(false)} /></div>
+    <SchoolProvider>
+      <TooltipProvider delayDuration={300}>
+        <div className="flex h-dvh overflow-hidden bg-paper">
+          {/* Tablet collapses to icons; desktop shows the full rail. */}
+          <div className="hidden shrink-0 md:block">
+            <AppSidebar collapsed={collapsed} onToggleCollapse={toggleCollapse} />
+          </div>
+
+          <DialogPrimitive.Root open={mobileOpen} onOpenChange={setMobileOpen}>
+            <DialogPrimitive.Portal>
+              <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/40 data-[state=open]:animate-fade-in md:hidden" />
+              <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 w-60 data-[state=open]:animate-fade-in md:hidden">
+                <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
+                <AppSidebar onNavigate={() => setMobileOpen(false)} />
+              </DialogPrimitive.Content>
+            </DialogPrimitive.Portal>
+          </DialogPrimitive.Root>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topbar
+              title={title}
+              onMenuClick={() => setMobileOpen(true)}
+              onSearchClick={() => setPaletteOpen(true)}
+            />
+            <main className="scrollbar-thin flex-1 overflow-y-auto">
+              {/* A short crossfade on route change - not a slide-up per section. */}
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={pathname}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15, ease: 'easeOut' }}
+                  className="mx-auto w-full max-w-[1440px] px-4 pb-24 pt-5 sm:px-6 lg:pb-8"
+                >
+                  {children}
+                </motion.div>
+              </AnimatePresence>
+            </main>
+          </div>
+
+          <MobileNav />
+          <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
         </div>
-      )}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header title={title} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-6">{children}</main>
-      </div>
-    </div>
+      </TooltipProvider>
+    </SchoolProvider>
   );
 }

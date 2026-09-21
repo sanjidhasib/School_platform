@@ -1,15 +1,46 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, ClipboardList, Trash2, MoreHorizontal, Pencil, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { adminAPI } from '@/lib/api/admin';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
+import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { SubjectLabel } from '@/components/shared/SubjectLabel';
+import { TableSkeleton } from '@/components/ui/skeleton';
+import { PersonAvatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Plus, ClipboardList, Trash2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Field } from '@/components/ui/field';
+import { Combobox } from '@/components/ui/combobox';
+import {
+  TableWrap,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetBody,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { apiErrorMessage } from '@/lib/utils';
+import { subjectBn } from '@/lib/design/subjects';
+
+const emptyForm = { teacherId: '', classId: '', subjectId: '' };
 
 export default function AssignmentsPage() {
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -17,50 +48,309 @@ export default function AssignmentsPage() {
   const [classes, setClasses] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ teacherId: '', classId: '', subjectId: '' });
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<any>(null);
+  const [failed, setFailed] = useState(false);
 
-  const load = () => { setLoading(true); adminAPI.getAssignments().then(r => setAssignments(r.data.data)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false)); };
-  useEffect(() => { load(); adminAPI.getTeachers().then(r => setTeachers(r.data.data)); adminAPI.getClasses().then(r => setClasses(r.data.data)); adminAPI.getSubjects().then(r => setSubjects(r.data.data)); }, []);
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [saving, setSaving] = useState(false);
+  /** The 409 the backend returns for a duplicate, shown inline in the sheet. */
+  const [conflict, setConflict] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<any>(null);
+  const [removing, setRemoving] = useState(false);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    setFailed(false);
+    adminAPI
+      .getAssignments()
+      .then((r) => setAssignments(r.data.data))
+      .catch(() => {
+        setFailed(true);
+        toast.error('Could not load assignments');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    load();
+    adminAPI.getTeachers().then((r) => setTeachers(r.data.data)).catch(() => setTeachers([]));
+    adminAPI.getClasses().then((r) => setClasses(r.data.data)).catch(() => setClasses([]));
+    adminAPI.getSubjects().then((r) => setSubjects(r.data.data)).catch(() => setSubjects([]));
+  }, [load]);
+
+  const teacherOptions = useMemo(
+    () =>
+      teachers.map((t: any) => ({
+        value: t._id,
+        label: t.fullName,
+        hint: [t.teacherId, t.specialization].filter(Boolean).join(' · '),
+      })),
+    [teachers]
+  );
+
+  const classOptions = useMemo(
+    () =>
+      classes.map((c: any) => ({
+        value: c._id,
+        label: `${c.name} ${c.section ?? ''}`.trim(),
+        hint: c.room || undefined,
+      })),
+    [classes]
+  );
+
+  const subjectOptions = useMemo(
+    () =>
+      subjects.map((s: any) => ({
+        value: s._id,
+        label: s.name,
+        hint: subjectBn(s) ?? s.code,
+      })),
+    [subjects]
+  );
+
+  const openAdd = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setConflict(null);
+    setOpen(true);
+  };
+
+  const openEdit = (a: any) => {
+    setEditing(a);
+    setForm({
+      teacherId: a.teacherId?._id ?? '',
+      classId: a.classId?._id ?? '',
+      subjectId: a.subjectId?._id ?? '',
+    });
+    setConflict(null);
+    setOpen(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true);
-    try { await adminAPI.createAssignment(form); toast.success('Assigned'); setOpen(false); load(); }
-    catch (err: any) { toast.error(err.response?.data?.error || 'Error saving'); } finally { setSaving(false); }
+    e.preventDefault();
+    setConflict(null);
+    setSaving(true);
+    try {
+      if (editing) {
+        await adminAPI.updateAssignment(editing._id, form);
+        toast.success('Assignment saved');
+      } else {
+        await adminAPI.createAssignment(form);
+        toast.success('Teacher assigned');
+      }
+      setOpen(false);
+      load();
+    } catch (err) {
+      const message = apiErrorMessage(err, 'Could not save the assignment');
+      setConflict(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    setRemoving(true);
+    try {
+      await adminAPI.deleteAssignment(deleting._id);
+      toast.success('Assignment removed');
+      setDeleting(null);
+      load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not remove the assignment'));
+    } finally {
+      setRemoving(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Teacher Assignments" actions={<Button onClick={() => { setForm({ teacherId: '', classId: '', subjectId: '' }); setOpen(true); }}><Plus className="h-4 w-4" />New Assignment</Button>} />
-      {loading ? <TableSkeleton /> : !assignments.length ? <EmptyState icon={ClipboardList} title="No assignments" description="Assign teachers to classes and subjects" /> : (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b"><tr><th className="px-4 py-3 text-left">Teacher</th><th className="px-4 py-3 text-left">Class</th><th className="px-4 py-3 text-left">Subject</th><th className="px-4 py-3" /></tr></thead>
-            <tbody className="divide-y">{assignments.map((a: any) => (<tr key={a._id}><td className="px-4 py-3 font-medium">{a.teacherId?.fullName}</td><td className="px-4 py-3">{a.classId?.name} {a.classId?.section}</td><td className="px-4 py-3">{a.subjectId?.name}</td><td className="px-4 py-3"><div className="flex justify-end"><Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setDeleting(a)}><Trash2 className="h-4 w-4" /></Button></div></td></tr>))}</tbody>
-          </table>
+    <div className="space-y-5">
+      <PageHeader
+        title="Assignments"
+        description="Which teacher takes which subject, in which class."
+        actions={
+          <Button onClick={openAdd}>
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
+            Assign a teacher
+          </Button>
+        }
+      />
+
+      {loading ? (
+        <TableSkeleton cols={4} />
+      ) : failed ? (
+        <ErrorState description="The assignment list did not load." onRetry={load} />
+      ) : !assignments.length ? (
+        <div className="rounded-card border border-line bg-surface">
+          <EmptyState
+            icon={ClipboardList}
+            title="No assignments yet"
+            description="Assign a teacher to a subject in a class before building the routine."
+            action={
+              <Button onClick={openAdd}>
+                <Plus className="h-4 w-4" strokeWidth={1.75} />
+                Assign a teacher
+              </Button>
+            }
+          />
         </div>
+      ) : (
+        <TableWrap>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Teacher</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead className="w-12" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {assignments.map((a: any) => (
+                <TableRow key={a._id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2.5">
+                      <PersonAvatar name={a.teacherId?.fullName} className="h-8 w-8" />
+                      <span className="truncate font-medium text-ink">
+                        {a.teacherId?.fullName ?? '—'}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-ink-muted">
+                    {a.classId ? `${a.classId.name} ${a.classId.section ?? ''}`.trim() : '—'}
+                  </TableCell>
+                  <TableCell>
+                    <SubjectLabel subject={a.subjectId} className="text-ink" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Actions for ${a.teacherId?.fullName}`}
+                            className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onSelect={() => openEdit(a)}>
+                            <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem destructive onSelect={() => setDeleting(a)}>
+                            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                            Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableWrap>
       )}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent><DialogHeader><DialogTitle>Assign Teacher</DialogTitle></DialogHeader>
-          <form onSubmit={handleSubmit}><DialogBody className="space-y-3">
-            <div><Label>Teacher</Label><Select value={form.teacherId} onValueChange={v => setForm(f => ({...f, teacherId: v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{teachers.map(t => <SelectItem key={t._id} value={t._id}>{t.fullName}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Class</Label><Select value={form.classId} onValueChange={v => setForm(f => ({...f, classId: v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{classes.map(c => <SelectItem key={c._id} value={c._id}>{c.name} {c.section}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Subject</Label><Select value={form.subjectId} onValueChange={v => setForm(f => ({...f, subjectId: v}))}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{subjects.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}</SelectContent></Select></div>
-          </DialogBody><DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Save</Button></DialogFooter></form>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Remove Assignment</DialogTitle></DialogHeader>
-          <DialogBody><p className="text-sm text-slate-600">Remove <strong>{deleting?.teacherId?.fullName}</strong> from <strong>{deleting?.subjectId?.name}</strong> in <strong>{deleting?.classId?.name} {deleting?.classId?.section}</strong>?</p></DialogBody>
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button>
-            <Button type="button" variant="destructive" onClick={async () => { try { await adminAPI.deleteAssignment(deleting._id); toast.success('Assignment removed'); setDeleting(null); load(); } catch (err: any) { toast.error(err.response?.data?.error || 'Delete failed'); } }}>Remove</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{editing ? 'Edit assignment' : 'Assign a teacher'}</SheetTitle>
+            <SheetDescription>
+              A teacher can take the same subject in several classes.
+            </SheetDescription>
+          </SheetHeader>
+
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4">
+              {conflict && (
+                <div
+                  role="alert"
+                  className="flex items-start gap-2.5 rounded-card border border-danger/30 bg-danger-bg px-3 py-2.5"
+                >
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" strokeWidth={1.75} />
+                  <p className="text-dense text-danger">{conflict}</p>
+                </div>
+              )}
+
+              <Field label="Teacher" required>
+                {(p) => (
+                  <Combobox
+                    {...p}
+                    options={teacherOptions}
+                    value={form.teacherId}
+                    onChange={(v) => setForm((f) => ({ ...f, teacherId: v }))}
+                    placeholder="Choose a teacher"
+                    searchPlaceholder="Find a teacher"
+                  />
+                )}
+              </Field>
+
+              <Field label="Class" required>
+                {(p) => (
+                  <Combobox
+                    {...p}
+                    options={classOptions}
+                    value={form.classId}
+                    onChange={(v) => setForm((f) => ({ ...f, classId: v }))}
+                    placeholder="Choose a class"
+                    searchPlaceholder="Find a class"
+                  />
+                )}
+              </Field>
+
+              <Field label="Subject" required>
+                {(p) => (
+                  <Combobox
+                    {...p}
+                    options={subjectOptions}
+                    value={form.subjectId}
+                    onChange={(v) => setForm((f) => ({ ...f, subjectId: v }))}
+                    placeholder="Choose a subject"
+                    searchPlaceholder="Find a subject"
+                  />
+                )}
+              </Field>
+            </SheetBody>
+
+            <SheetFooter>
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={saving}
+                disabled={!form.teacherId || !form.classId || !form.subjectId}
+              >
+                {editing ? 'Save changes' : 'Assign teacher'}
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title="Remove this assignment?"
+        description={
+          <>
+            <strong className="text-ink">{deleting?.teacherId?.fullName}</strong> will no longer take{' '}
+            <strong className="text-ink">{deleting?.subjectId?.name}</strong> in{' '}
+            <strong className="text-ink">
+              {deleting?.classId?.name} {deleting?.classId?.section}
+            </strong>
+            . Routine entries that use this assignment may stop resolving.
+          </>
+        }
+        confirmLabel="Remove"
+        destructive
+        loading={removing}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

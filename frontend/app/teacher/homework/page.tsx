@@ -1,94 +1,525 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, ClipboardCheck, ArrowLeft, Check } from 'lucide-react';
+import { toast } from 'sonner';
 import { teacherAPI } from '@/lib/api/teacher';
 import { adminAPI } from '@/lib/api/admin';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { EmptyState } from '@/components/shared/EmptyState';
-import { StatusBadge } from '@/components/shared/StatusBadge';
+import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
+import { SubjectLabel } from '@/components/shared/SubjectLabel';
+import { ListSkeleton, Skeleton } from '@/components/ui/skeleton';
+import { StatusPill } from '@/components/ui/status-pill';
+import { PersonAvatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Plus, ClipboardCheck } from 'lucide-react';
-import { formatDate } from '@/lib/utils';
-import { toast } from 'sonner';
+import { Field } from '@/components/ui/field';
+import { Combobox } from '@/components/ui/combobox';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetBody,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import { apiErrorMessage, cn, formatDate, formatRelativeTime } from '@/lib/utils';
+import { subjectBn } from '@/lib/design/subjects';
 
-export default function HomeworkPage() {
+const emptyForm = { classId: '', subjectId: '', title: '', description: '', dueAt: '', maxMarks: 10 };
+
+export default function TeacherHomeworkPage() {
   const [homeworks, setHomeworks] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
-  const [submissions, setSubmissions] = useState<any[]>([]);
-  const [selectedHw, setSelectedHw] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  const [selected, setSelected] = useState<any>(null);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [loadingSubs, setLoadingSubs] = useState(false);
+
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ classId: '', subjectId: '', title: '', description: '', dueAt: '', maxMarks: 10 });
+  const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
-  const load = () => { setLoading(true); teacherAPI.getHomework().then(r => setHomeworks(r.data.data)).finally(() => setLoading(false)); };
-  useEffect(() => { load(); adminAPI.getAssignments().then(r => setAssignments(r.data.data)); }, []);
+  /** The submission being graded, in a proper form rather than window.prompt(). */
+  const [grading, setGrading] = useState<any>(null);
+  const [gradeForm, setGradeForm] = useState({ marks: '', feedback: '' });
+  const [gradeError, setGradeError] = useState<string | null>(null);
+  const [savingGrade, setSavingGrade] = useState(false);
 
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true);
-    try { await teacherAPI.createHomework(form); toast.success('Created'); setOpen(false); load(); }
-    catch (err: any) { toast.error('Failed to create'); } finally { setSaving(false); }
-  };
+  const load = useCallback(() => {
+    setLoading(true);
+    setFailed(false);
+    teacherAPI
+      .getHomework()
+      .then((r) => setHomeworks(r.data.data ?? []))
+      .catch(() => {
+        setFailed(true);
+        toast.error('Could not load homework');
+      })
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    load();
+    adminAPI.getAssignments().then((r) => setAssignments(r.data.data ?? [])).catch(() => setAssignments([]));
+  }, [load]);
+
+  const assignmentOptions = useMemo(
+    () =>
+      assignments.map((a: any) => ({
+        value: `${a.classId?._id}|${a.subjectId?._id}`,
+        label: `${a.subjectId?.name ?? 'Subject'} — ${a.classId?.name ?? ''} ${a.classId?.section ?? ''}`.trim(),
+        hint: subjectBn(a.subjectId) ?? undefined,
+      })),
+    [assignments]
+  );
 
   const loadSubmissions = async (hw: any) => {
-    setSelectedHw(hw);
-    try { const res = await teacherAPI.getHomeworkSubmissions(hw._id); setSubmissions(res.data.data); } catch { toast.error('Failed to load submissions'); }
+    setSelected(hw);
+    setLoadingSubs(true);
+    try {
+      const res = await teacherAPI.getHomeworkSubmissions(hw._id);
+      setSubmissions(res.data.data ?? []);
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not load submissions'));
+    } finally {
+      setLoadingSubs(false);
+    }
   };
 
-  const handleGrade = async (subId: string, marks: number, feedback: string) => {
-    try { await teacherAPI.gradeSubmission(subId, { marks, feedback, status: 'GRADED' }); toast.success('Graded'); loadSubmissions(selectedHw); } catch { toast.error('Failed'); }
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await teacherAPI.createHomework(form);
+      toast.success('Homework published');
+      setOpen(false);
+      setForm(emptyForm);
+      load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not publish the homework'));
+    } finally {
+      setSaving(false);
+    }
   };
 
-  return (
-    <div className="space-y-6">
-      <PageHeader title="Homework" actions={<Button onClick={() => setOpen(true)}><Plus className="h-4 w-4" />New Homework</Button>} />
-      {!selectedHw ? (
-        !homeworks.length ? <EmptyState icon={ClipboardCheck} title="No homework created" description="Create an assignment for your students" /> : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {homeworks.map((h: any) => (
-              <div key={h._id} className="rounded-xl border border-slate-200 bg-white p-5 cursor-pointer hover:border-blue-300 transition-colors" onClick={() => loadSubmissions(h)}>
-                <div className="flex justify-between items-start mb-2"><span className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">{h.classId?.name}</span></div>
-                <h3 className="font-bold">{h.title}</h3>
-                <p className="text-sm text-slate-500 mt-1">{h.subjectId?.name}</p>
-                <p className="text-xs text-slate-400 mt-4">Due: {formatDate(h.dueAt)}</p>
-              </div>
-            ))}
-          </div>
-        )
-      ) : (
-        <div className="space-y-4">
-          <Button variant="secondary" size="sm" onClick={() => setSelectedHw(null)}>Back</Button>
-          <div className="rounded-xl border bg-white overflow-hidden">
-            <div className="p-4 border-b bg-slate-50"><h2 className="font-bold">{selectedHw.title}</h2><p className="text-sm text-slate-500">{selectedHw.classId?.name} · {selectedHw.subjectId?.name}</p></div>
-            <table className="w-full text-sm">
-              <thead className="border-b"><tr><th className="px-4 py-3 text-left">Student</th><th className="px-4 py-3 text-left">Status</th><th className="px-4 py-3 text-left">Answer</th><th className="px-4 py-3 text-left">Grade</th></tr></thead>
-              <tbody className="divide-y">{submissions.map((s: any) => (
-                <tr key={s._id}><td className="px-4 py-3">{s.studentId?.fullName}</td><td className="px-4 py-3"><StatusBadge status={s.status} /></td><td className="px-4 py-3 text-slate-500 max-w-xs truncate">{s.answerText}</td>
-                <td className="px-4 py-3">
-                  {s.status === 'SUBMITTED' || s.status === 'LATE' ? (
-                    <Button size="sm" onClick={() => { const m = prompt('Marks (out of '+selectedHw.maxMarks+'):'); if(m) handleGrade(s._id, parseInt(m), ''); }}>Grade</Button>
-                  ) : s.marks !== undefined ? <span className="font-bold text-green-600">{s.marks}/{selectedHw.maxMarks}</span> : '—'}
-                </td></tr>
-              ))}</tbody>
-            </table>
-          </div>
+  const openGrade = (submission: any) => {
+    setGrading(submission);
+    setGradeForm({
+      marks: submission.marks !== undefined && submission.marks !== null ? String(submission.marks) : '',
+      feedback: submission.feedback ?? '',
+    });
+    setGradeError(null);
+  };
+
+  const submitGrade = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const max = selected?.maxMarks ?? 100;
+    const marks = Number(gradeForm.marks);
+
+    if (gradeForm.marks === '' || Number.isNaN(marks)) {
+      setGradeError('Enter the marks awarded.');
+      return;
+    }
+    if (marks < 0 || marks > max) {
+      setGradeError(`Marks must be between 0 and ${max}.`);
+      return;
+    }
+
+    setGradeError(null);
+    setSavingGrade(true);
+    try {
+      await teacherAPI.gradeSubmission(grading._id, {
+        marks,
+        feedback: gradeForm.feedback,
+        status: 'GRADED',
+      });
+      toast.success(`${grading.studentId?.fullName ?? 'Submission'} graded`);
+      setGrading(null);
+      loadSubmissions(selected);
+    } catch (err) {
+      setGradeError(apiErrorMessage(err, 'Could not save the grade'));
+    } finally {
+      setSavingGrade(false);
+    }
+  };
+
+  // ── Detail view ────────────────────────────────────────────────────────────
+  if (selected) {
+    const turnedIn = submissions.filter((s) =>
+      ['SUBMITTED', 'LATE', 'GRADED'].includes(s.status)
+    ).length;
+    const graded = submissions.filter((s) => s.status === 'GRADED').length;
+    const waiting = submissions.filter((s) => ['SUBMITTED', 'LATE'].includes(s.status)).length;
+
+    return (
+      <div className="space-y-5">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSelected(null)}
+          className="-ml-2"
+        >
+          <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
+          All homework
+        </Button>
+
+        <div className="space-y-3">
+          <h1 className="text-page text-ink">{selected.title}</h1>
+          <dl className="flex flex-wrap gap-x-8 gap-y-3 border-b border-line pb-4">
+            <div>
+              <dt className="text-meta text-ink-subtle">Class</dt>
+              <dd className="mt-0.5 text-dense font-medium text-ink">
+                {selected.classId?.name} {selected.classId?.section}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-meta text-ink-subtle">Subject</dt>
+              <dd className="mt-0.5">
+                <SubjectLabel subject={selected.subjectId} className="text-dense font-medium text-ink" inline />
+              </dd>
+            </div>
+            <div>
+              <dt className="text-meta text-ink-subtle">Due</dt>
+              <dd className="mt-0.5 text-dense font-medium text-ink tabular">
+                {formatDate(selected.dueAt)}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-meta text-ink-subtle">Out of</dt>
+              <dd className="mt-0.5 text-dense font-medium text-ink tabular">{selected.maxMarks}</dd>
+            </div>
+          </dl>
         </div>
+
+        {selected.description && (
+          <p className="max-w-2xl whitespace-pre-line text-body text-ink-muted">
+            {selected.description}
+          </p>
+        )}
+
+        {submissions.length > 0 && (
+          <div className="max-w-md space-y-1.5">
+            <div className="flex items-baseline justify-between text-meta">
+              <span className="text-ink-muted tabular">
+                {turnedIn} of {submissions.length} turned in
+              </span>
+              {waiting > 0 && (
+                <span className="font-medium text-warning tabular">{waiting} to grade</span>
+              )}
+            </div>
+            <Progress
+              value={submissions.length ? (graded / submissions.length) * 100 : 0}
+              tone="success"
+            />
+          </div>
+        )}
+
+        {loadingSubs ? (
+          <ListSkeleton rows={5} />
+        ) : !submissions.length ? (
+          <div className="rounded-card border border-line bg-surface">
+            <EmptyState
+              icon={ClipboardCheck}
+              title="No students in this class yet"
+              description="Submissions appear here once students turn their work in."
+            />
+          </div>
+        ) : (
+          <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+            {submissions.map((s: any) => {
+              const canGrade = ['SUBMITTED', 'LATE', 'GRADED'].includes(s.status);
+              return (
+                <li key={s._id} className="flex flex-wrap items-start gap-3 px-4 py-3">
+                  <PersonAvatar name={s.studentId?.fullName} className="h-8 w-8 shrink-0" />
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="truncate text-dense font-medium text-ink">
+                        {s.studentId?.fullName ?? 'Student'}
+                      </p>
+                      <StatusPill status={s.status} />
+                    </div>
+                    {s.answerText && (
+                      <p className="mt-1 line-clamp-2 text-dense text-ink-muted">{s.answerText}</p>
+                    )}
+                    {s.submittedAt && (
+                      <p className="mt-1 text-meta text-ink-subtle">
+                        Turned in {formatRelativeTime(s.submittedAt)}
+                      </p>
+                    )}
+                    {s.feedback && (
+                      <p className="mt-1 text-meta text-ink-muted">Feedback: {s.feedback}</p>
+                    )}
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-3">
+                    {s.status === 'GRADED' && s.marks !== undefined && (
+                      <span className="text-dense font-semibold text-ink tabular">
+                        {s.marks} / {selected.maxMarks}
+                      </span>
+                    )}
+                    {canGrade ? (
+                      <Button
+                        variant={s.status === 'GRADED' ? 'secondary' : 'primary'}
+                        size="sm"
+                        onClick={() => openGrade(s)}
+                      >
+                        {s.status === 'GRADED' ? 'Change marks' : 'Grade'}
+                      </Button>
+                    ) : (
+                      <span className="text-meta text-ink-subtle">Not submitted</span>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+
+        <Sheet open={!!grading} onOpenChange={(o) => !o && setGrading(null)}>
+          <SheetContent>
+            <SheetHeader>
+              <SheetTitle>Grade this submission</SheetTitle>
+              <SheetDescription>
+                {grading?.studentId?.fullName} · {selected.title}
+              </SheetDescription>
+            </SheetHeader>
+
+            <form onSubmit={submitGrade} className="flex min-h-0 flex-1 flex-col">
+              <SheetBody className="space-y-4">
+                {grading?.answerText && (
+                  <div className="rounded-card border border-line bg-surface-sunken p-3">
+                    <p className="mb-1 text-meta font-medium text-ink-subtle">Their answer</p>
+                    <p className="whitespace-pre-line text-dense text-ink">{grading.answerText}</p>
+                  </div>
+                )}
+
+                <Field
+                  label="Marks"
+                  description={`Out of ${selected.maxMarks}.`}
+                  error={gradeError}
+                  required
+                >
+                  {(p) => (
+                    <Input
+                      {...p}
+                      type="number"
+                      min={0}
+                      max={selected.maxMarks}
+                      step="any"
+                      inputMode="decimal"
+                      value={gradeForm.marks}
+                      onChange={(e) => {
+                        setGradeForm((f) => ({ ...f, marks: e.target.value }));
+                        setGradeError(null);
+                      }}
+                      className="max-w-[8rem]"
+                      required
+                    />
+                  )}
+                </Field>
+
+                <Field label="Feedback" description="Optional. The student sees this.">
+                  {(p) => (
+                    <Textarea
+                      {...p}
+                      rows={4}
+                      value={gradeForm.feedback}
+                      onChange={(e) => setGradeForm((f) => ({ ...f, feedback: e.target.value }))}
+                    />
+                  )}
+                </Field>
+              </SheetBody>
+
+              <SheetFooter>
+                <Button type="button" variant="secondary" onClick={() => setGrading(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" loading={savingGrade}>
+                  <Check className="h-4 w-4" strokeWidth={1.75} />
+                  Save marks
+                </Button>
+              </SheetFooter>
+            </form>
+          </SheetContent>
+        </Sheet>
+      </div>
+    );
+  }
+
+  // ── List view ──────────────────────────────────────────────────────────────
+  return (
+    <div className="space-y-5">
+      <PageHeader
+        title="Homework"
+        actions={
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
+            Set homework
+          </Button>
+        }
+      />
+
+      {loading ? (
+        <ListSkeleton rows={4} />
+      ) : failed ? (
+        <ErrorState description="Your homework list did not load." onRetry={load} />
+      ) : !homeworks.length ? (
+        <div className="rounded-card border border-line bg-surface">
+          <EmptyState
+            icon={ClipboardCheck}
+            title="No homework set"
+            description="Set homework for a class and track who has turned it in."
+            action={
+              <Button onClick={() => setOpen(true)}>
+                <Plus className="h-4 w-4" strokeWidth={1.75} />
+                Set homework
+              </Button>
+            }
+          />
+        </div>
+      ) : (
+        /* A stream of assignments, Classroom-style: title, then when it is due. */
+        <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+          {homeworks.map((h: any) => {
+            const overdue = h.dueAt && new Date(h.dueAt) < new Date();
+            const dueSoon =
+              !overdue &&
+              h.dueAt &&
+              new Date(h.dueAt).getTime() - Date.now() < 3 * 24 * 60 * 60 * 1000;
+
+            return (
+              <li key={h._id}>
+                <button
+                  type="button"
+                  onClick={() => loadSubmissions(h)}
+                  className={cn(
+                    'flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors hover:bg-wash/50',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand'
+                  )}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-dense font-medium text-ink">{h.title}</span>
+                      <StatusPill status={h.status} />
+                      {dueSoon && <Badge tone="warning">Due soon</Badge>}
+                      {overdue && h.status === 'PUBLISHED' && <Badge tone="neutral">Past due</Badge>}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5">
+                      <SubjectLabel subject={h.subjectId} className="text-meta text-ink-muted" inline />
+                      <span className="text-meta text-ink-subtle">
+                        {h.classId?.name} {h.classId?.section}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <p className="text-meta text-ink-subtle">Due</p>
+                    <p className="text-dense text-ink tabular">{formatDate(h.dueAt)}</p>
+                  </div>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
       )}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent><DialogHeader><DialogTitle>New Homework</DialogTitle></DialogHeader>
-          <form onSubmit={handleCreate}><DialogBody className="space-y-3">
-            <div><Label>Assignment Context</Label><Select value={`${form.classId}|${form.subjectId}`} onValueChange={v => { const [c,s]=v.split('|'); setForm(f=>({...f,classId:c,subjectId:s})); }}><SelectTrigger><SelectValue placeholder="Select class & subject"/></SelectTrigger><SelectContent>{assignments.map(a => <SelectItem key={a._id} value={`${a.classId?._id}|${a.subjectId?._id}`}>{a.classId?.name} - {a.subjectId?.name}</SelectItem>)}</SelectContent></Select></div>
-            <div><Label>Title</Label><Input value={form.title} onChange={e => setForm(f => ({...f, title: e.target.value}))} required /></div>
-            <div><Label>Description</Label><Textarea value={form.description} onChange={e => setForm(f => ({...f, description: e.target.value}))} required /></div>
-            <div className="grid grid-cols-2 gap-3"><div><Label>Due Date</Label><Input type="date" value={form.dueAt} onChange={e => setForm(f => ({...f, dueAt: e.target.value}))} required /></div><div><Label>Max Marks</Label><Input type="number" value={form.maxMarks} onChange={e => setForm(f => ({...f, maxMarks: parseInt(e.target.value)}))} required /></div></div>
-          </DialogBody><DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>Create</Button></DialogFooter></form>
-        </DialogContent>
-      </Dialog>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Set homework</SheetTitle>
+            <SheetDescription>Students in the class see it straight away.</SheetDescription>
+          </SheetHeader>
+
+          <form onSubmit={handleCreate} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4">
+              <Field label="Class and subject" required>
+                {(p) => (
+                  <Combobox
+                    {...p}
+                    options={assignmentOptions}
+                    value={form.classId && form.subjectId ? `${form.classId}|${form.subjectId}` : ''}
+                    onChange={(v) => {
+                      const [classId, subjectId] = v.split('|');
+                      setForm((f) => ({ ...f, classId, subjectId }));
+                    }}
+                    placeholder="Choose a class"
+                    searchPlaceholder="Find a class"
+                  />
+                )}
+              </Field>
+
+              <Field label="Title" required>
+                {(p) => (
+                  <Input
+                    {...p}
+                    value={form.title}
+                    onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                    placeholder="Fractions worksheet"
+                    required
+                  />
+                )}
+              </Field>
+
+              <Field label="What to do" required>
+                {(p) => (
+                  <Textarea
+                    {...p}
+                    rows={5}
+                    value={form.description}
+                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    required
+                  />
+                )}
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Due date" required>
+                  {(p) => (
+                    <Input
+                      {...p}
+                      type="date"
+                      value={form.dueAt}
+                      onChange={(e) => setForm((f) => ({ ...f, dueAt: e.target.value }))}
+                      required
+                    />
+                  )}
+                </Field>
+                <Field label="Out of" required>
+                  {(p) => (
+                    <Input
+                      {...p}
+                      type="number"
+                      min={1}
+                      value={form.maxMarks}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, maxMarks: parseInt(e.target.value, 10) || 0 }))
+                      }
+                      required
+                    />
+                  )}
+                </Field>
+              </div>
+            </SheetBody>
+
+            <SheetFooter>
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={saving} disabled={!form.classId}>
+                Publish
+              </Button>
+            </SheetFooter>
+          </form>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

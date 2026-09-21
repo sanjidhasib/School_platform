@@ -1,45 +1,87 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { studentAPI } from '@/lib/api/student';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { NotificationList } from '@/components/shared/NotificationList';
+import { ErrorState } from '@/components/shared/EmptyState';
+import { ListSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Bell, AlertCircle, BookMarked, Trophy } from 'lucide-react';
-import { formatRelativeTime, cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { apiErrorMessage } from '@/lib/utils';
 
-const typeIcons: Record<string, any> = { ABSENCE: AlertCircle, MISSING_HOMEWORK: BookMarked, HOMEWORK: BookMarked, NOTICE: Bell, DEFAULT: Bell };
-
-export default function NotificationsPage() {
+export default function StudentNotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [marking, setMarking] = useState(false);
 
-  const load = () => { studentAPI.getNotifications().then(r => setNotifications(r.data.data)).catch(() => toast.error('Failed to load')).finally(() => setLoading(false)); };
-  useEffect(() => { load(); }, []);
+  const load = useCallback(() => {
+    setLoading(true);
+    setFailed(false);
+    studentAPI
+      .getNotifications()
+      .then((r) => setNotifications(r.data.data ?? []))
+      .catch(() => {
+        setFailed(true);
+        toast.error('Could not load notifications');
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
-  const markRead = async (id: string) => { await studentAPI.markNotificationRead(id); load(); };
-  const markAllRead = async () => { await studentAPI.markAllRead(); load(); toast.success('All marked as read'); };
+  useEffect(load, [load]);
+
+  const markRead = async (id: string) => {
+    // Update straight away so the row does not wait on the round trip.
+    setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)));
+    try {
+      await studentAPI.markNotificationRead(id);
+    } catch {
+      load();
+    }
+  };
+
+  const markAllRead = async () => {
+    setMarking(true);
+    try {
+      await studentAPI.markAllRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+      toast.success('All marked as read');
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not mark them as read'));
+    } finally {
+      setMarking(false);
+    }
+  };
+
+  const unread = notifications.filter((n) => !n.isRead).length;
 
   return (
-    <div className="space-y-6">
-      <PageHeader title="Notifications" actions={<Button variant="secondary" size="sm" onClick={markAllRead}>Mark all read</Button>} />
-      {!notifications.length ? <EmptyState icon={Bell} title="No notifications" description="You're all caught up!" /> : (
-        <div className="space-y-2">
-          {notifications.map((n: any) => {
-            const Icon = typeIcons[n.type] || typeIcons.DEFAULT;
-            return (
-              <div key={n._id} onClick={() => !n.isRead && markRead(n._id)} className={cn('flex items-start gap-4 p-4 rounded-xl border cursor-pointer transition-colors', n.isRead ? 'bg-white border-slate-200' : 'bg-blue-50 border-blue-200 hover:bg-blue-100')}>
-                <div className={cn('h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0', n.isRead ? 'bg-slate-100' : 'bg-blue-100')}><Icon className={cn('h-4 w-4', n.isRead ? 'text-slate-500' : 'text-blue-600')} /></div>
-                <div className="flex-1 min-w-0">
-                  <p className={cn('text-sm font-medium', n.isRead ? 'text-slate-700' : 'text-slate-900')}>{n.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">{n.message}</p>
-                  <p className="text-xs text-slate-400 mt-1">{formatRelativeTime(n.createdAt)}</p>
-                </div>
-                {!n.isRead && <div className="h-2 w-2 rounded-full bg-blue-600 flex-shrink-0 mt-1" />}
-              </div>
-            );
-          })}
-        </div>
+    <div className="space-y-5">
+      <PageHeader
+        title="Notifications"
+        description={unread ? `${unread} unread` : undefined}
+        actions={
+          unread > 0 ? (
+            <Button variant="secondary" onClick={markAllRead} loading={marking}>
+              Mark all as read
+            </Button>
+          ) : undefined
+        }
+      />
+
+      {loading ? (
+        <ListSkeleton rows={5} />
+      ) : failed ? (
+        <ErrorState description="Notifications did not load." onRetry={load} />
+      ) : (
+        <NotificationList
+          notifications={notifications}
+          role="STUDENT"
+          onMarkRead={markRead}
+          emptyTitle="Nothing new"
+          emptyDescription="Messages about your attendance, homework and results appear here."
+        />
       )}
     </div>
   );

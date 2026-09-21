@@ -54,7 +54,7 @@ export function Combobox({
         <button
           id={id}
           type="button"
-          aria-invalid={ariaInvalid}
+          data-invalid={ariaInvalid || undefined}
           aria-describedby={ariaDescribedBy}
           disabled={disabled}
           className={cn(
@@ -62,7 +62,7 @@ export function Combobox({
             'text-left text-dense transition-colors',
             'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
             'disabled:cursor-not-allowed disabled:opacity-60',
-            'aria-[invalid=true]:border-danger',
+            'data-[invalid=true]:border-danger',
             selected ? 'text-ink' : 'text-ink-subtle',
             className
           )}

@@ -1,106 +1,488 @@
 'use client';
-import { useEffect, useState } from 'react';
+
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
+import { Plus, Search, Pencil, Trash2, GraduationCap, MoreHorizontal, X, Eye } from 'lucide-react';
+import { toast } from 'sonner';
 import { adminAPI } from '@/lib/api/admin';
 import { PageHeader } from '@/components/shared/PageHeader';
-import { StatusBadge } from '@/components/shared/StatusBadge';
-import { TableSkeleton } from '@/components/shared/LoadingSkeleton';
-import { EmptyState } from '@/components/shared/EmptyState';
+import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
+import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
+import { TableSkeleton } from '@/components/ui/skeleton';
+import { StatusPill } from '@/components/ui/status-pill';
+import { PersonAvatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getInitials, formatDate } from '@/lib/utils';
-import { Plus, Search, Pencil, Trash2, GraduationCap } from 'lucide-react';
-import { toast } from 'sonner';
+import { Field } from '@/components/ui/field';
+import { Combobox } from '@/components/ui/combobox';
+import { CapacityBar } from '@/components/ui/progress';
+import {
+  TableWrap,
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@/components/ui/table';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetBody,
+  SheetFooter,
+} from '@/components/ui/sheet';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { apiErrorMessage } from '@/lib/utils';
 
-const emptyForm = { username: '', email: '', password: '', fullName: '', studentId: '', classId: '', phone: '', status: 'ACTIVE' };
+const emptyForm = {
+  username: '',
+  email: '',
+  password: '',
+  fullName: '',
+  studentId: '',
+  classId: '',
+  phone: '',
+  status: 'ACTIVE',
+};
 
 export default function StudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState('');
-  const [classFilter, setClassFilter] = useState<string>('all');
+  const [classFilter, setClassFilter] = useState('all');
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<any>(null);
+  const [removing, setRemoving] = useState(false);
 
-  const load = () => { setLoading(true); adminAPI.getStudents({ search, classId: classFilter === 'all' ? undefined : classFilter }).then(r => setStudents(r.data.data)).catch(() => toast.error('Failed to load students')).finally(() => setLoading(false)); };
-  useEffect(() => { load(); }, [search, classFilter]);
-  useEffect(() => { adminAPI.getClasses().then(r => setClasses(r.data.data)); }, []);
+  const load = useCallback(() => {
+    setLoading(true);
+    setFailed(false);
+    adminAPI
+      .getStudents({ search, classId: classFilter === 'all' ? undefined : classFilter })
+      .then((r) => setStudents(r.data.data))
+      .catch(() => {
+        setFailed(true);
+        toast.error('Could not load students');
+      })
+      .finally(() => setLoading(false));
+  }, [search, classFilter]);
 
-  const openAdd = () => { setEditing(null); setForm(emptyForm); setOpen(true); };
-  const openEdit = (s: any) => { setEditing(s); setForm({ username: s.userId?.username || '', email: s.email || '', password: '', fullName: s.fullName, studentId: s.studentId, classId: s.classId?._id || '', phone: s.phone || '', status: s.status }); setOpen(true); };
+  useEffect(() => {
+    const t = setTimeout(load, search ? 250 : 0);
+    return () => clearTimeout(t);
+  }, [load, search]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); setSaving(true);
-    try {
-      if (editing) { await adminAPI.updateStudent(editing._id, form); toast.success('Student updated'); }
-      else { await adminAPI.createStudent(form); toast.success('Student created'); }
-      setOpen(false); load();
-    } catch (err: any) { toast.error(err.response?.data?.error || 'Error saving'); } finally { setSaving(false); }
+  useEffect(() => {
+    adminAPI
+      .getClasses()
+      .then((r) => setClasses(r.data.data))
+      .catch(() => setClasses([]));
+  }, []);
+
+  /**
+   * The school caps every class at 40 and the backend rejects an admission past
+   * it with a 409. The picker now says so before the form is submitted: a full
+   * class is listed, disabled, and explains why.
+   */
+  const classOptions = useMemo(
+    () =>
+      classes.map((c: any) => {
+        const enrolled = c.enrollmentCount ?? 0;
+        const capacity = c.capacity ?? 40;
+        const full = enrolled >= capacity;
+        // Editing a student already in a full class must not lock them out of it.
+        const isCurrent = editing?.classId?._id === c._id;
+        return {
+          value: c._id,
+          label: `${c.name} ${c.section}`.trim(),
+          hint: `${enrolled} of ${capacity} places filled`,
+          disabled: full && !isCurrent,
+          disabledReason: full && !isCurrent ? `Full — ${enrolled} of ${capacity} places taken` : undefined,
+        };
+      }),
+    [classes, editing]
+  );
+
+  const selectedClass = classes.find((c: any) => c._id === form.classId);
+
+  const openAdd = () => {
+    setEditing(null);
+    setForm(emptyForm);
+    setOpen(true);
   };
 
+  const openEdit = (s: any) => {
+    setEditing(s);
+    setForm({
+      username: s.userId?.username || '',
+      email: s.email || '',
+      password: '',
+      fullName: s.fullName,
+      studentId: s.studentId,
+      classId: s.classId?._id || '',
+      phone: s.phone || '',
+      status: s.status,
+    });
+    setOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editing) {
+        await adminAPI.updateStudent(editing._id, form);
+        toast.success('Student saved');
+      } else {
+        await adminAPI.createStudent(form);
+        toast.success(`${form.fullName} admitted`);
+      }
+      setOpen(false);
+      load();
+      adminAPI.getClasses().then((r) => setClasses(r.data.data));
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not save the student'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const confirmDelete = async () => {
+    setRemoving(true);
+    try {
+      await adminAPI.deleteStudent(deleting._id);
+      toast.success(`${deleting.fullName} deactivated`);
+      setDeleting(null);
+      load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not deactivate the student'));
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  const activeFilterLabel =
+    classFilter === 'all'
+      ? null
+      : classOptions.find((c) => c.value === classFilter)?.label ?? 'Class';
+
   return (
-    <div className="space-y-6">
-      <PageHeader title="Students" description="Manage school students" actions={<Button onClick={openAdd}><Plus className="h-4 w-4" />Add Student</Button>} />
-      <div className="flex gap-3">
-        <div className="relative flex-1 max-w-sm"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" /><Input placeholder="Search students..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" /></div>
-        <Select value={classFilter} onValueChange={setClassFilter}><SelectTrigger className="w-[180px]"><SelectValue placeholder="All Classes" /></SelectTrigger><SelectContent><SelectItem value="all">All Classes</SelectItem>{classes.map(c => <SelectItem key={c._id} value={c._id}>{c.name} {c.section}</SelectItem>)}</SelectContent></Select>
-      </div>
-      {loading ? <TableSkeleton /> : !students.length ? <EmptyState icon={GraduationCap} title="No students found" description="Add your first student to get started" action={<Button onClick={openAdd}><Plus className="h-4 w-4" />Add Student</Button>} /> : (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr><th className="px-4 py-3 text-left font-medium text-slate-500 text-xs uppercase">Student</th><th className="px-4 py-3 text-left font-medium text-slate-500 text-xs uppercase">ID</th><th className="px-4 py-3 text-left font-medium text-slate-500 text-xs uppercase">Class</th><th className="px-4 py-3 text-left font-medium text-slate-500 text-xs uppercase">Status</th><th className="px-4 py-3" /></tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {students.map((s: any) => (
-                <tr key={s._id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3"><div className="flex items-center gap-3"><Avatar className="h-9 w-9"><AvatarImage src={s.photoUrl} /><AvatarFallback>{getInitials(s.fullName)}</AvatarFallback></Avatar><div><p className="font-medium text-slate-900">{s.fullName}</p></div></div></td>
-                  <td className="px-4 py-3 font-mono text-slate-600">{s.studentId}</td>
-                  <td className="px-4 py-3 text-slate-600">{s.classId?.name} {s.classId?.section}</td>
-                  <td className="px-4 py-3"><StatusBadge status={s.status} /></td>
-                  <td className="px-4 py-3"><div className="flex items-center gap-2 justify-end"><Button variant="ghost" size="icon" onClick={() => openEdit(s)}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setDeleting(s)}><Trash2 className="h-4 w-4" /></Button></div></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+    <div className="space-y-5">
+      <PageHeader
+        title="Students"
+        actions={
+          <Button onClick={openAdd}>
+            <Plus className="h-4 w-4" strokeWidth={1.75} />
+            Admit a student
+          </Button>
+        }
+      />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative min-w-0 flex-1 sm:max-w-xs">
+          <Search
+            className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-subtle"
+            strokeWidth={1.75}
+          />
+          <Input
+            placeholder="Search by name or ID"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-8"
+            aria-label="Search students"
+          />
         </div>
+
+        <div className="w-44">
+          <Combobox
+            options={[{ value: 'all', label: 'All classes' }, ...classOptions.map((c) => ({ ...c, disabled: false, disabledReason: undefined }))]}
+            value={classFilter}
+            onChange={setClassFilter}
+            placeholder="All classes"
+            searchPlaceholder="Find a class"
+          />
+        </div>
+
+        {activeFilterLabel && (
+          <button
+            type="button"
+            onClick={() => setClassFilter('all')}
+            className="inline-flex items-center gap-1 rounded-chip bg-wash px-2 py-1 text-meta font-medium text-brand transition-colors hover:bg-brand-wash focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            {activeFilterLabel}
+            <X className="h-3 w-3" strokeWidth={2} />
+            <span className="sr-only">Clear the class filter</span>
+          </button>
+        )}
+
+        {!loading && (
+          <p className="ml-auto text-meta text-ink-subtle tabular">
+            {students.length} {students.length === 1 ? 'student' : 'students'}
+          </p>
+        )}
+      </div>
+
+      {loading ? (
+        <TableSkeleton cols={5} />
+      ) : failed ? (
+        <ErrorState description="The student list did not load." onRetry={load} />
+      ) : !students.length ? (
+        <div className="rounded-card border border-line bg-surface">
+          <EmptyState
+            icon={GraduationCap}
+            title={search || classFilter !== 'all' ? 'No students match those filters' : 'No students yet'}
+            description={
+              search || classFilter !== 'all'
+                ? 'Try a different name, ID or class.'
+                : 'Admit the first student to get started.'
+            }
+            action={
+              search || classFilter !== 'all' ? (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setSearch('');
+                    setClassFilter('all');
+                  }}
+                >
+                  Clear filters
+                </Button>
+              ) : (
+                <Button onClick={openAdd}>
+                  <Plus className="h-4 w-4" strokeWidth={1.75} />
+                  Admit a student
+                </Button>
+              )
+            }
+          />
+        </div>
+      ) : (
+        <TableWrap>
+          <Table>
+            <TableHeader>
+              <TableRow className="hover:bg-transparent">
+                <TableHead>Name</TableHead>
+                <TableHead>Student ID</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead className="hidden md:table-cell">Guardian</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="w-12" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {students.map((s: any) => (
+                <TableRow key={s._id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2.5">
+                      <PersonAvatar name={s.fullName} src={s.photoUrl} className="h-8 w-8" />
+                      <Link
+                        href={`/admin/students/${s._id}`}
+                        className="truncate font-medium text-ink hover:text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                      >
+                        {s.fullName}
+                      </Link>
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular text-ink-muted">{s.studentId}</TableCell>
+                  <TableCell className="text-ink-muted">
+                    {s.classId ? `${s.classId.name} ${s.classId.section ?? ''}`.trim() : '—'}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell text-ink-muted">
+                    {s.guardianIds?.[0]?.fullName ?? '—'}
+                  </TableCell>
+                  <TableCell>
+                    <StatusPill status={s.status} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label={`Actions for ${s.fullName}`}
+                            className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
+                          >
+                            <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link href={`/admin/students/${s._id}`}>
+                              <Eye className="h-4 w-4" strokeWidth={1.75} />
+                              View profile
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => openEdit(s)}>
+                            <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem destructive onSelect={() => setDeleting(s)}>
+                            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
+                            Deactivate
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableWrap>
       )}
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{editing ? 'Edit Student' : 'Add Student'}</DialogTitle></DialogHeader>
-          <form onSubmit={handleSubmit}>
-            <DialogBody className="space-y-3">
-              {!editing && <><div className="grid grid-cols-2 gap-3"><div><Label>Username</Label><Input value={form.username} onChange={e => setForm(f => ({...f, username: e.target.value}))} required className="mt-1" /></div><div><Label>Password</Label><Input type="password" value={form.password} onChange={e => setForm(f => ({...f, password: e.target.value}))} required className="mt-1" /></div></div><div><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))} className="mt-1" /></div></>}
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Full Name</Label><Input value={form.fullName} onChange={e => setForm(f => ({...f, fullName: e.target.value}))} required className="mt-1" /></div>
-                <div><Label>Student ID</Label><Input value={form.studentId} onChange={e => setForm(f => ({...f, studentId: e.target.value}))} required className="mt-1" /></div>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>{editing ? 'Edit student' : 'Admit a student'}</SheetTitle>
+            <SheetDescription>
+              {editing ? editing.fullName : 'Creates the student record and their sign-in account.'}
+            </SheetDescription>
+          </SheetHeader>
+
+          <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+            <SheetBody className="space-y-4">
+              {!editing && (
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Username" required>
+                      {(p) => (
+                        <Input
+                          {...p}
+                          value={form.username}
+                          onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+                          autoComplete="off"
+                          required
+                        />
+                      )}
+                    </Field>
+                    <Field label="Password" required>
+                      {(p) => (
+                        <Input
+                          {...p}
+                          type="password"
+                          value={form.password}
+                          onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                          autoComplete="new-password"
+                          required
+                        />
+                      )}
+                    </Field>
+                  </div>
+                  <Field label="Email">
+                    {(p) => (
+                      <Input
+                        {...p}
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+                      />
+                    )}
+                  </Field>
+                </>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Full name" required>
+                  {(p) => (
+                    <Input
+                      {...p}
+                      value={form.fullName}
+                      onChange={(e) => setForm((f) => ({ ...f, fullName: e.target.value }))}
+                      required
+                    />
+                  )}
+                </Field>
+                <Field label="Student ID" required>
+                  {(p) => (
+                    <Input
+                      {...p}
+                      value={form.studentId}
+                      onChange={(e) => setForm((f) => ({ ...f, studentId: e.target.value }))}
+                      required
+                    />
+                  )}
+                </Field>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Class</Label><Select value={form.classId} onValueChange={v => setForm(f => ({...f, classId: v}))}><SelectTrigger className="mt-1"><SelectValue placeholder="Select Class" /></SelectTrigger><SelectContent>{classes.map(c => <SelectItem key={c._id} value={c._id}>{c.name} {c.section}</SelectItem>)}</SelectContent></Select></div>
-                <div><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))} className="mt-1" /></div>
-              </div>
-            </DialogBody>
-            <DialogFooter><Button type="button" variant="secondary" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Student'}</Button></DialogFooter>
+
+              <Field
+                label="Class"
+                description="Classes that already hold 40 students cannot take another."
+                required
+              >
+                {(p) => (
+                  <Combobox
+                    {...p}
+                    options={classOptions}
+                    value={form.classId}
+                    onChange={(v) => setForm((f) => ({ ...f, classId: v }))}
+                    placeholder="Choose a class"
+                    searchPlaceholder="Find a class"
+                  />
+                )}
+              </Field>
+
+              {selectedClass && (
+                <CapacityBar
+                  enrolled={selectedClass.enrollmentCount ?? 0}
+                  capacity={selectedClass.capacity ?? 40}
+                />
+              )}
+
+              <Field label="Phone">
+                {(p) => (
+                  <Input
+                    {...p}
+                    value={form.phone}
+                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                  />
+                )}
+              </Field>
+            </SheetBody>
+
+            <SheetFooter>
+              <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={saving}>
+                {editing ? 'Save changes' : 'Admit student'}
+              </Button>
+            </SheetFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-      <Dialog open={!!deleting} onOpenChange={(o) => !o && setDeleting(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Delete Student</DialogTitle></DialogHeader>
-          <DialogBody><p className="text-sm text-slate-600">Are you sure you want to delete <strong>{deleting?.fullName}</strong>? Their user account and related records will be removed.</p></DialogBody>
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setDeleting(null)}>Cancel</Button>
-            <Button type="button" variant="destructive" onClick={async () => { try { await adminAPI.deleteStudent(deleting._id); toast.success('Student deleted'); setDeleting(null); load(); } catch (err: any) { toast.error(err.response?.data?.error || 'Delete failed'); } }}>Delete</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
+
+      <ConfirmDialog
+        open={!!deleting}
+        onOpenChange={(o) => !o && setDeleting(null)}
+        title="Deactivate this student?"
+        description={
+          <>
+            <strong className="text-ink">{deleting?.fullName}</strong> ({deleting?.studentId}) will be
+            marked inactive and will no longer be able to sign in. Their attendance, homework and
+            results are kept.
+          </>
+        }
+        confirmLabel="Deactivate"
+        destructive
+        loading={removing}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

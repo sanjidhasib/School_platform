@@ -12,6 +12,7 @@ export const adminAPI = {
   deleteTeacher: (id: string) => api.delete(`/admin/teachers/${id}`),
   // Students
   getStudents: (params?: any) => api.get('/admin/students', { params }),
+  getStudent: (id: string) => api.get(`/admin/students/${id}`),
   createStudent: (data: any) => api.post('/admin/students', data),
   updateStudent: (id: string, data: any) => api.patch(`/admin/students/${id}`, data),
   deleteStudent: (id: string) => api.delete(`/admin/students/${id}`),
@@ -45,4 +46,10 @@ export const adminAPI = {
   createAchievement: (data: any) => api.post('/admin/achievements', data),
   updateAchievement: (id: string, data: any) => api.patch(`/admin/achievements/${id}`, data),
   deleteAchievement: (id: string) => api.delete(`/admin/achievements/${id}`),
+  // School-wide read-only views (added with the redesign; admin previously had
+  // no cross-school view because the teacher controllers are teacher-scoped).
+  getAttendanceOverview: (params?: any) => api.get('/admin/attendance', { params }),
+  getHomeworkOverview: (params?: any) => api.get('/admin/homework', { params }),
+  getResultsOverview: (params?: any) => api.get('/admin/results', { params }),
+  getNotifications: (params?: any) => api.get('/admin/notifications', { params }),
 };

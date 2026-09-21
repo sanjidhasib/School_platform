@@ -1,45 +1,51 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
+import {
+  UserCheck,
+  BookMarked,
+  BarChart3,
+  CalendarDays,
+  Trophy,
+  Phone,
+  Mail,
+  MapPin,
+} from 'lucide-react';
 import { publicAPI } from '@/lib/api/public';
 import { SchoolCarousel } from '@/components/shared/SchoolCarousel';
-import { GraduationCap, BookOpen, Users, Award, Calendar, Phone, Mail, MapPin } from 'lucide-react';
+import { DashboardPreview } from '@/components/shared/DashboardPreview';
+import { LogoMark } from '@/components/layout/Logo';
 import { formatDate } from '@/lib/utils';
 
 const SCHOOL_SLIDES = [
+  { src: '/school-images/slide-1.jpg', alt: 'The main building of Barishal Zilla School' },
+  { src: '/school-images/slide-3.jpg', alt: 'A classroom during a lesson' },
+  { src: '/school-images/slide-4.jpg', alt: 'The school library' },
+  { src: '/school-images/slide-5.jpg', alt: 'Students working in the science laboratory' },
+  { src: '/school-images/slide-6.jpg', alt: 'The morning assembly' },
+  { src: '/school-images/slide-7.jpg', alt: 'The sports field' },
+  { src: '/school-images/slide-8.jpg', alt: 'The school campus' },
+];
+
+/** What each role actually gets — described in their own terms, not in slogans. */
+const ROLES = [
   {
-    src: '/school-images/slide-1.jpg',
-    alt: 'Barishal Zilla School main building',
-    caption: 'A Historic Institution of Learning in Barishal',
+    icon: UserCheck,
+    title: 'For teachers',
+    body: 'Take attendance from the class on your routine, set homework, and enter marks for a whole class in one pass.',
   },
   {
-    src: '/school-images/slide-3.jpg',
-    alt: 'Classroom learning',
-    caption: 'Modern Classrooms with Interactive Learning',
+    icon: BookMarked,
+    title: 'For students',
+    body: 'See what is due, hand your work in, check your attendance and grades, and ask questions about your textbook.',
   },
   {
-    src: '/school-images/slide-4.jpg',
-    alt: 'Library and study area',
-    caption: 'Well-Stocked Library for Curious Minds',
+    icon: BarChart3,
+    title: 'For guardians',
+    body: "Follow your child's attendance and results, and download their progress report whenever you need it.",
   },
   {
-    src: '/school-images/slide-5.jpg',
-    alt: 'Students in science lab',
-    caption: 'Hands-On Science & ICT Laboratories',
-  },
-  {
-    src: '/school-images/slide-6.jpg',
-    alt: 'School assembly',
-    caption: 'Morning Assembly & Co-curricular Activities',
-  },
-  {
-    src: '/school-images/slide-7.jpg',
-    alt: 'Sports field',
-    caption: 'Sports & Physical Education for Holistic Growth',
-  },
-  {
-    src: '/school-images/slide-8.jpg',
-    alt: 'School campus',
-    caption: 'A Green Campus in the Heart of Barishal',
+    icon: CalendarDays,
+    title: 'For the office',
+    body: 'Admit students against class capacity, assign teachers to subjects, and build the school routine without clashes.',
   },
 ];
 
@@ -51,9 +57,9 @@ async function getPublicData() {
       publicAPI.getSchool(),
     ]);
     return {
-      achievements: achievements.data.data,
-      upcoming: upcoming.data.data,
-      school: school.data.data,
+      achievements: achievements.data.data ?? [],
+      upcoming: upcoming.data.data ?? [],
+      school: school.data.data ?? null,
     };
   } catch {
     return { achievements: [], upcoming: [], school: null };
@@ -62,156 +68,195 @@ async function getPublicData() {
 
 export default async function HomePage() {
   const { achievements, upcoming, school } = await getPublicData();
-  const schoolName = school?.schoolName || 'Barishal Zilla School';
+
+  /*
+    The public endpoint currently returns only {_id, logoUrl, address}: the
+    backend selects `schoolName`/`phone`/`email` while the model stores
+    `name`/`contactPhone`/`contactEmail`. That is a pre-existing backend bug
+    documented in docs/UI_REDESIGN_PLAN.md. Reading both shapes means the real
+    values flow through the moment it is fixed, with no change here.
+  */
+  const schoolName = school?.schoolName || school?.name || 'Barishal Zilla School';
+  const address = school?.address;
+  const phone = school?.contactPhone || school?.phone;
+  const email = school?.contactEmail || school?.email;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50">
-      {/* Nav */}
-      <nav className="sticky top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <GraduationCap className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-bold text-slate-900 text-lg">SchoolOS</span>
+    <div className="min-h-dvh bg-paper">
+      <header className="sticky top-0 z-40 border-b border-line bg-surface">
+        <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-btn bg-brand text-brand-contrast">
+              <LogoMark />
+            </span>
+            <span className="text-dense font-semibold text-ink">SchoolOS</span>
           </Link>
-          <div className="flex items-center gap-3">
+
+          <nav className="ml-auto flex items-center gap-2">
             <Link
-              href="/login"
-              className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              href="/register"
+              className="rounded-btn px-3 py-1.5 text-dense font-medium text-ink-muted transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              Login
+              Register
             </Link>
             <Link
               href="/login"
-              className="hidden sm:inline-flex px-4 py-2 text-sm font-semibold bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+              className="rounded-btn bg-brand px-3.5 py-1.5 text-dense font-medium text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             >
-              Sign In
+              Sign in
             </Link>
-          </div>
+          </nav>
         </div>
-      </nav>
+      </header>
 
-      {/* Carousel */}
-      <section className="max-w-7xl mx-auto px-4 pt-8">
-        <SchoolCarousel slides={SCHOOL_SLIDES} autoPlay intervalMs={5000} />
-      </section>
+      <main>
+        {/* Hero: a plain headline and the actual product beside it. */}
+        <section className="mx-auto max-w-[1200px] px-4 pb-14 pt-12 sm:px-6 lg:pb-20 lg:pt-16">
+          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
+            <div>
+              <h1 className="text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+                {schoolName} runs on SchoolOS
+              </h1>
+              <p className="mt-4 max-w-lg text-lg text-ink-muted">
+                The routine, attendance, homework and results for Classes 3 to 10 — in one place
+                for teachers, students, guardians and the office.
+              </p>
 
-      {/* Hero */}
-      <section className="max-w-7xl mx-auto px-4 py-16">
-        <div className="text-center max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 rounded-full px-4 py-1.5 text-sm font-medium mb-6">
-            <BookOpen className="h-4 w-4" />
-            Classes 3–10 · Bangladesh Curriculum
-          </div>
-          <h1 className="text-5xl font-bold text-slate-900 leading-tight">
-            {schoolName}
-          </h1>
-          <p className="text-xl text-slate-600 mt-4">
-            Digital School Management &amp; Personalized Learning Platform
-          </p>
-          {school?.address && (
-            <p className="text-slate-500 mt-2 flex items-center justify-center gap-1">
-              <MapPin className="h-4 w-4" /> {school.address}
-            </p>
-          )}
-
-          <div className="flex justify-center gap-4 mt-8">
-            <Link
-              href="/login"
-              className="px-8 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
-            >
-              Sign In
-            </Link>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 max-w-md mx-auto mt-12 text-center">
-          <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <Users className="h-6 w-6 text-blue-600 mx-auto mb-1" />
-            <p className="text-xs text-slate-500">Students</p>
-            <p className="font-bold text-slate-900">400+</p>
-          </div>
-          <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <BookOpen className="h-6 w-6 text-green-600 mx-auto mb-1" />
-            <p className="text-xs text-slate-500">Classes</p>
-            <p className="font-bold text-slate-900">3–10</p>
-          </div>
-          <div className="p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
-            <Award className="h-6 w-6 text-purple-600 mx-auto mb-1" />
-            <p className="text-xs text-slate-500">Achievements</p>
-            <p className="font-bold text-slate-900">{achievements.length}+</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Achievements */}
-      {achievements.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">School Achievements</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {achievements.map((a: any) => (
-              <div
-                key={a._id}
-                className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow"
-              >
-                <div className="h-10 w-10 rounded-xl bg-yellow-100 flex items-center justify-center mb-3">
-                  <Award className="h-5 w-5 text-yellow-600" />
-                </div>
-                <h3 className="font-semibold text-slate-900">{a.title}</h3>
-                <p className="text-sm text-slate-500 mt-1">{a.description}</p>
-                <p className="text-xs text-slate-400 mt-2">{formatDate(a.achievementDate)}</p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link
+                  href="/login"
+                  className="rounded-btn bg-brand px-5 py-2.5 text-body font-medium text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-btn border border-line bg-surface px-5 py-2.5 text-body font-medium text-ink transition-colors hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  Create an account
+                </Link>
               </div>
-            ))}
+
+              {address && (
+                <p className="mt-7 flex items-start gap-2 text-dense text-ink-subtle">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+                  {address}
+                </p>
+              )}
+            </div>
+
+            <DashboardPreview />
           </div>
         </section>
-      )}
 
-      {/* Upcoming Events */}
-      {upcoming.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 py-12">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Upcoming Events</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            {upcoming.slice(0, 6).map((n: any) => (
-              <div
-                key={n._id}
-                className="flex items-start gap-4 bg-white rounded-xl border border-slate-200 p-5"
-              >
-                <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                </div>
+        <section className="mx-auto max-w-[1200px] px-4 sm:px-6">
+          <SchoolCarousel slides={SCHOOL_SLIDES} autoPlay intervalMs={6000} />
+        </section>
+
+        <section className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
+          <h2 className="text-2xl font-semibold text-ink">What it does</h2>
+          <ul className="mt-6 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+            {ROLES.map((role) => (
+              <li key={role.title} className="flex gap-3.5">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-btn bg-wash text-brand">
+                  <role.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                </span>
                 <div>
-                  <h3 className="font-semibold text-slate-900">{n.title}</h3>
-                  <p className="text-sm text-slate-500">
-                    {n.description ? n.description.slice(0, 80) + '…' : ''}
-                  </p>
-                  <p className="text-xs text-blue-600 font-medium mt-1">
-                    {formatDate(n.eventDate)}
-                  </p>
+                  <h3 className="text-dense font-semibold text-ink">{role.title}</h3>
+                  <p className="mt-1 text-body text-ink-muted">{role.body}</p>
                 </div>
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
-      )}
 
-      <footer className="border-t border-slate-200 bg-white mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-8 text-center text-sm text-slate-500">
-          <p className="font-medium text-slate-700">© 2026 {schoolName}. Powered by SchoolOS.</p>
-          {(school?.contactPhone || school?.contactEmail) && (
-            <p className="mt-2 flex items-center justify-center gap-4 flex-wrap">
-              {school?.contactPhone && (
-                <span className="inline-flex items-center gap-1">
-                  <Phone className="h-3.5 w-3.5" /> {school.contactPhone}
-                </span>
-              )}
-              {school?.contactEmail && (
-                <span className="inline-flex items-center gap-1">
-                  <Mail className="h-3.5 w-3.5" /> {school.contactEmail}
-                </span>
-              )}
-            </p>
-          )}
+        {upcoming.length > 0 && (
+          <section className="border-t border-line bg-surface">
+            <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
+              <h2 className="text-2xl font-semibold text-ink">Notice board</h2>
+              <ul className="mt-6 divide-y divide-line border-y border-line">
+                {upcoming.slice(0, 6).map((n: any) => (
+                  <li key={n._id} className="flex gap-5 py-4">
+                    <div className="w-14 shrink-0 text-center">
+                      <p className="text-meta uppercase text-ink-subtle">
+                        {formatDate(n.eventDate).split(' ')[1]}
+                      </p>
+                      <p className="text-xl font-semibold text-ink tabular">
+                        {formatDate(n.eventDate).split(' ')[0]}
+                      </p>
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-dense font-semibold text-ink">{n.title}</h3>
+                      {n.description && (
+                        <p className="mt-1 line-clamp-2 text-dense text-ink-muted">
+                          {n.description}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
+
+        {achievements.length > 0 && (
+          <section className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
+            <h2 className="text-2xl font-semibold text-ink">What the school has won</h2>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {achievements.map((a: any) => (
+                <li
+                  key={a._id}
+                  className="flex flex-col rounded-card border border-line bg-surface p-4"
+                >
+                  <Trophy
+                    className="h-4 w-4 text-highlighter"
+                    strokeWidth={1.75}
+                    aria-hidden="true"
+                  />
+                  <h3 className="mt-2 text-dense font-semibold text-ink">{a.title}</h3>
+                  {a.description && (
+                    <p className="mt-1 flex-1 text-dense text-ink-muted">{a.description}</p>
+                  )}
+                  <p className="mt-3 text-meta text-ink-subtle tabular">
+                    {formatDate(a.achievementDate)}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+      </main>
+
+      <footer className="border-t border-line bg-surface">
+        <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6">
+          <div className="flex flex-wrap items-start justify-between gap-8">
+            <div>
+              <p className="text-dense font-semibold text-ink">{schoolName}</p>
+              {address && <p className="mt-1 max-w-xs text-dense text-ink-muted">{address}</p>}
+            </div>
+
+            {(phone || email) && (
+              <div className="space-y-1.5">
+                {phone && (
+                  <p className="flex items-center gap-2 text-dense text-ink-muted">
+                    <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                    <span className="tabular">{phone}</span>
+                  </p>
+                )}
+                {email && (
+                  <p className="flex items-center gap-2 text-dense text-ink-muted">
+                    <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
+                    {email}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <p className="mt-8 border-t border-line pt-6 text-meta text-ink-subtle">
+            © {new Date().getFullYear()} {schoolName}. Powered by SchoolOS.
+          </p>
         </div>
       </footer>
     </div>
