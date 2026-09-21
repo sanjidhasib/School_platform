@@ -26,3 +26,6 @@ frontend/cookies.txt
 Thumbs.db
 .vscode/
 .idea/
+
+# Build info
+*.tsbuildinfo
