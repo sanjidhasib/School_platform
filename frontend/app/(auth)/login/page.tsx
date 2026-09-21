@@ -157,16 +157,6 @@ function LoginScreen() {
           </Button>
         </form>
 
-        <p className="text-dense text-ink-muted">
-          Need an account?{' '}
-          <Link
-            href="/register"
-            className="font-medium text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-          >
-            Register
-          </Link>
-        </p>
-
         <div className="rounded-card border border-line bg-surface p-3">
           <p className="mb-1.5 text-meta font-medium text-ink">Demo accounts</p>
           <dl className="space-y-0.5 text-meta text-ink-muted">

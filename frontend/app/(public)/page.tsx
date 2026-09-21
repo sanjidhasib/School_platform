@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { publicAPI } from '@/lib/api/public';
 import { SchoolCarousel } from '@/components/shared/SchoolCarousel';
-import { DashboardPreview } from '@/components/shared/DashboardPreview';
 import { LogoMark } from '@/components/layout/Logo';
 import { formatDate } from '@/lib/utils';
 
@@ -97,12 +96,6 @@ export default async function HomePage() {
 
           <nav className="ml-auto flex items-center gap-2">
             <Link
-              href="/register"
-              className="rounded-btn px-3 py-1.5 text-dense font-medium text-ink-muted transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            >
-              Register
-            </Link>
-            <Link
               href="/login"
               className="rounded-btn bg-brand px-3.5 py-1.5 text-dense font-medium text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
             >
@@ -113,46 +106,35 @@ export default async function HomePage() {
       </header>
 
       <main>
-        {/* Hero: a plain headline and the actual product beside it. */}
-        <section className="mx-auto max-w-[1200px] px-4 pb-14 pt-12 sm:px-6 lg:pb-20 lg:pt-16">
-          <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14">
-            <div>
-              <h1 className="text-3xl font-semibold leading-tight text-ink sm:text-4xl">
-                {schoolName} runs on SchoolOS
-              </h1>
-              <p className="mt-4 max-w-lg text-lg text-ink-muted">
-                The routine, attendance, homework and results for Classes 3 to 10 — in one place
-                for teachers, students, guardians and the office.
-              </p>
+        {/* Hero: a plain, centred headline. The real campus carousel below
+            carries the visual weight instead of a product screenshot. */}
+        <section className="mx-auto max-w-[760px] px-4 pb-10 pt-12 text-center sm:px-6 lg:pb-14 lg:pt-16">
+          <h1 className="text-3xl font-semibold leading-tight text-ink sm:text-4xl">
+            {schoolName} runs on SchoolOS
+          </h1>
+          <p className="mx-auto mt-4 max-w-lg text-lg text-ink-muted">
+            The routine, attendance, homework and results for Classes 3 to 10 — in one place
+            for teachers, students, guardians and the office.
+          </p>
 
-              <div className="mt-7 flex flex-wrap gap-3">
-                <Link
-                  href="/login"
-                  className="rounded-btn bg-brand px-5 py-2.5 text-body font-medium text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  href="/register"
-                  className="rounded-btn border border-line bg-surface px-5 py-2.5 text-body font-medium text-ink transition-colors hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                >
-                  Create an account
-                </Link>
-              </div>
-
-              {address && (
-                <p className="mt-7 flex items-start gap-2 text-dense text-ink-subtle">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
-                  {address}
-                </p>
-              )}
-            </div>
-
-            <DashboardPreview />
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/login"
+              className="rounded-btn bg-brand px-5 py-2.5 text-body font-medium text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
+            >
+              Sign in
+            </Link>
           </div>
+
+          {address && (
+            <p className="mx-auto mt-7 flex items-start justify-center gap-2 text-dense text-ink-subtle">
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
+              {address}
+            </p>
+          )}
         </section>
 
-        <section className="mx-auto max-w-[1200px] px-4 sm:px-6">
+        <section className="mx-auto max-w-[1200px] px-4 pb-14 sm:px-6 lg:pb-20">
           <SchoolCarousel slides={SCHOOL_SLIDES} autoPlay intervalMs={6000} />
         </section>
 
