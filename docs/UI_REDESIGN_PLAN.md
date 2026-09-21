@@ -268,3 +268,39 @@ The brief's Section 7 describes a product noticeably larger than what is built. 
 - There is no command palette, dark mode, topbar search, notification bell or mobile bottom nav anywhere
 
 **Default approach unless you direct otherwise:** redesign the presentation of everything that exists, and wire up only what is *purely presentational surfacing of an already-called endpoint* — for example showing `nameBn`, showing capacity bars, and replacing `window.prompt()` grading with a proper form against the same `gradeSubmission` call. Anything needing a **new page or a new API call** is left out and reported, because that would be new functionality rather than a redesign.
+
+---
+
+## 8. Decisions (approved before Phase 2)
+
+Recorded after the audit was reviewed.
+
+1. **Scope: build the missing Section 7 pages**, not just redesign what exists.
+2. **Fix the 9 pre-existing TypeScript errors**, type-only, so lint / type-check / build pass for the Section 10 gate. No runtime behaviour changes.
+3. **`GET /api/public/school` stays as-is.** The landing page keeps reading the API and falls back to the school name only when the API omits it. The one-line backend fix is documented below for whoever owns the backend.
+4. **Rule 2 is lifted for a specific list of missing endpoints.** Several Section 7 pages had no API at all. The endpoints below are to be added, following the existing backend patterns (`asyncHandler`, `ApiError`, `protect` + `requireRole`, `{ success, data }` envelope).
+
+### Endpoints being added
+
+| Endpoint | Why | Unblocks |
+| --- | --- | --- |
+| `POST /api/auth/register` | Returned **404**; `authAPI.register` was already calling it | `/register` page |
+| `GET /api/admin/teachers/:id` | Not defined; `adminAPI.getTeacher` already calls it | Teacher detail |
+| `PATCH /api/admin/teachers/:id` | Returned **404** — the existing Edit button is broken today | Repairs existing functionality |
+| `DELETE /api/admin/teachers/:id` | Returned **404** — the existing Delete button is broken today | Repairs existing functionality |
+| `GET /api/admin/students/:id` | Not defined | Student profile with tabs |
+| `GET /api/admin/attendance` | No admin-side attendance view existed | Admin Attendance |
+| `GET /api/admin/homework` | No admin-side homework view existed | Admin Homework |
+| `GET /api/admin/results` | No admin-side results view existed | Admin Results |
+| `GET /api/admin/notifications` | Notifications were `STUDENT`/`GUARDIAN` only | Admin Notifications |
+| `GET /api/teacher/classes/:classId/students` | Teachers had no way to read a class roster | Teacher Marks grid |
+| `GET /api/teacher/results/assessments/:id/marks` | `saveMarks` existed with no read-back | Teacher Marks grid |
+| `GET /api/teacher/schedule/week` | Only `/schedule/today` existed | Teacher Schedule |
+
+These are **additive only**. No existing route, payload shape, validator or permission check is modified, so every endpoint the current frontend already uses keeps behaving exactly as before.
+
+### Pre-existing backend bugs left unfixed (documented, not touched)
+
+- `publicController.getSchool` selects `schoolName logoUrl address phone email`; the `SchoolSettings` model stores `name`, `contactPhone`, `contactEmail`. Correcting that one `.select()` string would make the school name and contact details flow to the landing page and render the frontend fallback dead.
+- `AiMessage` declares `role: { enum: ['user','assistant'] }` while `aiController` writes `'USER'` / `'ASSISTANT'`.
+- `admin/students.routes.js` carries two copy-pasted routes that belong to classes: `GET /:id/students` and `POST /:id/enroll`.
