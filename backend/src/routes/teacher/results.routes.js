@@ -6,6 +6,7 @@ const { requireRole } = require('../../middleware/rbac');
 const teacher = [protect, requireRole('TEACHER')];
 router.get('/assessments', ...teacher, c.listAssessments);
 router.post('/assessments', ...teacher, c.createAssessment);
+router.get('/assessments/:id/marks', ...teacher, c.getMarks);
 router.put('/assessments/:id/marks', ...teacher, c.saveMarks);
 router.put('/grades', ...teacher, c.saveGrades);
 module.exports = router;

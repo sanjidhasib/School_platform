@@ -1,5 +1,11 @@
 const express = require('express');
-const { getTeachers, createTeacher } = require('../../controllers/admin/teacherController');
+const {
+  getTeachers,
+  getTeacher,
+  createTeacher,
+  updateTeacher,
+  deleteTeacher
+} = require('../../controllers/admin/teacherController');
 const { protect } = require('../../middleware/auth');
 const { requireRole } = require('../../middleware/rbac');
 const { ROLES } = require('../../config/constants');
@@ -11,5 +17,8 @@ router.use(protect, requireRole(ROLES.ADMIN));
 
 router.get('/', getTeachers);
 router.post('/', teacherValidator, createTeacher);
+router.get('/:id', getTeacher);
+router.patch('/:id', updateTeacher);
+router.delete('/:id', deleteTeacher);
 
 module.exports = router;

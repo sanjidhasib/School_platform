@@ -23,6 +23,33 @@ exports.listAssessments = asyncHandler(async (req, res) => {
   res.json({ success: true, data: assessments });
 });
 
+exports.getMarks = asyncHandler(async (req, res) => {
+  const teacher = await Teacher.findOne({ userId: req.user._id });
+  if (!teacher) throw new ApiError(404, 'Teacher profile not found');
+
+  const assessment = await Assessment.findById(req.params.id)
+    .populate('classId', 'name section')
+    .populate('subjectId', 'name nameBn');
+  if (!assessment) throw new ApiError(404, 'Assessment not found');
+  if (String(assessment.teacherId) !== String(teacher._id)) {
+    throw new ApiError(403, 'This assessment belongs to another teacher');
+  }
+
+  const [students, marks] = await Promise.all([
+    Student.find({ classId: assessment.classId._id, status: 'ACTIVE' })
+      .select('fullName studentId rollNumber photoUrl')
+      .sort({ fullName: 1 }),
+    Mark.find({ assessmentId: assessment._id })
+  ]);
+
+  const byStudent = {};
+  marks.forEach((m) => {
+    byStudent[String(m.studentId)] = { obtainedMarks: m.obtainedMarks, absent: m.absent, remarks: m.remarks };
+  });
+
+  res.json({ success: true, data: { assessment, students, marks: byStudent } });
+});
+
 exports.saveMarks = asyncHandler(async (req, res) => {
   const { marks } = req.body; // [{studentId, obtainedMarks, absent, remarks}]
   const assessment = await Assessment.findById(req.params.id);

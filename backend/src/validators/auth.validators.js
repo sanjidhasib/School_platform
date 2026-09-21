@@ -17,9 +17,17 @@ const loginValidator = [
 ];
 
 const changePasswordValidator = [
-  body('oldPassword').notEmpty().withMessage('Old password is required'),
+  body('currentPassword').notEmpty().withMessage('Current password is required'),
   body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters'),
   validate
 ];
 
-module.exports = { loginValidator, changePasswordValidator };
+const registerValidator = [
+  body('username').trim().isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('email').optional({ checkFalsy: true }).isEmail().withMessage('A valid email is required'),
+  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  body('role').optional().isIn(['STUDENT', 'GUARDIAN']).withMessage('Role must be STUDENT or GUARDIAN'),
+  validate
+];
+
+module.exports = { loginValidator, changePasswordValidator, registerValidator };

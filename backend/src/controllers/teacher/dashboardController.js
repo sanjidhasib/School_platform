@@ -24,3 +24,16 @@ exports.getTodaySchedule = asyncHandler(async (req, res) => {
   });
   res.json({ success: true, data: { schedule, pendingGrading } });
 });
+
+exports.getWeekSchedule = asyncHandler(async (req, res) => {
+  const teacher = await Teacher.findOne({ userId: req.user._id });
+  if (!teacher) throw new ApiError(404, 'Teacher profile not found');
+  const assignments = await TeacherAssignment.find({ teacherId: teacher._id, isActive: true }).select('_id');
+  const schedule = await Timetable.find({
+    teacherAssignmentId: { $in: assignments.map(a => a._id) },
+    isActive: true
+  }).populate('classId', 'name section gradeNumber room')
+    .populate({ path: 'teacherAssignmentId', populate: { path: 'subjectId', select: 'name nameBn' } })
+    .sort({ dayOfWeek: 1, startTime: 1 });
+  res.json({ success: true, data: { schedule } });
+});

@@ -6,6 +6,7 @@ const { requireRole } = require('../../middleware/rbac');
 const admin = [protect, requireRole('ADMIN')];
 router.get('/', ...admin, c.list);
 router.post('/', ...admin, c.create);
+router.get('/:id', ...admin, c.getOne);
 router.patch('/:id', ...admin, c.update);
 router.delete('/:id', ...admin, c.remove);
 router.get('/:id/students', ...admin, c.getClassStudents);

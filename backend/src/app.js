@@ -41,9 +41,11 @@ app.use('/api/admin/achievements', require('./routes/admin/achievements.routes')
 app.use('/api/admin/textbooks', require('./routes/admin/textbooks.routes'));
 app.use('/api/admin/dashboard', require('./routes/admin/dashboard.routes'));
 app.use('/api/admin/settings', require('./routes/admin/settings.routes'));
+app.use('/api/admin', require('./routes/admin/overview.routes'));
 
 // Teacher
 app.use('/api/teacher/schedule', require('./routes/teacher/schedule.routes'));
+app.use('/api/teacher/classes', require('./routes/teacher/classes.routes'));
 app.use('/api/teacher/attendance', require('./routes/teacher/attendance.routes'));
 app.use('/api/teacher/homework', require('./routes/teacher/homework.routes'));
 app.use('/api/teacher/results', require('./routes/teacher/results.routes'));

@@ -22,6 +22,15 @@ exports.list = asyncHandler(async (req, res) => {
   res.json({ success: true, ...paginateResponse(students, total, page, lim) });
 });
 
+exports.getOne = asyncHandler(async (req, res) => {
+  const student = await Student.findById(req.params.id)
+    .populate('classId', 'name section gradeNumber room capacity')
+    .populate('guardianIds', 'fullName relation phone email')
+    .populate('userId', 'username email isActive');
+  if (!student) throw new ApiError(404, 'Student not found');
+  res.json({ success: true, data: student });
+});
+
 exports.create = asyncHandler(async (req, res) => {
   const { username, email, password, studentId, fullName, photoUrl, dateOfBirth, gender, phone, address, classId, guardianIds, admissionDate } = req.body;
   if (!username || !password || !studentId || !fullName || !classId) throw new ApiError(400, 'Required fields missing');
