@@ -1,6 +1,7 @@
 import api from './client';
 export const studentAPI = {
   getDashboard: () => api.get('/student/dashboard'),
+  getSubjects: () => api.get('/student/subjects'),
   getAttendance: (params?: any) => api.get('/student/attendance', { params }),
   getHomework: () => api.get('/student/homework'),
   submitHomework: (id: string, data: any) => api.post(`/student/homework/${id}/submit`, data),

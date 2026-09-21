@@ -19,7 +19,7 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     const present = records.filter(r => r.status === 'PRESENT').length;
     const pct = sessions.length ? Math.round((present / sessions.length) * 100) : 0;
     const pendingHw = await Homework.countDocuments({ classId: child.classId._id, status: 'PUBLISHED', dueAt: { $gte: new Date() } });
-    const grades = await SubjectGrade.find({ studentId: child._id }).populate('subjectId', 'name').sort({ grade: 1 });
+    const grades = await SubjectGrade.find({ studentId: child._id }).populate('subjectId', 'code name nameBn').sort({ grade: 1 });
     return { student: child, attendancePercentage: pct, presentCount: present, totalSessions: sessions.length, pendingHomework: pendingHw, grades };
   }));
   const unread = await Notification.countDocuments({ recipientUserId: req.user._id, isRead: false });

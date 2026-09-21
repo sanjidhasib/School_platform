@@ -26,7 +26,7 @@ exports.list = asyncHandler(async (req, res) => {
 
 exports.getAttendance = asyncHandler(async (req, res) => {
   const student = await getGuardianStudent(req.user._id, req.params.id);
-  const sessions = await AttendanceSession.find({ classId: student.classId._id }).populate('subjectId', 'name').sort({ sessionDate: -1 });
+  const sessions = await AttendanceSession.find({ classId: student.classId._id }).populate('subjectId', 'code name nameBn').sort({ sessionDate: -1 });
   const records = await AttendanceRecord.find({ studentId: student._id });
   const recordMap = Object.fromEntries(records.map(r => [r.attendanceSessionId.toString(), r]));
   const present = records.filter(r => r.status === 'PRESENT').length;
@@ -36,7 +36,7 @@ exports.getAttendance = asyncHandler(async (req, res) => {
 
 exports.getHomework = asyncHandler(async (req, res) => {
   const student = await getGuardianStudent(req.user._id, req.params.id);
-  const homeworks = await Homework.find({ classId: student.classId._id, status: 'PUBLISHED' }).populate('subjectId', 'name').sort({ dueAt: -1 });
+  const homeworks = await Homework.find({ classId: student.classId._id, status: 'PUBLISHED' }).populate('subjectId', 'code name nameBn').sort({ dueAt: -1 });
   const submissions = await HomeworkSubmission.find({ studentId: student._id });
   const subMap = Object.fromEntries(submissions.map(s => [s.homeworkId.toString(), s]));
   res.json({ success: true, data: homeworks.map(hw => ({ ...hw.toObject(), submission: subMap[hw._id.toString()] || { status: 'NOT_SUBMITTED' } })) });
@@ -44,7 +44,7 @@ exports.getHomework = asyncHandler(async (req, res) => {
 
 exports.getResults = asyncHandler(async (req, res) => {
   const student = await getGuardianStudent(req.user._id, req.params.id);
-  const marks = await Mark.find({ studentId: student._id }).populate({ path: 'assessmentId', populate: { path: 'subjectId', select: 'name' } });
-  const grades = await SubjectGrade.find({ studentId: student._id }).populate('subjectId', 'name');
+  const marks = await Mark.find({ studentId: student._id }).populate({ path: 'assessmentId', populate: { path: 'subjectId', select: 'code name nameBn' } });
+  const grades = await SubjectGrade.find({ studentId: student._id }).populate('subjectId', 'code name nameBn');
   res.json({ success: true, data: { marks, grades } });
 });

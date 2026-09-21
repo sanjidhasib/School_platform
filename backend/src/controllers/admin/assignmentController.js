@@ -12,7 +12,7 @@ exports.list = asyncHandler(async (req, res) => {
   const assignments = await TeacherAssignment.find(filter)
     .populate('teacherId', 'fullName teacherId')
     .populate('classId', 'name section gradeNumber')
-    .populate('subjectId', 'name code')
+    .populate('subjectId', 'code name nameBn')
     .sort({ createdAt: -1 });
   res.json({ success: true, data: assignments });
 });

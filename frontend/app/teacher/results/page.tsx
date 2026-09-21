@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BarChart3, Plus, ArrowLeft, Check, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { teacherAPI } from '@/lib/api/teacher';
-import { adminAPI } from '@/lib/api/admin';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
@@ -82,7 +81,7 @@ export default function TeacherResultsPage() {
 
   useEffect(() => {
     load();
-    adminAPI.getAssignments().then((r) => setAssignments(r.data.data ?? [])).catch(() => setAssignments([]));
+    teacherAPI.getAssignments().then((r) => setAssignments(r.data.data ?? [])).catch(() => setAssignments([]));
   }, [load]);
 
   const assignmentOptions = useMemo(

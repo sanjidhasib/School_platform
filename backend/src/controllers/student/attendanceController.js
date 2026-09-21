@@ -10,7 +10,7 @@ exports.getAttendance = asyncHandler(async (req, res) => {
   const { subjectId, from, to } = req.query;
   const sessionFilter = { classId: student.classId };
   if (from || to) { sessionFilter.sessionDate = {}; if (from) sessionFilter.sessionDate.$gte = new Date(from); if (to) sessionFilter.sessionDate.$lte = new Date(to); }
-  const sessions = await AttendanceSession.find(sessionFilter).populate('subjectId', 'name').sort({ sessionDate: -1 });
+  const sessions = await AttendanceSession.find(sessionFilter).populate('subjectId', 'code name nameBn').sort({ sessionDate: -1 });
   const records = await AttendanceRecord.find({ studentId: student._id, attendanceSessionId: { $in: sessions.map(s => s._id) } });
   const recordMap = Object.fromEntries(records.map(r => [r.attendanceSessionId.toString(), r]));
   const combined = sessions.map(s => ({ session: s, record: recordMap[s._id.toString()] }));

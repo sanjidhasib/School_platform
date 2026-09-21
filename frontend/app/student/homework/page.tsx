@@ -28,9 +28,9 @@ import { subjectTint } from '@/lib/design/subjects';
 
 type Filter = 'all' | 'pending' | 'submitted' | 'graded' | 'overdue';
 
-const submissionStatus = (hw: any): string => hw.submission?.status ?? 'NOT_SUBMITTED';
+const submissionStatus = (hw: any): string => hw?.submission?.status ?? 'NOT_SUBMITTED';
 const isOverdue = (hw: any) =>
-  hw.dueAt && new Date(hw.dueAt) < new Date() && submissionStatus(hw) === 'NOT_SUBMITTED';
+  hw?.dueAt && new Date(hw.dueAt) < new Date() && submissionStatus(hw) === 'NOT_SUBMITTED';
 
 export default function StudentHomeworkPage() {
   const [homeworks, setHomeworks] = useState<any[]>([]);

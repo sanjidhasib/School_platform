@@ -16,11 +16,11 @@ exports.getDashboard = asyncHandler(async (req, res) => {
   const today = new Date().getDay();
   const [todaySchedule, sessions, submissions, pendingHw, unreadCount, notices] = await Promise.all([
     Timetable.find({ classId: student.classId, dayOfWeek: today, isActive: true })
-      .populate({ path: 'teacherAssignmentId', populate: { path: 'subjectId', select: 'name' } })
+      .populate({ path: 'teacherAssignmentId', populate: { path: 'subjectId', select: 'code name nameBn' } })
       .sort({ startTime: 1 }),
     AttendanceSession.find({ classId: student.classId._id }).select('_id'),
     AttendanceRecord.find({ studentId: student._id }).select('status'),
-    Homework.find({ classId: student.classId._id, status: 'PUBLISHED', dueAt: { $gte: new Date() } }).sort({ dueAt: 1 }).limit(5).populate('subjectId', 'name'),
+    Homework.find({ classId: student.classId._id, status: 'PUBLISHED', dueAt: { $gte: new Date() } }).sort({ dueAt: 1 }).limit(5).populate('subjectId', 'code name nameBn'),
     Notification.countDocuments({ recipientUserId: req.user._id, isRead: false }),
     Notice.find({ isPublished: true }).sort({ createdAt: -1 }).limit(3)
   ]);

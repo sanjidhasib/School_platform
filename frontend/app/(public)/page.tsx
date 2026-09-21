@@ -15,6 +15,9 @@ import { DashboardPreview } from '@/components/shared/DashboardPreview';
 import { LogoMark } from '@/components/layout/Logo';
 import { formatDate } from '@/lib/utils';
 
+/** Re-fetch notices and achievements at most once a minute. */
+export const revalidate = 60;
+
 const SCHOOL_SLIDES = [
   { src: '/school-images/slide-1.jpg', alt: 'The main building of Barishal Zilla School' },
   { src: '/school-images/slide-3.jpg', alt: 'A classroom during a lesson' },

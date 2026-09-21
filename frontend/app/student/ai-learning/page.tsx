@@ -6,7 +6,6 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { aiAPI } from '@/lib/api/ai';
 import { studentAPI } from '@/lib/api/student';
-import { adminAPI } from '@/lib/api/admin';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
@@ -42,13 +41,11 @@ export default function AILearningPage() {
 
   const loadContext = useCallback(async () => {
     try {
-      const dash = await studentAPI.getDashboard();
-      const classId = dash.data.data.student?.classId?._id;
-      if (classId) {
-        const subRes = await adminAPI.getSubjects({ classId });
-        setSubjects(subRes.data.data ?? []);
-      }
-      const sessRes = await aiAPI.getSessions();
+      const [subRes, sessRes] = await Promise.all([
+        studentAPI.getSubjects(),
+        aiAPI.getSessions(),
+      ]);
+      setSubjects(subRes.data.data ?? []);
       setSessions(sessRes.data.data ?? []);
     } catch {
       toast.error('Could not load your subjects');

@@ -2,6 +2,7 @@ import api from './client';
 export const teacherAPI = {
   getTodaySchedule: () => api.get('/teacher/schedule/today'),
   getWeekSchedule: () => api.get('/teacher/schedule/week'),
+  getAssignments: () => api.get('/teacher/assignments'),
   createAttendanceSession: (data: any) => api.post('/teacher/attendance/session', data),
   getAttendanceSession: (sessionId: string) => api.get(`/teacher/attendance/${sessionId}`),
   saveAttendance: (sessionId: string, data: any) => api.put(`/teacher/attendance/${sessionId}`, data),

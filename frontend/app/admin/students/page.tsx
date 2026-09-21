@@ -42,6 +42,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage } from '@/lib/utils';
 
+/**
+ * Optional fields left blank must be omitted, not sent as "". The User model
+ * has a unique index on email, so an empty string collides with the next
+ * record that also has none.
+ */
+function withoutBlanks<T extends Record<string, any>>(form: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(form).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+  ) as Partial<T>;
+}
+
 const emptyForm = {
   username: '',
   email: '',
@@ -60,6 +71,8 @@ export default function StudentsPage() {
   const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState('');
   const [classFilter, setClassFilter] = useState('all');
+  const [limit, setLimit] = useState(20);
+  const [total, setTotal] = useState(0);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -72,13 +85,20 @@ export default function StudentsPage() {
     setLoading(true);
     setFailed(false);
     adminAPI
-      .getStudents({ search, classId: classFilter === 'all' ? undefined : classFilter })
-      .then((r) => setStudents(r.data.data))
+      .getStudents({ search, classId: classFilter === 'all' ? undefined : classFilter, limit })
+      .then((r) => {
+        setStudents(r.data.data);
+        setTotal(r.data.pagination?.total ?? r.data.data.length);
+      })
       .catch(() => {
         setFailed(true);
         toast.error('Could not load students');
       })
       .finally(() => setLoading(false));
+  }, [search, classFilter, limit]);
+
+  useEffect(() => {
+    setLimit(20);
   }, [search, classFilter]);
 
   useEffect(() => {
@@ -145,10 +165,10 @@ export default function StudentsPage() {
     setSaving(true);
     try {
       if (editing) {
-        await adminAPI.updateStudent(editing._id, form);
+        await adminAPI.updateStudent(editing._id, withoutBlanks(form));
         toast.success('Student saved');
       } else {
-        await adminAPI.createStudent(form);
+        await adminAPI.createStudent(withoutBlanks(form));
         toast.success(`${form.fullName} admitted`);
       }
       setOpen(false);
@@ -231,7 +251,9 @@ export default function StudentsPage() {
 
         {!loading && (
           <p className="ml-auto text-meta text-ink-subtle tabular">
-            {students.length} {students.length === 1 ? 'student' : 'students'}
+            {total > students.length
+              ? `Showing ${students.length} of ${total} students`
+              : `${students.length} ${students.length === 1 ? 'student' : 'students'}`}
           </p>
         )}
       </div>
@@ -344,6 +366,15 @@ export default function StudentsPage() {
             </TableBody>
           </Table>
         </TableWrap>
+      )}
+
+      {/* The list starts at 20; the rest of the school is one click away. */}
+      {!loading && !failed && total > students.length && (
+        <div className="flex justify-center">
+          <Button variant="secondary" onClick={() => setLimit((l) => l + 40)}>
+            Show more students
+          </Button>
+        </div>
       )}
 
       <Sheet open={open} onOpenChange={setOpen}>

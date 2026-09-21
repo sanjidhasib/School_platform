@@ -163,6 +163,7 @@ export default function TeacherDashboardPage() {
                 ? 'Nothing else is scheduled. Marking and homework are still open.'
                 : 'Your routine has nothing scheduled for today.'
             }
+            compact
             action={
               <Button variant="secondary" asChild>
                 <Link href="/teacher/schedule">See the week</Link>

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, ClipboardCheck, ArrowLeft, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { teacherAPI } from '@/lib/api/teacher';
-import { adminAPI } from '@/lib/api/admin';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
@@ -30,7 +29,7 @@ import {
 import { apiErrorMessage, cn, formatDate, formatRelativeTime } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
 
-const emptyForm = { classId: '', subjectId: '', title: '', description: '', dueAt: '', maxMarks: 10 };
+const emptyForm = { teacherAssignmentId: '', title: '', description: '', dueAt: '', maxMarks: 10 };
 
 export default function TeacherHomeworkPage() {
   const [homeworks, setHomeworks] = useState<any[]>([]);
@@ -67,13 +66,13 @@ export default function TeacherHomeworkPage() {
 
   useEffect(() => {
     load();
-    adminAPI.getAssignments().then((r) => setAssignments(r.data.data ?? [])).catch(() => setAssignments([]));
+    teacherAPI.getAssignments().then((r) => setAssignments(r.data.data ?? [])).catch(() => setAssignments([]));
   }, [load]);
 
   const assignmentOptions = useMemo(
     () =>
       assignments.map((a: any) => ({
-        value: `${a.classId?._id}|${a.subjectId?._id}`,
+        value: a._id,
         label: `${a.subjectId?.name ?? 'Subject'} — ${a.classId?.name ?? ''} ${a.classId?.section ?? ''}`.trim(),
         hint: subjectBn(a.subjectId) ?? undefined,
       })),
@@ -95,9 +94,23 @@ export default function TeacherHomeworkPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const assignment = assignments.find((a: any) => a._id === form.teacherAssignmentId);
+    if (!assignment) {
+      toast.error('Choose the class and subject first');
+      return;
+    }
     setSaving(true);
     try {
-      await teacherAPI.createHomework(form);
+      await teacherAPI.createHomework({
+        teacherAssignmentId: assignment._id,
+        classId: assignment.classId?._id,
+        subjectId: assignment.subjectId?._id,
+        title: form.title,
+        description: form.description,
+        assignedAt: new Date().toISOString(),
+        dueAt: form.dueAt,
+        maxMarks: form.maxMarks,
+      });
       toast.success('Homework published');
       setOpen(false);
       setForm(emptyForm);
@@ -140,7 +153,7 @@ export default function TeacherHomeworkPage() {
         feedback: gradeForm.feedback,
         status: 'GRADED',
       });
-      toast.success(`${grading.studentId?.fullName ?? 'Submission'} graded`);
+      toast.success(`${grading.student?.fullName ?? 'Submission'} graded`);
       setGrading(null);
       loadSubmissions(selected);
     } catch (err) {
@@ -152,11 +165,12 @@ export default function TeacherHomeworkPage() {
 
   // ── Detail view ────────────────────────────────────────────────────────────
   if (selected) {
-    const turnedIn = submissions.filter((s) =>
-      ['SUBMITTED', 'LATE', 'GRADED'].includes(s.status)
+    const statusOf = (row: any) => row?.submission?.status ?? 'NOT_SUBMITTED';
+    const turnedIn = submissions.filter((r) =>
+      ['SUBMITTED', 'LATE', 'GRADED'].includes(statusOf(r))
     ).length;
-    const graded = submissions.filter((s) => s.status === 'GRADED').length;
-    const waiting = submissions.filter((s) => ['SUBMITTED', 'LATE'].includes(s.status)).length;
+    const graded = submissions.filter((r) => statusOf(r) === 'GRADED').length;
+    const waiting = submissions.filter((r) => ['SUBMITTED', 'LATE'].includes(statusOf(r))).length;
 
     return (
       <div className="space-y-5">
@@ -233,45 +247,64 @@ export default function TeacherHomeworkPage() {
           </div>
         ) : (
           <ul className="divide-y divide-line rounded-card border border-line bg-surface">
-            {submissions.map((s: any) => {
-              const canGrade = ['SUBMITTED', 'LATE', 'GRADED'].includes(s.status);
+            {submissions.map((row: any) => {
+              const student = row.student ?? {};
+              const submission = row.submission ?? {};
+              const status = submission.status ?? 'NOT_SUBMITTED';
+              // Only a real submission has an id to grade against.
+              const canGrade = Boolean(submission._id) && ['SUBMITTED', 'LATE', 'GRADED'].includes(status);
+
               return (
-                <li key={s._id} className="flex flex-wrap items-start gap-3 px-4 py-3">
-                  <PersonAvatar name={s.studentId?.fullName} className="h-8 w-8 shrink-0" />
+                <li
+                  key={student._id ?? submission._id}
+                  className="flex flex-wrap items-start gap-3 px-4 py-3"
+                >
+                  <PersonAvatar
+                    name={student.fullName}
+                    src={student.photoUrl}
+                    className="h-8 w-8 shrink-0"
+                  />
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-dense font-medium text-ink">
-                        {s.studentId?.fullName ?? 'Student'}
+                        {student.fullName ?? 'Student'}
                       </p>
-                      <StatusPill status={s.status} />
+                      <StatusPill status={status} />
                     </div>
-                    {s.answerText && (
-                      <p className="mt-1 line-clamp-2 text-dense text-ink-muted">{s.answerText}</p>
+                    {student.studentId && (
+                      <p className="mt-0.5 text-meta text-ink-subtle tabular">{student.studentId}</p>
                     )}
-                    {s.submittedAt && (
-                      <p className="mt-1 text-meta text-ink-subtle">
-                        Turned in {formatRelativeTime(s.submittedAt)}
+                    {submission.answerText && (
+                      <p className="mt-1 line-clamp-2 text-dense text-ink-muted">
+                        {submission.answerText}
                       </p>
                     )}
-                    {s.feedback && (
-                      <p className="mt-1 text-meta text-ink-muted">Feedback: {s.feedback}</p>
+                    {submission.submittedAt && (
+                      <p className="mt-1 text-meta text-ink-subtle">
+                        Turned in {formatRelativeTime(submission.submittedAt)}
+                      </p>
+                    )}
+                    {submission.feedback && (
+                      <p className="mt-1 text-meta text-ink-muted">
+                        Feedback: {submission.feedback}
+                      </p>
                     )}
                   </div>
 
                   <div className="flex shrink-0 items-center gap-3">
-                    {s.status === 'GRADED' && s.marks !== undefined && (
+                    {status === 'GRADED' && submission.marks !== undefined && (
                       <span className="text-dense font-semibold text-ink tabular">
-                        {s.marks} / {selected.maxMarks}
+                        {submission.marks} / {selected.maxMarks}
                       </span>
                     )}
                     {canGrade ? (
                       <Button
-                        variant={s.status === 'GRADED' ? 'secondary' : 'primary'}
+                        variant={status === 'GRADED' ? 'secondary' : 'primary'}
                         size="sm"
-                        onClick={() => openGrade(s)}
+                        onClick={() => openGrade({ ...submission, student })}
                       >
-                        {s.status === 'GRADED' ? 'Change marks' : 'Grade'}
+                        {status === 'GRADED' ? 'Change marks' : 'Grade'}
                       </Button>
                     ) : (
                       <span className="text-meta text-ink-subtle">Not submitted</span>
@@ -288,7 +321,7 @@ export default function TeacherHomeworkPage() {
             <SheetHeader>
               <SheetTitle>Grade this submission</SheetTitle>
               <SheetDescription>
-                {grading?.studentId?.fullName} · {selected.title}
+                {grading?.student?.fullName} · {selected.title}
               </SheetDescription>
             </SheetHeader>
 
@@ -445,11 +478,8 @@ export default function TeacherHomeworkPage() {
                   <Combobox
                     {...p}
                     options={assignmentOptions}
-                    value={form.classId && form.subjectId ? `${form.classId}|${form.subjectId}` : ''}
-                    onChange={(v) => {
-                      const [classId, subjectId] = v.split('|');
-                      setForm((f) => ({ ...f, classId, subjectId }));
-                    }}
+                    value={form.teacherAssignmentId}
+                    onChange={(v) => setForm((f) => ({ ...f, teacherAssignmentId: v }))}
                     placeholder="Choose a class"
                     searchPlaceholder="Find a class"
                   />
@@ -513,7 +543,7 @@ export default function TeacherHomeworkPage() {
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
                 Cancel
               </Button>
-              <Button type="submit" loading={saving} disabled={!form.classId}>
+              <Button type="submit" loading={saving} disabled={!form.teacherAssignmentId}>
                 Publish
               </Button>
             </SheetFooter>

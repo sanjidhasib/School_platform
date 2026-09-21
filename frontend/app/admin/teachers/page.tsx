@@ -40,6 +40,17 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage, cn, formatDate } from '@/lib/utils';
 
+/**
+ * Optional fields left blank must be omitted, not sent as "". The User model
+ * has a unique index on email, so an empty string collides with the next
+ * record that also has none.
+ */
+function withoutBlanks<T extends Record<string, any>>(form: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(form).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+  ) as Partial<T>;
+}
+
 const emptyForm = {
   username: '',
   email: '',
@@ -133,10 +144,10 @@ export default function TeachersPage() {
     setSaving(true);
     try {
       if (editing) {
-        await adminAPI.updateTeacher(editing._id, form);
+        await adminAPI.updateTeacher(editing._id, withoutBlanks(form));
         toast.success('Teacher saved');
       } else {
-        await adminAPI.createTeacher(form);
+        await adminAPI.createTeacher(withoutBlanks(form));
         toast.success(`${form.fullName} added`);
       }
       setOpen(false);

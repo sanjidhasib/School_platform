@@ -16,7 +16,7 @@ exports.createSession = asyncHandler(async (req, res) => {
 exports.getSession = asyncHandler(async (req, res) => {
   const session = await AttendanceSession.findById(req.params.sessionId)
     .populate('classId', 'name section')
-    .populate('subjectId', 'name');
+    .populate('subjectId', 'code name nameBn');
   if (!session) throw new ApiError(404, 'Session not found');
   const students = await Student.find({ classId: session.classId, status: 'ACTIVE' }).sort({ fullName: 1 });
   const records = await AttendanceRecord.find({ attendanceSessionId: session._id });
@@ -51,7 +51,7 @@ exports.getHistory = asyncHandler(async (req, res) => {
   const teacher = await Teacher.findOne({ userId: req.user._id });
   const sessions = await AttendanceSession.find({ teacherId: teacher._id })
     .populate('classId', 'name section')
-    .populate('subjectId', 'name')
+    .populate('subjectId', 'code name nameBn')
     .sort({ sessionDate: -1 }).limit(50);
   res.json({ success: true, data: sessions });
 });

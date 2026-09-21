@@ -225,7 +225,7 @@ export default function TimetablePage() {
           />
         </div>
         {currentClass?.room && (
-          <p className="text-meta text-ink-subtle">Room {currentClass.room}</p>
+          <p className="text-meta text-ink-subtle">{currentClass.room}</p>
         )}
       </div>
 

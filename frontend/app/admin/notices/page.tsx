@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Field } from '@/components/ui/field';
+import { Combobox } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
 import {
   Sheet,
@@ -31,7 +32,17 @@ import {
 import { apiErrorMessage, formatDate } from '@/lib/utils';
 
 const today = () => new Date().toISOString().split('T')[0];
-const emptyForm = { title: '', description: '', publishDate: '', eventDate: '' };
+const CATEGORIES = ['GENERAL', 'ACADEMIC', 'EXAM', 'HOLIDAY', 'EVENT', 'URGENT'] as const;
+const categoryLabel = (c: string) =>
+  c.charAt(0) + c.slice(1).toLowerCase();
+
+const emptyForm = {
+  title: '',
+  description: '',
+  category: 'GENERAL',
+  publishDate: '',
+  eventDate: '',
+};
 
 /**
  * The school notice board, kept close to the real thing: a dated stack of
@@ -74,6 +85,7 @@ export default function NoticesPage() {
     setForm({
       title: n.title ?? '',
       description: n.description ?? '',
+      category: n.category ?? 'GENERAL',
       publishDate: (n.publishAt ?? n.publishDate ?? '').slice(0, 10),
       eventDate: (n.eventDate ?? '').slice(0, 10),
     });
@@ -84,8 +96,16 @@ export default function NoticesPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const payload: any = { ...form, status: 'PUBLISHED' };
-      if (!payload.eventDate) delete payload.eventDate;
+      const payload: any = {
+        title: form.title,
+        description: form.description,
+        category: form.category,
+        // The school notice board is read by everyone.
+        audienceType: 'ALL',
+        publishAt: form.publishDate || new Date().toISOString().slice(0, 10),
+        isPublished: true,
+      };
+      if (form.eventDate) payload.eventDate = form.eventDate;
       if (editing) {
         await adminAPI.updateNotice(editing._id, payload);
         toast.success('Notice updated');
@@ -220,6 +240,18 @@ export default function NoticesPage() {
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                     placeholder="Parent-teacher meeting"
                     required
+                  />
+                )}
+              </Field>
+
+              <Field label="Category" required>
+                {(p) => (
+                  <Combobox
+                    {...p}
+                    options={CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))}
+                    value={form.category}
+                    onChange={(v) => setForm((f) => ({ ...f, category: v }))}
+                    searchPlaceholder="Find a category"
                   />
                 )}
               </Field>

@@ -25,7 +25,7 @@ export default function GuardianReportsPage() {
       .then((r) => {
         const list = r.data.data ?? [];
         setChildren(list);
-        if (list.length) setSelectedId(list[0].student._id);
+        if (list.length) setSelectedId(list[0]._id);
       })
       .catch(() => toast.error('Could not load your children'))
       .finally(() => setLoading(false));
@@ -77,7 +77,7 @@ export default function GuardianReportsPage() {
     );
   }
 
-  const child = children.find((c: any) => c.student._id === selectedId)?.student;
+  const child = children.find((c: any) => c._id === selectedId);
 
   return (
     <div className="space-y-6">
@@ -87,7 +87,7 @@ export default function GuardianReportsPage() {
       />
 
       <ChildSwitcher
-        options={children.map((c: any) => c.student)}
+        options={children}
         selectedId={selectedId}
         onSelect={setSelectedId}
       />

@@ -46,6 +46,7 @@ app.use('/api/admin', require('./routes/admin/overview.routes'));
 // Teacher
 app.use('/api/teacher/schedule', require('./routes/teacher/schedule.routes'));
 app.use('/api/teacher/classes', require('./routes/teacher/classes.routes'));
+app.use('/api/teacher/assignments', require('./routes/teacher/assignments.routes'));
 app.use('/api/teacher/attendance', require('./routes/teacher/attendance.routes'));
 app.use('/api/teacher/homework', require('./routes/teacher/homework.routes'));
 app.use('/api/teacher/results', require('./routes/teacher/results.routes'));
@@ -57,6 +58,7 @@ app.use('/api/student/homework', require('./routes/student/homework.routes'));
 app.use('/api/student/results', require('./routes/student/results.routes'));
 app.use('/api/student/notifications', require('./routes/student/notifications.routes'));
 app.use('/api/student/report', require('./routes/student/report.routes'));
+app.use('/api/student/subjects', require('./routes/student/subjects.routes'));
 
 // Guardian
 app.use('/api/guardian/dashboard', require('./routes/guardian/dashboard.routes'));

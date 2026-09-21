@@ -16,7 +16,7 @@ exports.getTodaySchedule = asyncHandler(async (req, res) => {
     dayOfWeek: today,
     isActive: true
   }).populate('classId', 'name section gradeNumber room')
-    .populate({ path: 'teacherAssignmentId', populate: { path: 'subjectId', select: 'name' } })
+    .populate({ path: 'teacherAssignmentId', populate: { path: 'subjectId', select: 'code name nameBn' } })
     .sort({ startTime: 1 });
   const pendingGrading = await HomeworkSubmission.countDocuments({
     status: 'SUBMITTED',

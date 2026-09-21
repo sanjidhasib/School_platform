@@ -21,13 +21,13 @@ exports.createSession = asyncHandler(async (req, res) => {
 
 exports.listSessions = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ userId: req.user._id });
-  const sessions = await AiSession.find({ studentId: student._id }).populate('subjectId', 'name').sort({ startedAt: -1 }).limit(20);
+  const sessions = await AiSession.find({ studentId: student._id }).populate('subjectId', 'code name nameBn').sort({ startedAt: -1 }).limit(20);
   res.json({ success: true, data: sessions });
 });
 
 exports.getSession = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ userId: req.user._id });
-  const session = await AiSession.findOne({ _id: req.params.id, studentId: student._id }).populate('subjectId', 'name');
+  const session = await AiSession.findOne({ _id: req.params.id, studentId: student._id }).populate('subjectId', 'code name nameBn');
   if (!session) throw new ApiError(404, 'Session not found');
   const messages = await AiMessage.find({ sessionId: session._id }).sort({ createdAt: 1 });
   res.json({ success: true, data: { session, messages } });

@@ -8,7 +8,7 @@ exports.list = asyncHandler(async (req, res) => {
   const student = await Student.findOne({ userId: req.user._id });
   if (!student) throw new ApiError(404, 'Student not found');
   const homeworks = await Homework.find({ classId: student.classId, status: 'PUBLISHED' })
-    .populate('subjectId', 'name').sort({ dueAt: 1 });
+    .populate('subjectId', 'code name nameBn').sort({ dueAt: 1 });
   const submissions = await HomeworkSubmission.find({ studentId: student._id, homeworkId: { $in: homeworks.map(h => h._id) } });
   const subMap = Object.fromEntries(submissions.map(s => [s.homeworkId.toString(), s]));
   const result = homeworks.map(hw => ({ ...hw.toObject(), submission: subMap[hw._id.toString()] || { status: 'NOT_SUBMITTED' } }));

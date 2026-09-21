@@ -16,7 +16,7 @@ exports.list = asyncHandler(async (req, res) => {
   const teacher = await Teacher.findOne({ userId: req.user._id });
   const homeworks = await Homework.find({ teacherId: teacher._id })
     .populate('classId', 'name section')
-    .populate('subjectId', 'name')
+    .populate('subjectId', 'code name nameBn')
     .sort({ createdAt: -1 });
   res.json({ success: true, data: homeworks });
 });

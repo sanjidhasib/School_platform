@@ -15,7 +15,7 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     Class.countDocuments({ isActive: true }),
     Timetable.find({ dayOfWeek, isActive: true })
       .populate('classId', 'name section')
-      .populate({ path: 'teacherAssignmentId', populate: [{ path: 'teacherId', select: 'fullName' }, { path: 'subjectId', select: 'name' }] })
+      .populate({ path: 'teacherAssignmentId', populate: [{ path: 'teacherId', select: 'fullName' }, { path: 'subjectId', select: 'code name nameBn' }] })
       .sort({ startTime: 1 })
   ]);
   res.json({ success: true, data: { totalStudents, totalTeachers, activeClasses, todaySessionsCount: todayTimetable.length, todayTimetable } });

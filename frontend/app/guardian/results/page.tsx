@@ -36,7 +36,7 @@ export default function GuardianResultsPage() {
       .then((r) => {
         const list = r.data.data ?? [];
         setChildren(list);
-        if (list.length) setSelectedId(list[0].student._id);
+        if (list.length) setSelectedId(list[0]._id);
       })
       .catch(() => toast.error('Could not load your children'))
       .finally(() => setLoadingChildren(false));
@@ -124,7 +124,7 @@ export default function GuardianResultsPage() {
       />
 
       <ChildSwitcher
-        options={children.map((c: any) => c.student)}
+        options={children}
         selectedId={selectedId}
         onSelect={setSelectedId}
       />

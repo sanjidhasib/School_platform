@@ -28,7 +28,7 @@ export default function GuardianAttendancePage() {
       .then((r) => {
         const list = r.data.data ?? [];
         setChildren(list);
-        if (list.length) setSelectedId(list[0].student._id);
+        if (list.length) setSelectedId(list[0]._id);
       })
       .catch(() => toast.error('Could not load your children'))
       .finally(() => setLoadingChildren(false));
@@ -50,7 +50,7 @@ export default function GuardianAttendancePage() {
 
   useEffect(load, [load]);
 
-  const child = children.find((c: any) => c.student._id === selectedId)?.student;
+  const child = children.find((c: any) => c._id === selectedId);
   const records: any[] = useMemo(() => data?.attendance ?? [], [data]);
   const summary = data?.summary ?? {};
 
@@ -90,7 +90,7 @@ export default function GuardianAttendancePage() {
       <PageHeader title="Attendance" />
 
       <ChildSwitcher
-        options={children.map((c: any) => c.student)}
+        options={children}
         selectedId={selectedId}
         onSelect={setSelectedId}
       />
