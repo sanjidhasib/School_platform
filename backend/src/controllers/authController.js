@@ -1,4 +1,6 @@
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const env = require('../config/env');
 const User = require('../models/User');
 const { generateTokens, setAuthCookies, clearAuthCookies } = require('../services/authService');
 const asyncHandler = require('../utils/asyncHandler');
@@ -24,6 +26,40 @@ exports.login = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = generateTokens(user._id);
   setAuthCookies(res, accessToken, refreshToken);
   res.json({ success: true, data: { id: user._id, username: user.username, email: user.email, role: user.role, mustChangePassword: user.mustChangePassword } });
+});
+
+/**
+ * Silently renews the 15-minute access token from the 7-day refresh token.
+ *
+ * The refresh token cookie was always issued at login and the frontend's
+ * anonymous-401 allowlist already named this route, but the route itself was
+ * never implemented. Without it, every session died after 15 minutes: the
+ * access token cookie expired, the browser stopped sending it, and every
+ * subsequent API call came back 401 - which pages quietly rendered as an
+ * empty list rather than a login redirect, so it looked like the data had
+ * simply vanished.
+ */
+exports.refresh = asyncHandler(async (req, res) => {
+  const token = req.cookies?.refreshToken;
+  if (!token) throw new ApiError(401, 'No refresh token');
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, env.JWT_SECRET);
+  } catch (err) {
+    clearAuthCookies(res);
+    throw new ApiError(401, err.name === 'TokenExpiredError' ? 'Session expired' : 'Invalid refresh token');
+  }
+
+  const user = await User.findById(decoded.id);
+  if (!user || !user.isActive) {
+    clearAuthCookies(res);
+    throw new ApiError(401, 'User not found or disabled');
+  }
+
+  const { accessToken, refreshToken } = generateTokens(user._id);
+  setAuthCookies(res, accessToken, refreshToken);
+  res.json({ success: true, data: { id: user._id, username: user.username, role: user.role } });
 });
 
 exports.logout = asyncHandler(async (req, res) => {

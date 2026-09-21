@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
@@ -31,7 +31,7 @@ export default function LoginPage() {
 
 function LoginScreen() {
   const school = useSchool();
-  const { login } = useAuth();
+  const { user, loading: authLoading, login } = useAuth();
   const router = useRouter();
 
   const [username, setUsername] = useState('');
@@ -40,6 +40,20 @@ function LoginScreen() {
   const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * Middleware only checks whether the accessToken cookie exists. If it has
+   * expired but the 7-day refresh token is still valid, middleware sends a
+   * still-logged-in visitor here before the axios client gets a chance to
+   * silently refresh. Once that refresh completes and AuthProvider's /auth/me
+   * resolves, `user` becomes non-null - so send them straight back to their
+   * dashboard rather than making them sign in again for no reason.
+   */
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.replace(REDIRECTS[user.role] || '/');
+    }
+  }, [authLoading, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
