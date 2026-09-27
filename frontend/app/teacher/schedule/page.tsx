@@ -10,6 +10,7 @@ import { TimetableGrid, TimetableDayList } from '@/components/shared/TimetableGr
 import { Skeleton } from '@/components/ui/skeleton';
 import { DAYS, SHORT_DAYS } from '@/lib/constants';
 import { cn, formatDateLong } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 const SCHOOL_DAYS = [0, 1, 2, 3, 4];
 
@@ -32,7 +33,7 @@ export default function TeacherSchedulePage() {
       .then((r) => setEntries(r.data.data?.schedule ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your routine');
+        toast.error(t('Could not load your routine'));
       })
       .finally(() => setLoading(false));
   };
@@ -48,13 +49,13 @@ export default function TeacherSchedulePage() {
     );
   }
 
-  if (failed) return <ErrorState description="Your routine did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={t('Your routine did not load.')} onRetry={load} />;
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Schedule"
-        description={view === 'day' ? formatDateLong(new Date()) : 'Sunday to Thursday'}
+        title={t('Schedule')}
+        description={view === 'day' ? formatDateLong(new Date()) : t('Sunday to Thursday')}
         actions={
           <div className="flex rounded-btn border border-line p-0.5">
             <button
@@ -66,7 +67,7 @@ export default function TeacherSchedulePage() {
                 view === 'day' ? 'bg-wash text-brand' : 'text-ink-muted hover:text-ink'
               )}
             >
-              Day
+              {t('Day')}
             </button>
             <button
               type="button"
@@ -77,7 +78,7 @@ export default function TeacherSchedulePage() {
                 view === 'week' ? 'bg-wash text-brand' : 'text-ink-muted hover:text-ink'
               )}
             >
-              Week
+              {t('Week')}
             </button>
           </div>
         }
@@ -87,8 +88,8 @@ export default function TeacherSchedulePage() {
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CalendarDays}
-            title="Nothing on your routine"
-            description="Once the office adds you to the school routine, your classes appear here."
+            title={t('Nothing on your routine')}
+            description={t('Once the office adds you to the school routine, your classes appear here.')}
           />
         </div>
       ) : view === 'week' ? (
@@ -115,7 +116,7 @@ function DayTabs({ day, onChange }: { day: number; onChange: (d: number) => void
   return (
     <div
       role="tablist"
-      aria-label="Day"
+      aria-label={t('Day')}
       className="flex gap-1 overflow-x-auto rounded-btn border border-line p-0.5"
     >
       {SCHOOL_DAYS.map((d) => (
@@ -130,8 +131,8 @@ function DayTabs({ day, onChange }: { day: number; onChange: (d: number) => void
             day === d ? 'bg-wash text-brand' : 'text-ink-muted hover:text-ink'
           )}
         >
-          <span className="hidden sm:inline">{DAYS[d]}</span>
-          <span className="sm:hidden">{SHORT_DAYS[d]}</span>
+          <span className="hidden sm:inline">{t(DAYS[d])}</span>
+          <span className="sm:hidden">{t(SHORT_DAYS[d])}</span>
         </button>
       ))}
     </div>

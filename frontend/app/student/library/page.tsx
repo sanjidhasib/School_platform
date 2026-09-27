@@ -10,6 +10,8 @@ import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { subjectBn, subjectTint } from '@/lib/design/subjects';
+import { t, num } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 export default function StudentLibraryPage() {
   const [data, setData] = useState<any>(null);
@@ -24,7 +26,7 @@ export default function StudentLibraryPage() {
       .then((r) => setData(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your library');
+        toast.error(t('Could not load your library'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -60,16 +62,16 @@ export default function StudentLibraryPage() {
     );
   }
 
-  if (failed) return <ErrorState description="Your library did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={t('Your library did not load.')} onRetry={load} />;
 
   const cls = data?.class;
 
   return (
     <div className="space-y-7">
       <PageHeader
-        title="Library"
+        title={t('Library')}
         description={
-          cls ? `NCTB textbooks for ${cls.name}${cls.section ? ` ${cls.section}` : ''}.` : undefined
+          cls ? t('NCTB textbooks for {name}{value}.', { name: cls.name, value: cls.section ? ` ${cls.section}` : '' }) : undefined
         }
       />
 
@@ -77,15 +79,17 @@ export default function StudentLibraryPage() {
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Library}
-            title="No books in your library yet"
-            description="Your class's NCTB textbooks appear here once the school adds them."
+            title={t('No books in your library yet')}
+            description={t('Your class\'s NCTB textbooks appear here once the school adds them.')}
           />
         </div>
       ) : (
         <>
           <p className="text-dense text-ink-muted">
-            <span className="font-semibold text-ink tabular">{available}</span> of{' '}
-            <span className="tabular">{shelves.length}</span> subjects have their textbook here.
+            {tNode('{available} of {total} subjects have their textbook here.', {
+              available: <span className="font-semibold text-ink tabular">{num(available)}</span>,
+              total: <span className="tabular">{num(shelves.length)}</span>,
+            })}
           </p>
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {shelves.map(({ subject, books }) => (
@@ -121,7 +125,7 @@ function SubjectShelf({ subject, books }: { subject: any; books: any[] }) {
             <BookOpen className={cn('h-5 w-5', ready ? 'text-ink' : 'text-ink-subtle')} strokeWidth={1.75} aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="truncate text-body font-semibold text-ink">{subject?.name ?? 'Other books'}</p>
+            <p className="truncate text-body font-semibold text-ink">{subject?.name ?? t('Other books')}</p>
             {bn && (
               <p lang="bn" className="truncate font-bn text-meta text-ink-muted">
                 {bn}
@@ -131,7 +135,7 @@ function SubjectShelf({ subject, books }: { subject: any; books: any[] }) {
         </div>
 
         {!ready ? (
-          <p className="mt-auto text-meta text-ink-subtle">Textbook not added yet.</p>
+          <p className="mt-auto text-meta text-ink-subtle">{t('Textbook not added yet.')}</p>
         ) : (
           <ul className="mt-auto space-y-2">
             {books.map((b) => {
@@ -146,11 +150,11 @@ function SubjectShelf({ subject, books }: { subject: any; books: any[] }) {
                       lang={bangla ? 'bn' : undefined}
                       className={cn('flex-1 text-dense font-medium text-ink group-hover:text-brand', bangla && 'font-bn')}
                     >
-                      {bangla ? 'বাংলা ভার্সন' : 'English version'}
+                      {bangla ? 'বাংলা ভার্সন' : t('English version')}
                     </span>
-                    {b.pageCount > 0 && <span className="text-meta text-ink-subtle tabular">{b.pageCount} pages</span>}
+                    {b.pageCount > 0 && <span className="text-meta text-ink-subtle tabular">{t('{pageCount} pages', { pageCount: b.pageCount })}</span>}
                     {b.status === 'COMPLETED' && b.textStatus === 'OK' && (
-                      <Sparkles className="h-3.5 w-3.5 text-brand" strokeWidth={1.75} aria-label="AI ready" />
+                      <Sparkles className="h-3.5 w-3.5 text-brand" strokeWidth={1.75} aria-label={t('AI ready')} />
                     )}
                     <ArrowRight className="h-4 w-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-brand" strokeWidth={1.75} aria-hidden="true" />
                   </Link>

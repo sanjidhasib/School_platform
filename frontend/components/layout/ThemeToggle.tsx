@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
+import { t } from '@/lib/i18n';
 
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -18,7 +19,7 @@ export function ThemeToggle() {
     <button
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      aria-label={mounted ? (isDark ? 'Switch to light theme' : 'Switch to dark theme') : 'Switch theme'}
+      aria-label={mounted ? (isDark ? t('Switch to light theme') : t('Switch to dark theme')) : t('Switch theme')}
       className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
     >
       {mounted && isDark ? (

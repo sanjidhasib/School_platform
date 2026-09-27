@@ -17,6 +17,7 @@ import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { apiErrorMessage, cn, formatDateLong, formatTime } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
+import { t } from '@/lib/i18n';
 
 type Status = 'PRESENT' | 'ABSENT' | 'LEAVE';
 
@@ -44,7 +45,7 @@ export default function TeacherAttendancePage() {
       .then((r) => setSchedule(r.data.data.schedule ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your schedule');
+        toast.error(t('Could not load your schedule'));
       })
       .finally(() => setLoadingSchedule(false));
   };
@@ -81,7 +82,7 @@ export default function TeacherAttendancePage() {
       setSavedAt(null);
       setStep('mark');
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not open this class'));
+      toast.error(apiErrorMessage(err, t('Could not open this class')));
     } finally {
       setOpening(null);
     }
@@ -106,9 +107,9 @@ export default function TeacherAttendancePage() {
       }));
       await teacherAPI.saveAttendance(session._id, { records });
       setSavedAt(Date.now());
-      toast.success('Attendance saved');
+      toast.success(t('Attendance saved'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save attendance'));
+      toast.error(apiErrorMessage(err, t('Could not save attendance')));
     } finally {
       setSaving(false);
     }
@@ -138,33 +139,33 @@ export default function TeacherAttendancePage() {
       <div className="space-y-5 pb-24">
         <Button variant="ghost" size="sm" onClick={() => setStep('select')} className="-ml-2">
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-          All classes
+          {t('All classes')}
         </Button>
 
         {/* Labelled facts, not a middle-dot string. */}
         <div className="space-y-3">
-          <h1 className="text-page text-ink">Take attendance</h1>
+          <h1 className="text-page text-ink">{t('Take attendance')}</h1>
           <dl className="flex flex-wrap gap-x-8 gap-y-3 border-b border-line pb-4">
             <div>
-              <dt className="text-meta text-ink-subtle">Class</dt>
+              <dt className="text-meta text-ink-subtle">{t('Class')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink">
                 {sessionData.session?.classId?.name} {sessionData.session?.classId?.section}
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Subject</dt>
+              <dt className="text-meta text-ink-subtle">{t('Subject')}</dt>
               <dd className="mt-0.5">
                 <SubjectLabel subject={subject} className="text-dense font-medium text-ink" inline />
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Date</dt>
+              <dt className="text-meta text-ink-subtle">{t('Date')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink">
                 {formatDateLong(sessionData.session?.sessionDate ?? new Date())}
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Time</dt>
+              <dt className="text-meta text-ink-subtle">{t('Time')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink tabular">
                 {formatTime(sessionData.session?.startTime)} –{' '}
                 {formatTime(sessionData.session?.endTime)}
@@ -175,16 +176,16 @@ export default function TeacherAttendancePage() {
 
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" onClick={() => setAll('PRESENT')}>
-            Mark all present
+            {t('Mark all present')}
           </Button>
           <Button variant="secondary" size="sm" onClick={() => setAll('ABSENT')}>
-            Mark all absent
+            {t('Mark all absent')}
           </Button>
 
           <div className="ml-auto flex items-center gap-2" aria-live="polite">
-            <CountChip label="Present" value={counts.PRESENT} tone="success" />
-            <CountChip label="Absent" value={counts.ABSENT} tone="danger" />
-            <CountChip label="Leave" value={counts.LEAVE} tone="warning" />
+            <CountChip label={t('Present')} value={counts.PRESENT} tone="success" />
+            <CountChip label={t('Absent')} value={counts.ABSENT} tone="danger" />
+            <CountChip label={t('Leave')} value={counts.LEAVE} tone="warning" />
           </div>
         </div>
 
@@ -219,8 +220,8 @@ export default function TeacherAttendancePage() {
                       onChange={(e) =>
                         setNotes((prev) => ({ ...prev, [student._id]: e.target.value }))
                       }
-                      placeholder="Add a note (optional)"
-                      aria-label={`Note for ${student.fullName}`}
+                      placeholder={t('Add a note (optional)')}
+                      aria-label={t('Note for {fullName}', { fullName: student.fullName })}
                       className="h-8 max-w-md text-meta"
                     />
                   </div>
@@ -235,19 +236,19 @@ export default function TeacherAttendancePage() {
           <div className="mx-auto flex max-w-[1440px] items-center gap-4">
             <div className="min-w-0 flex-1">
               <p className="text-meta text-ink-muted tabular">
-                {marked} of {total} marked
+                {t('{marked} of {total} marked', { marked, total })}
               </p>
               <Progress value={total ? (marked / total) * 100 : 0} className="mt-1 max-w-xs" />
             </div>
             {savedAt && (
               <span className="flex items-center gap-1.5 text-meta font-medium text-success">
                 <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} />
-                Saved
+                {t('Saved')}
               </span>
             )}
             <Button onClick={saveAttendance} loading={saving}>
               <Check className="h-4 w-4" strokeWidth={1.75} />
-              Save attendance
+              {t('Save attendance')}
             </Button>
           </div>
         </div>
@@ -258,13 +259,13 @@ export default function TeacherAttendancePage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Attendance"
+        title={t('Attendance')}
         description={formatDateLong(new Date())}
         actions={
           <Button variant="secondary" asChild>
             <Link href="/teacher/register">
               <Sheet className="h-4 w-4" strokeWidth={1.75} />
-              Open register
+              {t('Open register')}
             </Link>
           </Button>
         }
@@ -277,13 +278,13 @@ export default function TeacherAttendancePage() {
           ))}
         </div>
       ) : failed ? (
-        <ErrorState description="Your schedule did not load." onRetry={load} />
+        <ErrorState description={t('Your schedule did not load.')} onRetry={load} />
       ) : !schedule.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CalendarClock}
-            title="No classes scheduled today"
-            description="Attendance is taken from a scheduled class. Nothing is on your routine for today."
+            title={t('No classes scheduled today')}
+            description={t('Attendance is taken from a scheduled class. Nothing is on your routine for today.')}
           />
         </div>
       ) : (
@@ -309,20 +310,20 @@ export default function TeacherAttendancePage() {
 
                 <dl className="mt-3 flex-1 space-y-2">
                   <div className="flex justify-between gap-2">
-                    <dt className="text-meta text-ink-subtle">Class</dt>
+                    <dt className="text-meta text-ink-subtle">{t('Class')}</dt>
                     <dd className="text-meta font-medium text-ink">
                       {slot.classId?.name} {slot.classId?.section}
                     </dd>
                   </div>
                   <div className="flex justify-between gap-2">
-                    <dt className="text-meta text-ink-subtle">Time</dt>
+                    <dt className="text-meta text-ink-subtle">{t('Time')}</dt>
                     <dd className="text-meta font-medium text-ink tabular">
                       {formatTime(slot.startTime)} – {formatTime(slot.endTime)}
                     </dd>
                   </div>
                   {(slot.room || slot.classId?.room) && (
                     <div className="flex justify-between gap-2">
-                      <dt className="text-meta text-ink-subtle">Room</dt>
+                      <dt className="text-meta text-ink-subtle">{t('Room')}</dt>
                       <dd className="text-meta font-medium text-ink">
                         {slot.room || slot.classId?.room}
                       </dd>
@@ -336,7 +337,7 @@ export default function TeacherAttendancePage() {
                   loading={opening === slot._id}
                 >
                   <Users className="h-4 w-4" strokeWidth={1.75} />
-                  Take attendance
+                  {t('Take attendance')}
                 </Button>
               </Card>
             </li>

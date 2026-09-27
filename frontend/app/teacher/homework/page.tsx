@@ -29,6 +29,7 @@ import {
 import { apiErrorMessage, cn, formatDate, formatRelativeTime } from '@/lib/utils';
 import { HOMEWORK_TYPES, homeworkType, type HomeworkType } from '@/lib/design/homework';
 import { subjectBn } from '@/lib/design/subjects';
+import { t as tr } from '@/lib/i18n';
 
 const emptyForm = {
   teacherAssignmentId: '',
@@ -67,7 +68,7 @@ export default function TeacherHomeworkPage() {
       .then((r) => setHomeworks(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load homework');
+        toast.error(tr('Could not load homework'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -94,7 +95,7 @@ export default function TeacherHomeworkPage() {
       const res = await teacherAPI.getHomeworkSubmissions(hw._id);
       setSubmissions(res.data.data ?? []);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not load submissions'));
+      toast.error(apiErrorMessage(err, tr('Could not load submissions')));
     } finally {
       setLoadingSubs(false);
     }
@@ -104,7 +105,7 @@ export default function TeacherHomeworkPage() {
     e.preventDefault();
     const assignment = assignments.find((a: any) => a._id === form.teacherAssignmentId);
     if (!assignment) {
-      toast.error('Choose the class and subject first');
+      toast.error(tr('Choose the class and subject first'));
       return;
     }
     setSaving(true);
@@ -120,12 +121,12 @@ export default function TeacherHomeworkPage() {
         dueAt: form.dueAt,
         maxMarks: form.maxMarks,
       });
-      toast.success('Homework published');
+      toast.success(tr('Homework published'));
       setOpen(false);
       setForm(emptyForm);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not publish the homework'));
+      toast.error(apiErrorMessage(err, tr('Could not publish the homework')));
     } finally {
       setSaving(false);
     }
@@ -146,7 +147,7 @@ export default function TeacherHomeworkPage() {
     const marks = Number(gradeForm.marks);
 
     if (gradeForm.marks === '' || Number.isNaN(marks)) {
-      setGradeError('Enter the marks awarded.');
+      setGradeError(tr('Enter the marks awarded.'));
       return;
     }
     if (marks < 0 || marks > max) {
@@ -162,11 +163,11 @@ export default function TeacherHomeworkPage() {
         feedback: gradeForm.feedback,
         status: 'GRADED',
       });
-      toast.success(`${grading.student?.fullName ?? 'Submission'} graded`);
+      toast.success(tr('{value} graded', { value: grading.student?.fullName ?? 'Submission' }));
       setGrading(null);
       loadSubmissions(selected);
     } catch (err) {
-      setGradeError(apiErrorMessage(err, 'Could not save the grade'));
+      setGradeError(apiErrorMessage(err, tr('Could not save the grade')));
     } finally {
       setSavingGrade(false);
     }
@@ -190,32 +191,32 @@ export default function TeacherHomeworkPage() {
           className="-ml-2"
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-          All homework
+          {tr('All homework')}
         </Button>
 
         <div className="space-y-3">
           <h1 className="text-page text-ink">{selected.title}</h1>
           <dl className="flex flex-wrap gap-x-8 gap-y-3 border-b border-line pb-4">
             <div>
-              <dt className="text-meta text-ink-subtle">Class</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Class')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink">
                 {selected.classId?.name} {selected.classId?.section}
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Subject</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Subject')}</dt>
               <dd className="mt-0.5">
                 <SubjectLabel subject={selected.subjectId} className="text-dense font-medium text-ink" inline />
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Due</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Due')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink tabular">
                 {formatDate(selected.dueAt)}
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Out of</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Out of')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink tabular">{selected.maxMarks}</dd>
             </div>
           </dl>
@@ -231,10 +232,10 @@ export default function TeacherHomeworkPage() {
           <div className="max-w-md space-y-1.5">
             <div className="flex items-baseline justify-between text-meta">
               <span className="text-ink-muted tabular">
-                {turnedIn} of {submissions.length} turned in
+                {tr('{turnedIn} of {length} turned in', { turnedIn, length: submissions.length })}
               </span>
               {waiting > 0 && (
-                <span className="font-medium text-warning tabular">{waiting} to grade</span>
+                <span className="font-medium text-warning tabular">{tr('{waiting} to grade', { waiting })}</span>
               )}
             </div>
             <Progress
@@ -250,8 +251,8 @@ export default function TeacherHomeworkPage() {
           <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={ClipboardCheck}
-              title="No students in this class yet"
-              description="Submissions appear here once students turn their work in."
+              title={tr('No students in this class yet')}
+              description={tr('Submissions appear here once students turn their work in.')}
             />
           </div>
         ) : (
@@ -277,7 +278,7 @@ export default function TeacherHomeworkPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="truncate text-dense font-medium text-ink">
-                        {student.fullName ?? 'Student'}
+                        {student.fullName ?? tr('Student')}
                       </p>
                       <StatusPill status={status} />
                     </div>
@@ -291,12 +292,12 @@ export default function TeacherHomeworkPage() {
                     )}
                     {submission.submittedAt && (
                       <p className="mt-1 text-meta text-ink-subtle">
-                        Turned in {formatRelativeTime(submission.submittedAt)}
+                        {tr('Turned in {formatRelativeTime}', { formatRelativeTime: formatRelativeTime(submission.submittedAt) })}
                       </p>
                     )}
                     {submission.feedback && (
                       <p className="mt-1 text-meta text-ink-muted">
-                        Feedback: {submission.feedback}
+                        {tr('Feedback: {feedback}', { feedback: submission.feedback })}
                       </p>
                     )}
                   </div>
@@ -313,10 +314,10 @@ export default function TeacherHomeworkPage() {
                         size="sm"
                         onClick={() => openGrade({ ...submission, student })}
                       >
-                        {status === 'GRADED' ? 'Change marks' : 'Grade'}
+                        {status === 'GRADED' ? tr('Change marks') : tr('Grade')}
                       </Button>
                     ) : (
-                      <span className="text-meta text-ink-subtle">Not submitted</span>
+                      <span className="text-meta text-ink-subtle">{tr('Not submitted')}</span>
                     )}
                   </div>
                 </li>
@@ -328,7 +329,7 @@ export default function TeacherHomeworkPage() {
         <Sheet open={!!grading} onOpenChange={(o) => !o && setGrading(null)}>
           <SheetContent>
             <SheetHeader>
-              <SheetTitle>Grade this submission</SheetTitle>
+              <SheetTitle>{tr('Grade this submission')}</SheetTitle>
               <SheetDescription>
                 {grading?.student?.fullName} · {selected.title}
               </SheetDescription>
@@ -338,14 +339,14 @@ export default function TeacherHomeworkPage() {
               <SheetBody className="space-y-4">
                 {grading?.answerText && (
                   <div className="rounded-card border border-line bg-surface-sunken p-3">
-                    <p className="mb-1 text-meta font-medium text-ink-subtle">Their answer</p>
+                    <p className="mb-1 text-meta font-medium text-ink-subtle">{tr('Their answer')}</p>
                     <p className="whitespace-pre-line text-dense text-ink">{grading.answerText}</p>
                   </div>
                 )}
 
                 <Field
-                  label="Marks"
-                  description={`Out of ${selected.maxMarks}.`}
+                  label={tr('Marks')}
+                  description={tr('Out of {maxMarks}.', { maxMarks: selected.maxMarks })}
                   error={gradeError}
                   required
                 >
@@ -368,7 +369,7 @@ export default function TeacherHomeworkPage() {
                   )}
                 </Field>
 
-                <Field label="Feedback" description="Optional. The student sees this.">
+                <Field label={tr('Feedback')} description={tr('Optional. The student sees this.')}>
                   {(p) => (
                     <Textarea
                       {...p}
@@ -382,11 +383,11 @@ export default function TeacherHomeworkPage() {
 
               <SheetFooter>
                 <Button type="button" variant="secondary" onClick={() => setGrading(null)}>
-                  Cancel
+                  {tr('Cancel')}
                 </Button>
                 <Button type="submit" loading={savingGrade}>
                   <Check className="h-4 w-4" strokeWidth={1.75} />
-                  Save marks
+                  {tr('Save marks')}
                 </Button>
               </SheetFooter>
             </form>
@@ -400,11 +401,11 @@ export default function TeacherHomeworkPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Homework"
+        title={tr('Homework')}
         actions={
           <Button onClick={() => setOpen(true)}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Set homework
+            {tr('Set homework')}
           </Button>
         }
       />
@@ -412,17 +413,17 @@ export default function TeacherHomeworkPage() {
       {loading ? (
         <ListSkeleton rows={4} />
       ) : failed ? (
-        <ErrorState description="Your homework list did not load." onRetry={load} />
+        <ErrorState description={tr('Your homework list did not load.')} onRetry={load} />
       ) : !homeworks.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={ClipboardCheck}
-            title="No homework set"
-            description="Set homework for a class and track who has turned it in."
+            title={tr('No homework set')}
+            description={tr('Set homework for a class and track who has turned it in.')}
             action={
               <Button onClick={() => setOpen(true)}>
                 <Plus className="h-4 w-4" strokeWidth={1.75} />
-                Set homework
+                {tr('Set homework')}
               </Button>
             }
           />
@@ -451,11 +452,11 @@ export default function TeacherHomeworkPage() {
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-dense font-medium text-ink">{h.title}</span>
                       <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', homeworkType(h.type).tone)}>
-                        {homeworkType(h.type).label}
+                        {tr(homeworkType(h.type).label)}
                       </span>
                       <StatusPill status={h.status} />
-                      {dueSoon && <Badge tone="warning">Due soon</Badge>}
-                      {overdue && h.status === 'PUBLISHED' && <Badge tone="neutral">Past due</Badge>}
+                      {dueSoon && <Badge tone="warning">{tr('Due soon')}</Badge>}
+                      {overdue && h.status === 'PUBLISHED' && <Badge tone="neutral">{tr('Past due')}</Badge>}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-0.5">
                       <SubjectLabel subject={h.subjectId} className="text-meta text-ink-muted" inline />
@@ -466,7 +467,7 @@ export default function TeacherHomeworkPage() {
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="text-meta text-ink-subtle">Due</p>
+                    <p className="text-meta text-ink-subtle">{tr('Due')}</p>
                     <p className="text-dense text-ink tabular">{formatDate(h.dueAt)}</p>
                   </div>
                 </button>
@@ -479,28 +480,28 @@ export default function TeacherHomeworkPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Set homework</SheetTitle>
-            <SheetDescription>Students in the class see it straight away.</SheetDescription>
+            <SheetTitle>{tr('Set homework')}</SheetTitle>
+            <SheetDescription>{tr('Students in the class see it straight away.')}</SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleCreate} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
-              <Field label="Class and subject" required>
+              <Field label={tr('Class and subject')} required>
                 {(p) => (
                   <Combobox
                     {...p}
                     options={assignmentOptions}
                     value={form.teacherAssignmentId}
                     onChange={(v) => setForm((f) => ({ ...f, teacherAssignmentId: v }))}
-                    placeholder="Choose a class"
-                    searchPlaceholder="Find a class"
+                    placeholder={tr('Choose a class')}
+                    searchPlaceholder={tr('Find a class')}
                   />
                 )}
               </Field>
 
-              <Field label="Kind of work" required description={homeworkType(form.type).hint}>
+              <Field label={tr('Kind of work')} required description={tr(homeworkType(form.type).hint)}>
                 {() => (
-                  <div className="grid grid-cols-3 gap-1 rounded-btn border border-line p-0.5" role="group" aria-label="Kind of work">
+                  <div className="grid grid-cols-3 gap-1 rounded-btn border border-line p-0.5" role="group" aria-label={tr('Kind of work')}>
                     {HOMEWORK_TYPES.map((t) => (
                       <button
                         key={t.value}
@@ -513,26 +514,26 @@ export default function TeacherHomeworkPage() {
                           form.type === t.value ? 'bg-wash text-brand' : 'text-ink-muted hover:text-ink'
                         )}
                       >
-                        {t.value === 'NEXT_CLASS' ? 'Next class prep' : t.label}
+                        {t.value === 'NEXT_CLASS' ? tr('Next class prep') : t.label}
                       </button>
                     ))}
                   </div>
                 )}
               </Field>
 
-              <Field label="Title" required>
+              <Field label={tr('Title')} required>
                 {(p) => (
                   <Input
                     {...p}
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="Fractions worksheet"
+                    placeholder={tr('Fractions worksheet')}
                     required
                   />
                 )}
               </Field>
 
-              <Field label="What to do" required>
+              <Field label={tr('What to do')} required>
                 {(p) => (
                   <Textarea
                     {...p}
@@ -545,7 +546,7 @@ export default function TeacherHomeworkPage() {
               </Field>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Due date" required>
+                <Field label={tr('Due date')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -556,7 +557,7 @@ export default function TeacherHomeworkPage() {
                     />
                   )}
                 </Field>
-                <Field label="Out of" required>
+                <Field label={tr('Out of')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -575,10 +576,10 @@ export default function TeacherHomeworkPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {tr('Cancel')}
               </Button>
               <Button type="submit" loading={saving} disabled={!form.teacherAssignmentId}>
-                Publish
+                {tr('Publish')}
               </Button>
             </SheetFooter>
           </form>

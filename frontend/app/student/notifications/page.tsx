@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/shared/EmptyState';
 import { ListSkeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { apiErrorMessage } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export default function StudentNotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -24,7 +25,7 @@ export default function StudentNotificationsPage() {
       .then((r) => setNotifications(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load notifications');
+        toast.error(t('Could not load notifications'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -46,9 +47,9 @@ export default function StudentNotificationsPage() {
     try {
       await studentAPI.markAllRead();
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      toast.success('All marked as read');
+      toast.success(t('All marked as read'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not mark them as read'));
+      toast.error(apiErrorMessage(err, t('Could not mark them as read')));
     } finally {
       setMarking(false);
     }
@@ -59,12 +60,12 @@ export default function StudentNotificationsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Notifications"
-        description={unread ? `${unread} unread` : undefined}
+        title={t('Notifications')}
+        description={unread ? t('{unread} unread', { unread }) : undefined}
         actions={
           unread > 0 ? (
             <Button variant="secondary" onClick={markAllRead} loading={marking}>
-              Mark all as read
+              {t('Mark all as read')}
             </Button>
           ) : undefined
         }
@@ -73,7 +74,7 @@ export default function StudentNotificationsPage() {
       {loading ? (
         <ListSkeleton rows={5} />
       ) : failed ? (
-        <ErrorState description="Notifications did not load." onRetry={load} />
+        <ErrorState description={t('Notifications did not load.')} onRetry={load} />
       ) : (
         <NotificationList
           notifications={notifications}

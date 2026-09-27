@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { DashboardShell } from './DashboardShell';
 import { LogoMark } from './Logo';
+import { t } from '@/lib/i18n';
 
 /**
  * The role check each dashboard layout already performed, lifted into one place
@@ -31,7 +32,7 @@ function ShellLoading() {
         <span className="flex h-10 w-10 items-center justify-center rounded-btn bg-brand text-brand-contrast">
           <LogoMark className="h-6 w-6" />
         </span>
-        <span className="sr-only">Loading</span>
+        <span className="sr-only">{t('Loading')}</span>
         <span className="h-1 w-24 overflow-hidden rounded-full bg-line">
           <span className="block h-full w-1/2 animate-pulse rounded-full bg-brand" />
         </span>

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { getLanguage } from '@/lib/i18n';
 import { subjectTint, subjectBn, type SubjectLike } from '@/lib/design/subjects';
 
 /**
@@ -17,14 +18,18 @@ export function SubjectLabel({
   inline?: boolean;
 }) {
   if (!subject?.name) return <span className={cn('text-ink-subtle', className)}>—</span>;
-  const bn = subjectBn(subject);
+  const bnName = subjectBn(subject);
+  // In the Bangla interface the Bangla name leads and English sits beneath.
+  const bangla = getLanguage() === 'bn' && !!bnName;
+  const primary = bangla ? bnName! : subject.name;
+  const bn = bangla ? subject.name : bnName;
 
   if (inline) {
     return (
       <span className={cn('inline-flex items-baseline gap-1.5', className)}>
-        <span>{subject.name}</span>
+        <span lang={bangla ? 'bn' : undefined}>{primary}</span>
         {bn && (
-          <span lang="bn" className="font-bn text-meta text-ink-muted">
+          <span lang={bangla ? undefined : 'bn'} className={cn('text-meta text-ink-muted', !bangla && 'font-bn')}>
             {bn}
           </span>
         )}
@@ -34,9 +39,9 @@ export function SubjectLabel({
 
   return (
     <span className={cn('block', className)}>
-      <span className="block truncate">{subject.name}</span>
+      <span lang={bangla ? 'bn' : undefined} className="block truncate">{primary}</span>
       {bn && (
-        <span lang="bn" className="block truncate font-bn text-meta text-ink-muted">
+        <span lang={bangla ? undefined : 'bn'} className={cn('block truncate text-meta text-ink-muted', !bangla && 'font-bn')}>
           {bn}
         </span>
       )}

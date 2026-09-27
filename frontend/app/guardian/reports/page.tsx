@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { useSchool } from '@/lib/school-context';
 import { apiErrorMessage, firstName } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export default function GuardianReportsPage() {
   const school = useSchool();
@@ -27,7 +28,7 @@ export default function GuardianReportsPage() {
         setChildren(list);
         if (list.length) setSelectedId(list[0]._id);
       })
-      .catch(() => toast.error('Could not load your children'))
+      .catch(() => toast.error(t('Could not load your children')))
       .finally(() => setLoading(false));
   }, []);
 
@@ -44,9 +45,9 @@ export default function GuardianReportsPage() {
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success('Progress report downloaded');
+      toast.success(t('Progress report downloaded'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not download the progress report'));
+      toast.error(apiErrorMessage(err, t('Could not download the progress report')));
     } finally {
       setDownloading(false);
     }
@@ -65,12 +66,12 @@ export default function GuardianReportsPage() {
   if (!children.length) {
     return (
       <div className="space-y-5">
-        <PageHeader title="Reports" />
+        <PageHeader title={t('Reports')} />
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
-            title="No children linked to your account"
-            description="Please ask the school office to link your child's record to your account."
+            title={t('No children linked to your account')}
+            description={t('Please ask the school office to link your child\'s record to your account.')}
           />
         </div>
       </div>
@@ -82,8 +83,8 @@ export default function GuardianReportsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Reports"
-        description="The official progress report, as the school issues it."
+        title={t('Reports')}
+        description={t('The official progress report, as the school issues it.')}
       />
 
       <ChildSwitcher
@@ -98,21 +99,21 @@ export default function GuardianReportsPage() {
           <p className="text-section text-ink">{school.name}</p>
           {school.address && <p className="mt-0.5 text-meta text-ink-subtle">{school.address}</p>}
           <p className="mt-3 inline-block border-y border-line px-4 py-1 text-dense font-medium uppercase tracking-wide text-ink-muted">
-            Progress report
+            {t('Progress report')}
           </p>
         </div>
 
         <dl className="divide-y divide-line">
           <div className="flex justify-between gap-4 px-6 py-3">
-            <dt className="text-dense text-ink-subtle">Student</dt>
+            <dt className="text-dense text-ink-subtle">{t('Student')}</dt>
             <dd className="text-dense font-medium text-ink">{child?.fullName}</dd>
           </div>
           <div className="flex justify-between gap-4 px-6 py-3">
-            <dt className="text-dense text-ink-subtle">Student ID</dt>
+            <dt className="text-dense text-ink-subtle">{t('Student ID')}</dt>
             <dd className="text-dense font-medium text-ink tabular">{child?.studentId}</dd>
           </div>
           <div className="flex justify-between gap-4 px-6 py-3">
-            <dt className="text-dense text-ink-subtle">Class</dt>
+            <dt className="text-dense text-ink-subtle">{t('Class')}</dt>
             <dd className="text-dense font-medium text-ink">
               {child?.classId?.name} {child?.classId?.section}
             </dd>
@@ -122,11 +123,11 @@ export default function GuardianReportsPage() {
         <div className="flex items-center gap-3 border-t border-line px-6 py-4">
           <FileText className="h-4 w-4 shrink-0 text-ink-subtle" strokeWidth={1.75} />
           <p className="flex-1 text-meta text-ink-muted">
-            Attendance, subject grades and marks for {firstName(child?.fullName)}.
+            {t('Attendance, subject grades and marks for {firstName}.', { firstName: firstName(child?.fullName) })}
           </p>
           <Button onClick={download} loading={downloading}>
             <Download className="h-4 w-4" strokeWidth={1.75} />
-            Download PDF
+            {t('Download PDF')}
           </Button>
         </div>
       </div>

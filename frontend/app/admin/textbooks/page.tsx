@@ -52,6 +52,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage, cn } from '@/lib/utils';
 import { subjectBn, subjectTint } from '@/lib/design/subjects';
+import { t as tr } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 const MAX_MB = 200;
 const emptyForm = { classNumber: '', subjectId: '', language: 'BN' as 'BN' | 'EN', title: '', edition: '' };
@@ -93,7 +95,7 @@ export default function AdminTextbooksPage() {
       .catch(() => {
         if (!quiet) {
           setFailed(true);
-          toast.error('Could not load textbooks');
+          toast.error(tr('Could not load textbooks'));
         }
       })
       .finally(() => !quiet && setLoading(false));
@@ -106,7 +108,7 @@ export default function AdminTextbooksPage() {
         setClasses(c.data.data ?? []);
         setSubjects(s.data.data ?? []);
       })
-      .catch(() => toast.error('Could not load classes and subjects'));
+      .catch(() => toast.error(tr('Could not load classes and subjects')));
   }, [load]);
 
   // While any book is still being processed, check back every few seconds.
@@ -143,11 +145,11 @@ export default function AdminTextbooksPage() {
   const pickFile = (f?: File | null) => {
     if (!f) return;
     if (!/\.pdf$/i.test(f.name)) {
-      toast.error('Choose a PDF file');
+      toast.error(tr('Choose a PDF file'));
       return;
     }
     if (f.size > MAX_MB * 1024 * 1024) {
-      toast.error(`That file is larger than ${MAX_MB} MB`);
+      toast.error(tr('That file is larger than {MAX_MB} MB', { MAX_MB }));
       return;
     }
     setFile(f);
@@ -156,7 +158,7 @@ export default function AdminTextbooksPage() {
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.classNumber || !form.subjectId || !file) {
-      toast.error('Choose a class, a subject and a PDF');
+      toast.error(tr('Choose a class, a subject and a PDF'));
       return;
     }
     const data = new FormData();
@@ -171,11 +173,11 @@ export default function AdminTextbooksPage() {
     setProgress(0);
     try {
       await adminAPI.uploadTextbook(data, setProgress);
-      toast.success('Uploaded — the book is being processed');
+      toast.success(tr('Uploaded — the book is being processed'));
       setOpen(false);
       load(true);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not upload the book'));
+      toast.error(apiErrorMessage(err, tr('Could not upload the book')));
     } finally {
       setUploading(false);
     }
@@ -184,10 +186,10 @@ export default function AdminTextbooksPage() {
   const reprocess = async (b: any) => {
     try {
       await adminAPI.reprocessTextbook(b._id);
-      toast.success('Processing again');
+      toast.success(tr('Processing again'));
       load(true);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not re-process the book'));
+      toast.error(apiErrorMessage(err, tr('Could not re-process the book')));
     }
   };
 
@@ -195,27 +197,27 @@ export default function AdminTextbooksPage() {
     setRemoving(true);
     try {
       await adminAPI.deleteTextbook(deleting._id);
-      toast.success('Textbook deleted');
+      toast.success(tr('Textbook deleted'));
       setDeleting(null);
       load(true);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not delete the book'));
+      toast.error(apiErrorMessage(err, tr('Could not delete the book')));
     } finally {
       setRemoving(false);
     }
   };
 
-  const classOptions = gradeNumbers.map((n) => ({ value: String(n), label: `Class ${n}` }));
+  const classOptions = gradeNumbers.map((n) => ({ value: String(n), label: tr('Class {n}', { n }) }));
 
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Textbooks"
-        description="NCTB books for each class. Students read them in their library, and the AI study helper answers from them."
+        title={tr('Textbooks')}
+        description={tr('NCTB books for each class. Students read them in their library, and the AI study helper answers from them.')}
         actions={
           <Button onClick={openUpload}>
             <Upload className="h-4 w-4" strokeWidth={1.75} />
-            Upload a book
+            {tr('Upload a book')}
           </Button>
         }
       />
@@ -224,12 +226,11 @@ export default function AdminTextbooksPage() {
         <div className="flex items-start gap-3 rounded-card border border-warning/30 bg-warning-bg px-4 py-3">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" strokeWidth={1.75} aria-hidden="true" />
           <div className="space-y-0.5 text-dense">
-            <p className="font-medium text-ink">AI answers are switched off</p>
+            <p className="font-medium text-ink">{tr('AI answers are switched off')}</p>
             <p className="text-ink-muted">
-              {String(ai.reason ?? '').replace(/\.$/, '')}. Students still get the matching textbook pages. Put a valid key in{' '}
-              <code className="rounded bg-surface px-1 text-meta">GEMINI_API_KEY</code> in{' '}
-              <code className="rounded bg-surface px-1 text-meta">backend/.env</code>, restart the server, then
-              re-process each book to switch on full answers and smarter search.
+              {tr('{replace}. Students still get the matching textbook pages. Put a valid key in', { replace: String(ai.reason ?? '').replace(/\.$/, '') })}{' '}
+              <code className="rounded bg-surface px-1 text-meta">{tr('GEMINI_API_KEY')}</code>{' '}{tr('in')}{' '}
+              <code className="rounded bg-surface px-1 text-meta">{tr('backend/.env')}</code>{tr(', restart the server, then re-process each book to switch on full answers and smarter search.')}
             </p>
           </div>
         </div>
@@ -237,28 +238,28 @@ export default function AdminTextbooksPage() {
 
       <div className="w-44">
         <Combobox
-          options={[{ value: 'all', label: 'All classes' }, ...classOptions]}
+          options={[{ value: 'all', label: tr('All classes') }, ...classOptions]}
           value={classFilter}
           onChange={setClassFilter}
-          placeholder="All classes"
-          searchPlaceholder="Find a class"
+          placeholder={tr('All classes')}
+          searchPlaceholder={tr('Find a class')}
         />
       </div>
 
       {loading ? (
         <TableSkeleton cols={5} />
       ) : failed ? (
-        <ErrorState description="The textbook list did not load." onRetry={() => load()} />
+        <ErrorState description={tr('The textbook list did not load.')} onRetry={() => load()} />
       ) : !visible.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Library}
-            title={books.length ? 'No books for this class yet' : 'No textbooks yet'}
-            description="Upload the NCTB PDF for each subject — the Bangla version, the English version, or both."
+            title={books.length ? tr('No books for this class yet') : tr('No textbooks yet')}
+            description={tr('Upload the NCTB PDF for each subject — the Bangla version, the English version, or both.')}
             action={
               <Button onClick={openUpload}>
                 <Upload className="h-4 w-4" strokeWidth={1.75} />
-                Upload a book
+                {tr('Upload a book')}
               </Button>
             }
           />
@@ -268,13 +269,13 @@ export default function AdminTextbooksPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Book</TableHead>
-                <TableHead className="w-24">Class</TableHead>
-                <TableHead className="hidden md:table-cell">Version</TableHead>
+                <TableHead>{tr('Book')}</TableHead>
+                <TableHead className="w-24">{tr('Class')}</TableHead>
+                <TableHead className="hidden md:table-cell">{tr('Version')}</TableHead>
                 <TableHead numeric className="hidden sm:table-cell">
-                  Pages
+                  {tr('Pages')}
                 </TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{tr('Status')}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -297,14 +298,14 @@ export default function AdminTextbooksPage() {
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-ink tabular">Class {b.classNumber}</TableCell>
+                  <TableCell className="text-ink tabular">{tr('Class {classNumber}', { classNumber: b.classNumber })}</TableCell>
                   <TableCell className="hidden md:table-cell">
                     {b.language === 'BN' ? (
                       <span lang="bn" className="font-bn text-ink-muted">
                         বাংলা ভার্সন
                       </span>
                     ) : (
-                      <span className="text-ink-muted">English version</span>
+                      <span className="text-ink-muted">{tr('English version')}</span>
                     )}
                   </TableCell>
                   <TableCell numeric className="hidden text-ink-muted sm:table-cell">
@@ -317,7 +318,7 @@ export default function AdminTextbooksPage() {
                     <div className="flex justify-end">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${b.title}`}>
+                          <Button variant="ghost" size="icon-sm" aria-label={tr('Actions for {title}', { title: b.title })}>
                             <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                           </Button>
                         </DropdownMenuTrigger>
@@ -326,18 +327,18 @@ export default function AdminTextbooksPage() {
                             onSelect={() => window.open(adminAPI.textbookFileUrl(b._id), '_blank', 'noopener')}
                           >
                             <ExternalLink className="h-4 w-4" strokeWidth={1.75} />
-                            Open PDF
+                            {tr('Open PDF')}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             disabled={b.status === 'PROCESSING'}
                             onSelect={() => reprocess(b)}
                           >
                             <RefreshCw className="h-4 w-4" strokeWidth={1.75} />
-                            Process again
+                            {tr('Process again')}
                           </DropdownMenuItem>
                           <DropdownMenuItem destructive onSelect={() => setDeleting(b)}>
                             <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                            Delete
+                            {tr('Delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -353,31 +354,31 @@ export default function AdminTextbooksPage() {
       <Sheet open={open} onOpenChange={(o) => !uploading && setOpen(o)}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Upload a textbook</SheetTitle>
+            <SheetTitle>{tr('Upload a textbook')}</SheetTitle>
             <SheetDescription>
-              One PDF per subject and version. Download the official books from nctb.gov.bd.
+              {tr('One PDF per subject and version. Download the official books from nctb.gov.bd.')}
             </SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleUpload} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
-              <Field label="Class" required>
+              <Field label={tr('Class')} required>
                 {(p) => (
                   <Combobox
                     {...p}
                     options={classOptions}
                     value={form.classNumber}
                     onChange={(v) => setForm((f) => ({ ...f, classNumber: v, subjectId: '' }))}
-                    placeholder="Choose a class"
-                    searchPlaceholder="Find a class"
+                    placeholder={tr('Choose a class')}
+                    searchPlaceholder={tr('Find a class')}
                   />
                 )}
               </Field>
 
               <Field
-                label="Subject"
+                label={tr('Subject')}
                 required
-                description={form.classNumber ? `Subjects taught in Class ${form.classNumber}.` : undefined}
+                description={form.classNumber ? tr('Subjects taught in Class {classNumber}.', { classNumber: form.classNumber }) : undefined}
               >
                 {(p) => (
                   <Combobox
@@ -389,15 +390,15 @@ export default function AdminTextbooksPage() {
                     }))}
                     value={form.subjectId}
                     onChange={(v) => setForm((f) => ({ ...f, subjectId: v }))}
-                    placeholder="Choose a subject"
-                    searchPlaceholder="Find a subject"
+                    placeholder={tr('Choose a subject')}
+                    searchPlaceholder={tr('Find a subject')}
                   />
                 )}
               </Field>
 
-              <Field label="Version" required>
+              <Field label={tr('Version')} required>
                 {() => (
-                  <div className="flex rounded-btn border border-line p-0.5" role="group" aria-label="Version">
+                  <div className="flex rounded-btn border border-line p-0.5" role="group" aria-label={tr('Version')}>
                     {(['BN', 'EN'] as const).map((lang) => (
                       <button
                         key={lang}
@@ -412,14 +413,14 @@ export default function AdminTextbooksPage() {
                           form.language === lang ? 'bg-wash text-brand' : 'text-ink-muted hover:text-ink'
                         )}
                       >
-                        {lang === 'BN' ? 'বাংলা ভার্সন' : 'English version'}
+                        {lang === 'BN' ? 'বাংলা ভার্সন' : tr('English version')}
                       </button>
                     ))}
                   </div>
                 )}
               </Field>
 
-              <Field label="PDF file" required description={`Up to ${MAX_MB} MB.`}>
+              <Field label={tr('PDF file')} required description={tr('Up to {MAX_MB} MB.', { MAX_MB })}>
                 {(p) => (
                   <div
                     onDragOver={(e) => {
@@ -453,14 +454,14 @@ export default function AdminTextbooksPage() {
                           <p className="text-meta text-ink-subtle">{formatSize(file.size)}</p>
                         </div>
                         <Button type="button" variant="ghost" size="sm" onClick={() => fileInput.current?.click()}>
-                          Change
+                          {tr('Change')}
                         </Button>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        <p className="text-dense text-ink-muted">Drag the PDF here, or</p>
+                        <p className="text-dense text-ink-muted">{tr('Drag the PDF here, or')}</p>
                         <Button type="button" variant="secondary" size="sm" onClick={() => fileInput.current?.click()}>
-                          Choose a file
+                          {tr('Choose a file')}
                         </Button>
                       </div>
                     )}
@@ -468,18 +469,18 @@ export default function AdminTextbooksPage() {
                 )}
               </Field>
 
-              <Field label="Title" description="Optional. Leave empty to name it from the class and subject.">
+              <Field label={tr('Title')} description={tr('Optional. Leave empty to name it from the class and subject.')}>
                 {(p) => (
                   <Input
                     {...p}
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="Science — Class 6 (Bangla version)"
+                    placeholder={tr('Science — Class 6 (Bangla version)')}
                   />
                 )}
               </Field>
 
-              <Field label="Edition" description="Optional, e.g. the curriculum year.">
+              <Field label={tr('Edition')} description={tr('Optional, e.g. the curriculum year.')}>
                 {(p) => (
                   <Input
                     {...p}
@@ -492,9 +493,9 @@ export default function AdminTextbooksPage() {
 
               {uploading && (
                 <div className="space-y-1.5">
-                  <Progress value={progress} label="Upload progress" />
+                  <Progress value={progress} label={tr('Upload progress')} />
                   <p className="text-meta text-ink-subtle tabular">
-                    {progress < 100 ? `Uploading… ${progress}%` : 'Saving…'}
+                    {progress < 100 ? tr('Uploading… {progress}%', { progress }) : tr('Saving…')}
                   </p>
                 </div>
               )}
@@ -502,10 +503,10 @@ export default function AdminTextbooksPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={uploading}>
-                Cancel
+                {tr('Cancel')}
               </Button>
               <Button type="submit" loading={uploading} disabled={!file || !form.classNumber || !form.subjectId}>
-                Upload
+                {tr('Upload')}
               </Button>
             </SheetFooter>
           </form>
@@ -515,14 +516,11 @@ export default function AdminTextbooksPage() {
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="Delete this textbook?"
+        title={tr('Delete this textbook?')}
         description={
-          <>
-            <strong className="text-ink">{deleting?.title}</strong> will be removed from the library, and the AI
-            will stop answering from it.
-          </>
+          tNode('{name} will be removed from the library, and the AI will stop answering from it.', { name: <strong className="text-ink">{deleting?.title}</strong> })
         }
-        confirmLabel="Delete"
+        confirmLabel={tr('Delete')}
         destructive
         loading={removing}
         onConfirm={confirmDelete}
@@ -539,7 +537,7 @@ function BookStatus({ book }: { book: any }) {
     return (
       <span className={cn(base, 'bg-info-bg text-info')}>
         <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.75} aria-hidden="true" />
-        Processing
+        {tr('Processing')}
       </span>
     );
   }
@@ -548,7 +546,7 @@ function BookStatus({ book }: { book: any }) {
       <div className="space-y-1">
         <span className={cn(base, 'bg-danger-bg text-danger')}>
           <XCircle className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-          Failed
+          {tr('Failed')}
         </span>
         {book.errorMessage && <p className="max-w-xs text-meta text-ink-subtle">{book.errorMessage}</p>}
       </div>
@@ -559,7 +557,7 @@ function BookStatus({ book }: { book: any }) {
       <div className="space-y-1">
         <span className={cn(base, 'bg-warning-bg text-warning')}>
           <BookOpen className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-          Reading only
+          {tr('Reading only')}
         </span>
         {book.errorMessage && <p className="max-w-xs text-meta text-ink-subtle">{book.errorMessage}</p>}
       </div>
@@ -569,7 +567,7 @@ function BookStatus({ book }: { book: any }) {
     <div className="space-y-1">
       <span className={cn(base, 'bg-success-bg text-success')}>
         <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-        Ready for AI
+        {tr('Ready for AI')}
       </span>
       {book.errorMessage && <p className="max-w-xs text-meta text-ink-subtle">{book.errorMessage}</p>}
     </div>

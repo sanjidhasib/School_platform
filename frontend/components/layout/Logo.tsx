@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * The mark is an open exercise book seen from above — the object every student
@@ -41,9 +42,9 @@ export function Logo({
       </span>
       {!compact && (
         <span className="min-w-0 leading-tight">
-          <span className="block truncate text-dense font-semibold text-ink">SchoolOS</span>
+          <span className="block truncate text-dense font-semibold text-ink">{t('SchoolOS')}</span>
           {schoolName && (
-            <span className="block truncate text-meta text-ink-subtle">{schoolName}</span>
+            <span className="block truncate text-meta text-ink-subtle">{t(schoolName)}</span>
           )}
         </span>
       )}

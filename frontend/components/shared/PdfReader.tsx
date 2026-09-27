@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Minus, Plus, ExternalLink, AlertCircle } fro
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { t, num } from '@/lib/i18n';
 
 // Copied into /public by the postinstall script, so it always matches the
 // pdf.js version react-pdf was built against.
@@ -88,7 +89,7 @@ export default function PdfReader({
             size="icon-sm"
             onClick={() => goTo(page - 1)}
             disabled={page <= 1}
-            aria-label="Previous page"
+            aria-label={t('Previous page')}
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
           </Button>
@@ -101,7 +102,7 @@ export default function PdfReader({
             className="flex items-center gap-1.5 text-dense text-ink-muted"
           >
             <label htmlFor="reader-page" className="sr-only">
-              Page number
+              {t('Page number')}
             </label>
             <input
               id="reader-page"
@@ -111,14 +112,14 @@ export default function PdfReader({
               onBlur={() => setPageInput(String(page))}
               className="h-7 w-12 rounded-chip border border-line bg-surface text-center text-dense text-ink tabular focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
             />
-            <span className="tabular">of {numPages || '…'}</span>
+            <span className="tabular">/ {numPages ? num(numPages) : '…'}</span>
           </form>
           <Button
             variant="ghost"
             size="icon-sm"
             onClick={() => goTo(page + 1)}
             disabled={!numPages || page >= numPages}
-            aria-label="Next page"
+            aria-label={t('Next page')}
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
           </Button>
@@ -130,7 +131,7 @@ export default function PdfReader({
             size="icon-sm"
             onClick={() => setZoom((z) => ZOOMS[Math.max(0, ZOOMS.indexOf(z) - 1)])}
             disabled={zoom === ZOOMS[0]}
-            aria-label="Zoom out"
+            aria-label={t('Zoom out')}
           >
             <Minus className="h-4 w-4" strokeWidth={1.75} />
           </Button>
@@ -140,12 +141,12 @@ export default function PdfReader({
             size="icon-sm"
             onClick={() => setZoom((z) => ZOOMS[Math.min(ZOOMS.length - 1, ZOOMS.indexOf(z) + 1)])}
             disabled={zoom === ZOOMS[ZOOMS.length - 1]}
-            aria-label="Zoom in"
+            aria-label={t('Zoom in')}
           >
             <Plus className="h-4 w-4" strokeWidth={1.75} />
           </Button>
           <Button variant="ghost" size="icon-sm" asChild>
-            <a href={`${url}#page=${page}`} target="_blank" rel="noreferrer" aria-label="Open the PDF in a new tab">
+            <a href={`${url}#page=${page}`} target="_blank" rel="noreferrer" aria-label={t('Open the PDF in a new tab')}>
               <ExternalLink className="h-4 w-4" strokeWidth={1.75} />
             </a>
           </Button>
@@ -156,9 +157,9 @@ export default function PdfReader({
         {failed ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
             <AlertCircle className="h-5 w-5 text-danger" strokeWidth={1.75} aria-hidden="true" />
-            <p className="text-dense font-medium text-ink">This book could not be opened</p>
+            <p className="text-dense font-medium text-ink">{t('This book could not be opened')}</p>
             <p className="max-w-sm text-dense text-ink-muted">
-              The file may be missing or damaged. Try opening it in a new tab, or tell the school office.
+              {t('The file may be missing or damaged. Try opening it in a new tab, or tell the school office.')}
             </p>
           </div>
         ) : (

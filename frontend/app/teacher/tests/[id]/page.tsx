@@ -34,6 +34,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter } from '@/components/ui/sheet';
 import { apiErrorMessage, cn } from '@/lib/utils';
 import { PHASE_META, testPhase, fmtWhen, toLocalInput } from '@/lib/design/classTests';
+import { t as tr } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
+import { num } from '@/lib/i18n';
 
 type Q = { _id?: string; key: string; kind: 'MCQ' | 'SHORT'; text: string; options: string[]; correctOption: number | null; marks: number };
 
@@ -143,11 +146,11 @@ export default function TeacherTestPage() {
     setSaving(true);
     try {
       await teacherAPI.updateTest(id, payload());
-      toast.success('Test saved');
+      toast.success(tr('Test saved'));
       load();
       return true;
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the test'));
+      toast.error(apiErrorMessage(err, tr('Could not save the test')));
       return false;
     } finally {
       setSaving(false);
@@ -160,26 +163,26 @@ export default function TeacherTestPage() {
       if (what === 'publish') {
         if (dirty && !(await save())) return;
         await teacherAPI.publishTest(id);
-        toast.success('Published — students can see it now');
+        toast.success(tr('Published — students can see it now'));
         load();
       } else if (what === 'close') {
         await teacherAPI.closeTest(id);
-        toast.success('Test closed');
+        toast.success(tr('Test closed'));
         load();
       } else {
         await teacherAPI.deleteTest(id);
-        toast.success('Test deleted');
+        toast.success(tr('Test deleted'));
         router.push('/teacher/tests');
       }
       setConfirm(null);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'That didn’t work'));
+      toast.error(apiErrorMessage(err, tr('That didn’t work')));
     } finally {
       setBusy(null);
     }
   };
 
-  if (failed) return <ErrorState description="This test did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={tr('This test did not load.')} onRetry={load} />;
   if (!test) {
     return (
       <div className="space-y-4">
@@ -197,17 +200,17 @@ export default function TeacherTestPage() {
         <Button variant="ghost" size="sm" asChild className="-ml-2">
           <Link href="/teacher/tests">
             <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-            Class tests
+            {tr('Class tests')}
           </Link>
         </Button>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-page text-ink">{test.title}</h1>
-              <span className={cn('rounded-full px-2.5 py-0.5 text-meta font-semibold', meta.tone)}>{meta.label}</span>
+              <span className={cn('rounded-full px-2.5 py-0.5 text-meta font-semibold', meta.tone)}>{tr(meta.label)}</span>
             </div>
             <p className="mt-1 text-body text-ink-muted">
-              {test.classId?.name} {test.classId?.section} · {test.subjectId?.name} · {test.durationMinutes} min ·{' '}
+              {tr('{name} {section} · {name2} · {durationMinutes} min ·', { name: test.classId?.name, section: test.classId?.section, name2: test.subjectId?.name, durationMinutes: test.durationMinutes })}{' '}
               {fmtWhen(test.opensAt)} → {fmtWhen(test.closesAt)}
             </p>
           </div>
@@ -215,19 +218,19 @@ export default function TeacherTestPage() {
             {phase === 'DRAFT' && (
               <Button onClick={() => setConfirm('publish')} disabled={!questions.length}>
                 <Send className="h-4 w-4" strokeWidth={1.75} />
-                Publish
+                {tr('Publish')}
               </Button>
             )}
             {(phase === 'OPEN' || phase === 'SCHEDULED') && (
               <Button variant="secondary" onClick={() => setConfirm('close')}>
                 <Square className="h-4 w-4" strokeWidth={1.75} />
-                Close now
+                {tr('Close now')}
               </Button>
             )}
             {!locked && (
               <Button variant="ghost" onClick={() => setConfirm('delete')}>
                 <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                Delete
+                {tr('Delete')}
               </Button>
             )}
           </div>
@@ -237,10 +240,10 @@ export default function TeacherTestPage() {
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
           <TabsTrigger value="questions" indicatorId="test-tabs">
-            Questions <span className="ml-1.5 text-meta text-ink-subtle tabular">{questions.length}</span>
+            {tr('Questions')}{' '}<span className="ml-1.5 text-meta text-ink-subtle tabular">{questions.length}</span>
           </TabsTrigger>
           <TabsTrigger value="submissions" indicatorId="test-tabs">
-            Submissions <span className="ml-1.5 text-meta text-ink-subtle tabular">{test.attempts}</span>
+            {tr('Submissions')}{' '}<span className="ml-1.5 text-meta text-ink-subtle tabular">{test.attempts}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -248,8 +251,7 @@ export default function TeacherTestPage() {
           {locked && (
             <p className="flex items-center gap-2 rounded-card border border-line bg-surface-sunken px-4 py-3 text-dense text-ink-muted">
               <Lock className="h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-              Students have started this test, so the questions and time limit are locked. You can still change the title,
-              instructions and closing time.
+              {tr('Students have started this test, so the questions and time limit are locked. You can still change the title, instructions and closing time.')}
             </p>
           )}
 
@@ -258,7 +260,7 @@ export default function TeacherTestPage() {
             <div className="space-y-4">
               {!questions.length ? (
                 <div className="rounded-[18px] border border-dashed border-line-strong bg-surface">
-                  <EmptyState icon={ListChecks} title="No questions yet" description="Add multiple-choice questions (marked automatically) or short answers (you mark them)." />
+                  <EmptyState icon={ListChecks} title={tr('No questions yet')} description={tr('Add multiple-choice questions (marked automatically) or short answers (you mark them).')} />
                 </div>
               ) : (
                 questions.map((q, i) => (
@@ -278,11 +280,11 @@ export default function TeacherTestPage() {
                 <div className="flex flex-wrap gap-2">
                   <Button variant="secondary" onClick={() => edit(() => setQuestions((qs) => [...qs, blankMcq()]))}>
                     <ListChecks className="h-4 w-4" strokeWidth={1.75} />
-                    Add multiple choice
+                    {tr('Add multiple choice')}
                   </Button>
                   <Button variant="secondary" onClick={() => edit(() => setQuestions((qs) => [...qs, blankShort()]))}>
                     <AlignLeft className="h-4 w-4" strokeWidth={1.75} />
-                    Add short answer
+                    {tr('Add short answer')}
                   </Button>
                 </div>
               )}
@@ -291,22 +293,22 @@ export default function TeacherTestPage() {
             {/* Settings */}
             <aside className="space-y-4 xl:sticky xl:top-4 xl:self-start">
               <div className="space-y-4 rounded-[18px] border border-line bg-surface p-5 shadow-card">
-                <p className="text-dense font-semibold text-ink">Settings</p>
-                <Field label="Title">
+                <p className="text-dense font-semibold text-ink">{tr('Settings')}</p>
+                <Field label={tr('Title')}>
                   {(p) => <Input {...p} value={settings.title} onChange={(e) => edit(() => setSettings((s) => ({ ...s, title: e.target.value })))} />}
                 </Field>
-                <Field label="Instructions" description="Shown before the student starts.">
+                <Field label={tr('Instructions')} description={tr('Shown before the student starts.')}>
                   {(p) => (
                     <Textarea
                       {...p}
                       rows={3}
                       value={settings.instructions}
                       onChange={(e) => edit(() => setSettings((s) => ({ ...s, instructions: e.target.value })))}
-                      placeholder="Answer all questions. No books."
+                      placeholder={tr('Answer all questions. No books.')}
                     />
                   )}
                 </Field>
-                <Field label="Time limit (minutes)">
+                <Field label={tr('Time limit (minutes)')}>
                   {(p) => (
                     <Input
                       {...p}
@@ -319,21 +321,21 @@ export default function TeacherTestPage() {
                     />
                   )}
                 </Field>
-                <Field label="Opens">
+                <Field label={tr('Opens')}>
                   {(p) => <Input {...p} type="datetime-local" value={settings.opensAt} onChange={(e) => edit(() => setSettings((s) => ({ ...s, opensAt: e.target.value })))} />}
                 </Field>
-                <Field label="Closes">
+                <Field label={tr('Closes')}>
                   {(p) => <Input {...p} type="datetime-local" value={settings.closesAt} onChange={(e) => edit(() => setSettings((s) => ({ ...s, closesAt: e.target.value })))} />}
                 </Field>
                 <div className="flex items-center justify-between rounded-xl bg-surface-sunken px-3 py-2.5 text-dense">
-                  <span className="text-ink-muted">Total</span>
+                  <span className="text-ink-muted">{tr('Total')}</span>
                   <span className="font-semibold text-ink tabular">
-                    {questions.length} {questions.length === 1 ? 'question' : 'questions'} · {totalMarks} marks
+                    {questions.length} {questions.length === 1 ? tr('question') : tr('questions')}{' '}{tr('· {totalMarks} marks', { totalMarks })}
                   </span>
                 </div>
                 <Button className="w-full" onClick={save} loading={saving} disabled={!dirty}>
                   <Save className="h-4 w-4" strokeWidth={1.75} />
-                  {dirty ? 'Save changes' : 'All changes saved'}
+                  {dirty ? tr('Save changes') : tr('All changes saved')}
                 </Button>
               </div>
             </aside>
@@ -348,36 +350,37 @@ export default function TeacherTestPage() {
       <ConfirmDialog
         open={confirm === 'publish'}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="Publish this test?"
+        title={tr('Publish this test?')}
         description={
-          <>
-            <strong className="text-ink">{test.title}</strong> will appear for {test.classId?.name} {test.classId?.section}. They can start it from{' '}
-            {fmtWhen(test.opensAt)} until {fmtWhen(test.closesAt)}, with {test.durationMinutes} minutes each.
-          </>
+          tNode('{name} will appear for {cls}. They can start it from {opens} until {closes}, with {minutes} minutes each.', {
+            name: <strong className="text-ink">{test.title}</strong>,
+            cls: `${test.classId?.name} ${test.classId?.section}`,
+            opens: fmtWhen(test.opensAt),
+            closes: fmtWhen(test.closesAt),
+            minutes: num(test.durationMinutes),
+          })
         }
-        confirmLabel="Publish"
+        confirmLabel={tr('Publish')}
         loading={busy === 'publish'}
         onConfirm={() => act('publish')}
       />
       <ConfirmDialog
         open={confirm === 'close'}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="Close the test now?"
-        description="Nobody else will be able to start it. Students already sitting it keep the rest of their time."
-        confirmLabel="Close now"
+        title={tr('Close the test now?')}
+        description={tr('Nobody else will be able to start it. Students already sitting it keep the rest of their time.')}
+        confirmLabel={tr('Close now')}
         loading={busy === 'close'}
         onConfirm={() => act('close')}
       />
       <ConfirmDialog
         open={confirm === 'delete'}
         onOpenChange={(o) => !o && setConfirm(null)}
-        title="Delete this test?"
+        title={tr('Delete this test?')}
         description={
-          <>
-            <strong className="text-ink">{test.title}</strong> and its questions will be removed.
-          </>
+          tNode('{name} and its questions will be removed.', { name: <strong className="text-ink">{test.title}</strong> })
         }
-        confirmLabel="Delete"
+        confirmLabel={tr('Delete')}
         destructive
         loading={busy === 'delete'}
         onConfirm={() => act('delete')}
@@ -407,7 +410,7 @@ function QuestionCard({
     <div className="rounded-[18px] border border-line bg-surface shadow-card">
       <div className="flex flex-wrap items-center gap-2 border-b border-line px-4 py-2.5">
         <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand text-meta font-bold text-brand-contrast tabular">{index + 1}</span>
-        <div className="flex rounded-btn border border-line p-0.5" role="group" aria-label="Question type">
+        <div className="flex rounded-btn border border-line p-0.5" role="group" aria-label={tr('Question type')}>
           {(['MCQ', 'SHORT'] as const).map((k) => (
             <button
               key={k}
@@ -422,12 +425,12 @@ function QuestionCard({
                 q.kind === k ? 'bg-wash text-brand' : 'text-ink-muted hover:text-ink'
               )}
             >
-              {k === 'MCQ' ? 'Multiple choice' : 'Short answer'}
+              {k === 'MCQ' ? tr('Multiple choice') : tr('Short answer')}
             </button>
           ))}
         </div>
         <label className="ml-auto flex items-center gap-1.5 text-meta text-ink-muted">
-          Marks
+          {tr('Marks')}
           <input
             type="number"
             min={0}
@@ -440,13 +443,13 @@ function QuestionCard({
         </label>
         {!locked && (
           <div className="flex items-center">
-            <Button variant="ghost" size="icon-sm" onClick={() => onMove(-1)} disabled={index === 0} aria-label="Move up">
+            <Button variant="ghost" size="icon-sm" onClick={() => onMove(-1)} disabled={index === 0} aria-label={tr('Move up')}>
               <ArrowUp className="h-4 w-4" strokeWidth={1.75} />
             </Button>
-            <Button variant="ghost" size="icon-sm" onClick={() => onMove(1)} disabled={index === count - 1} aria-label="Move down">
+            <Button variant="ghost" size="icon-sm" onClick={() => onMove(1)} disabled={index === count - 1} aria-label={tr('Move down')}>
               <ArrowDown className="h-4 w-4" strokeWidth={1.75} />
             </Button>
-            <Button variant="ghost" size="icon-sm" onClick={onRemove} aria-label="Remove question">
+            <Button variant="ghost" size="icon-sm" onClick={onRemove} aria-label={tr('Remove question')}>
               <Trash2 className="h-4 w-4" strokeWidth={1.75} />
             </Button>
           </div>
@@ -458,8 +461,8 @@ function QuestionCard({
           disabled={locked}
           rows={2}
           onChange={(e) => onChange({ text: e.target.value })}
-          placeholder="Write the question…"
-          aria-label={`Question ${index + 1}`}
+          placeholder={tr('Write the question…')}
+          aria-label={tr('Question {value}', { value: index + 1 })}
           className="text-body"
         />
         {q.kind === 'MCQ' ? (
@@ -473,7 +476,7 @@ function QuestionCard({
                     disabled={locked}
                     onClick={() => onChange({ correctOption: oi })}
                     aria-pressed={correct}
-                    aria-label={`Mark option ${LETTERS[oi]} as the correct answer`}
+                    aria-label={tr('Mark option {oi} as the correct answer', { oi: LETTERS[oi] })}
                     className={cn('shrink-0 rounded-full transition-colors', correct ? 'text-success' : 'text-ink-subtle hover:text-ink')}
                   >
                     {correct ? <CheckCircle2 className="h-5 w-5" strokeWidth={2} /> : <Circle className="h-5 w-5" strokeWidth={1.75} />}
@@ -483,14 +486,14 @@ function QuestionCard({
                     value={opt}
                     disabled={locked}
                     onChange={(e) => onChange({ options: q.options.map((o, j) => (j === oi ? e.target.value : o)) })}
-                    placeholder={`Option ${LETTERS[oi]}`}
+                    placeholder={tr('Option {oi}', { oi: LETTERS[oi] })}
                     className={cn(correct && 'border-success/50 bg-success-bg/40')}
                   />
                   {!locked && q.options.length > 2 && (
                     <Button
                       variant="ghost"
                       size="icon-sm"
-                      aria-label={`Remove option ${LETTERS[oi]}`}
+                      aria-label={tr('Remove option {oi}', { oi: LETTERS[oi] })}
                       onClick={() =>
                         onChange({
                           options: q.options.filter((_, j) => j !== oi),
@@ -508,17 +511,17 @@ function QuestionCard({
               {!locked && q.options.length < 6 ? (
                 <Button variant="ghost" size="sm" onClick={() => onChange({ options: [...q.options, ''] })}>
                   <Plus className="h-4 w-4" strokeWidth={1.75} />
-                  Add option
+                  {tr('Add option')}
                 </Button>
               ) : (
                 <span />
               )}
-              {q.correctOption === null && <span className="text-meta text-warning">Tick the correct answer</span>}
+              {q.correctOption === null && <span className="text-meta text-warning">{tr('Tick the correct answer')}</span>}
             </div>
           </div>
         ) : (
           <p className="rounded-xl bg-surface-sunken px-3 py-2 text-meta text-ink-muted">
-            Students type their answer. You mark it in Submissions after they hand in.
+            {tr('Students type their answer. You mark it in Submissions after they hand in.')}
           </p>
         )}
       </div>
@@ -551,7 +554,7 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
         setRows(r.data.data.rows);
         setFull(r.data.data.test);
       })
-      .catch(() => toast.error('Could not load submissions'));
+      .catch(() => toast.error(tr('Could not load submissions')));
   }, [test._id]);
 
   useEffect(() => {
@@ -581,12 +584,12 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
     try {
       const payload = Object.fromEntries(Object.entries(awards).filter(([, v]) => v !== '').map(([k, v]) => [k, Number(v)]));
       await teacherAPI.markAttempt(open.attempt._id, payload);
-      toast.success('Marks saved');
+      toast.success(tr('Marks saved'));
       setOpen(null);
       load();
       onChanged();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the marks'));
+      toast.error(apiErrorMessage(err, tr('Could not save the marks')));
     } finally {
       setSavingMarks(false);
     }
@@ -596,11 +599,11 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
     setPublishing(true);
     try {
       await teacherAPI.publishTestResults(test._id, { term });
-      toast.success('Results published — students and guardians can see them');
+      toast.success(tr('Results published — students and guardians can see them'));
       onChanged();
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not publish results'));
+      toast.error(apiErrorMessage(err, tr('Could not publish results')));
     } finally {
       setPublishing(false);
     }
@@ -613,36 +616,36 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
   return (
     <div className="space-y-5">
       <div className="grid gap-3 sm:grid-cols-4">
-        <Tile label="Handed in" value={`${stats.sat} / ${stats.total}`} />
-        <Tile label="Average" value={stats.average !== null ? `${stats.average} / ${total}` : '—'} />
-        <Tile label="To mark" value={String(stats.toMark)} warn={stats.toMark > 0} />
-        <Tile label="Results" value={test.resultsPublished ? 'Published' : 'Not yet'} />
+        <Tile label={tr('Handed in')} value={`${stats.sat} / ${stats.total}`} />
+        <Tile label={tr('Average')} value={stats.average !== null ? `${stats.average} / ${total}` : '—'} />
+        <Tile label={tr('To mark')} value={String(stats.toMark)} warn={stats.toMark > 0} />
+        <Tile label={tr('Results')} value={test.resultsPublished ? 'Published' : 'Not yet'} />
       </div>
 
       <div className="flex flex-col gap-3 rounded-[18px] border border-line bg-surface p-4 shadow-card sm:flex-row sm:items-center">
         <Award className="h-5 w-5 shrink-0 text-brand" strokeWidth={1.75} aria-hidden="true" />
         <p className="flex-1 text-dense text-ink-muted">
           {!closed
-            ? 'You can publish results once the test has closed.'
+            ? tr('You can publish results once the test has closed.')
             : stats.toMark
-              ? 'Mark every short answer, then publish the results.'
+              ? tr('Mark every short answer, then publish the results.')
               : test.resultsPublished
-                ? 'Results are on students’ Results pages. Publishing again updates them after re-marking.'
-                : 'Publishing adds each score to the class results. Students who didn’t sit it are recorded as absent.'}
+                ? tr('Results are on students’ Results pages. Publishing again updates them after re-marking.')
+                : tr('Publishing adds each score to the class results. Students who didn’t sit it are recorded as absent.')}
         </p>
         <div className="w-36">
           <Combobox
             options={[
-              { value: 'TERM_1', label: 'Term 1' },
-              { value: 'TERM_2', label: 'Term 2' },
-              { value: 'FINAL', label: 'Final' },
+              { value: 'TERM_1', label: tr('Term 1') },
+              { value: 'TERM_2', label: tr('Term 2') },
+              { value: 'FINAL', label: tr('Final') },
             ]}
             value={term}
             onChange={setTerm}
           />
         </div>
         <Button onClick={publishResults} loading={publishing} disabled={!closed || stats.toMark > 0}>
-          {test.resultsPublished ? 'Publish again' : 'Publish results'}
+          {test.resultsPublished ? tr('Publish again') : tr('Publish results')}
         </Button>
       </div>
 
@@ -650,11 +653,11 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
         <table className="w-full text-dense">
           <thead className="bg-surface-sunken text-meta text-ink-muted">
             <tr>
-              <th className="w-16 px-4 py-2.5 text-left font-semibold">Roll</th>
-              <th className="px-4 py-2.5 text-left font-semibold">Student</th>
-              <th className="px-4 py-2.5 text-left font-semibold">Status</th>
-              <th className="hidden px-4 py-2.5 text-left font-semibold md:table-cell">Handed in</th>
-              <th className="px-4 py-2.5 text-right font-semibold">Score</th>
+              <th className="w-16 px-4 py-2.5 text-left font-semibold">{tr('Roll')}</th>
+              <th className="px-4 py-2.5 text-left font-semibold">{tr('Student')}</th>
+              <th className="px-4 py-2.5 text-left font-semibold">{tr('Status')}</th>
+              <th className="hidden px-4 py-2.5 text-left font-semibold md:table-cell">{tr('Handed in')}</th>
+              <th className="px-4 py-2.5 text-right font-semibold">{tr('Score')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -670,8 +673,8 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
                   <td className="px-4 py-2.5 text-ink-muted tabular">{r.student.rollNumber || rows.indexOf(r) + 1}</td>
                   <td className="px-4 py-2.5 font-medium text-ink">{r.student.fullName}</td>
                   <td className="px-4 py-2.5">
-                    <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', meta.tone)}>{meta.label}</span>
-                    {a?.autoSubmitted && <span className="ml-2 text-meta text-ink-subtle">time ran out</span>}
+                    <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', meta.tone)}>{tr(meta.label)}</span>
+                    {a?.autoSubmitted && <span className="ml-2 text-meta text-ink-subtle">{tr('time ran out')}</span>}
                   </td>
                   <td className="hidden px-4 py-2.5 text-ink-muted md:table-cell">{a?.submittedAt ? fmtWhen(a.submittedAt) : '—'}</td>
                   <td className="px-4 py-2.5 text-right tabular">
@@ -696,7 +699,7 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
           <SheetHeader>
             <SheetTitle>{open?.student.fullName}</SheetTitle>
             <SheetDescription>
-              {open?.attempt?.status === 'SUBMITTED' ? 'Mark the short answers.' : 'Their answers.'} Score so far:{' '}
+              {open?.attempt?.status === 'SUBMITTED' ? tr('Mark the short answers.') : tr('Their answers.')}{' '}{tr('Score so far:')}{' '}
               {open?.attempt?.score ?? 0} / {total}
             </SheetDescription>
           </SheetHeader>
@@ -706,7 +709,7 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
               return (
                 <div key={q._id} className="rounded-xl border border-line p-3">
                   <p className="text-meta font-semibold text-ink-subtle">
-                    Question {i + 1} · {q.marks} {q.marks === 1 ? 'mark' : 'marks'}
+                    {tr('Question {value} · {marks}', { value: i + 1, marks: q.marks })}{' '}{q.marks === 1 ? tr('mark') : tr('marks')}
                   </p>
                   <p className="mt-1 text-dense text-ink">{q.text}</p>
                   {q.kind === 'MCQ' ? (
@@ -724,19 +727,19 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
                           >
                             <span className="w-4 font-semibold">{LETTERS[oi]}</span>
                             {o}
-                            {chosen && <span className="ml-auto text-meta font-semibold">their answer</span>}
+                            {chosen && <span className="ml-auto text-meta font-semibold">{tr('their answer')}</span>}
                           </li>
                         );
                       })}
-                      {ans?.option === undefined && <li className="text-meta text-ink-subtle">Not answered</li>}
+                      {ans?.option === undefined && <li className="text-meta text-ink-subtle">{tr('Not answered')}</li>}
                     </ul>
                   ) : (
                     <div className="mt-2 space-y-2">
                       <p className="whitespace-pre-wrap rounded-lg bg-surface-sunken px-3 py-2 text-dense text-ink">
-                        {ans?.text?.trim() ? ans.text : <span className="text-ink-subtle">No answer</span>}
+                        {ans?.text?.trim() ? ans.text : <span className="text-ink-subtle">{tr('No answer')}</span>}
                       </p>
                       <label className="flex items-center gap-2 text-dense text-ink-muted">
-                        Marks
+                        {tr('Marks')}
                         <input
                           type="number"
                           min={0}
@@ -756,11 +759,11 @@ function Submissions({ test, active, onChanged }: { test: any; active: boolean; 
           </SheetBody>
           <SheetFooter>
             <Button variant="secondary" onClick={() => setOpen(null)}>
-              Close
+              {tr('Close')}
             </Button>
             {(full?.questions ?? []).some((q: any) => q.kind === 'SHORT') && (
               <Button onClick={saveMarks} loading={savingMarks}>
-                Save marks
+                {tr('Save marks')}
               </Button>
             )}
           </SheetFooter>

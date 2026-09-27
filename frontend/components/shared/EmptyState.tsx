@@ -1,5 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * Every empty state names the thing that is missing and offers the one action
@@ -68,8 +69,8 @@ export function ErrorState({
       )}
     >
       <div className="space-y-1">
-        <p className="text-dense font-medium text-ink">{title}</p>
-        {description && <p className="max-w-sm text-dense text-ink-muted">{description}</p>}
+        <p className="text-dense font-medium text-ink">{t(title)}</p>
+        {description && <p className="max-w-sm text-dense text-ink-muted">{t(description)}</p>}
       </div>
       {onRetry && (
         <button
@@ -77,7 +78,7 @@ export function ErrorState({
           onClick={onRetry}
           className="rounded-btn border border-line px-3 py-1.5 text-dense font-medium text-ink transition-colors hover:bg-surface-sunken focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
-          Try again
+          {t('Try again')}
         </button>
       )}
     </div>

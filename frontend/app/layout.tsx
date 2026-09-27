@@ -3,6 +3,9 @@ import { Onest, Hind_Siliguri } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { Providers } from '@/components/providers';
+import { cookies } from 'next/headers';
+import { LanguageProvider } from '@/components/i18n/LanguageProvider';
+import { LANG_COOKIE, type Lang } from '@/lib/i18n';
 
 /*
   Onest carries the UI. It was chosen over Inter deliberately: its narrower,
@@ -42,12 +45,16 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // The interface language the visitor chose (English unless they picked Bangla).
+  const lang: Lang = cookies().get(LANG_COOKIE)?.value === 'bn' ? 'bn' : 'en';
   return (
-    <html lang="en" className={`${onest.variable} ${hindSiliguri.variable}`} suppressHydrationWarning>
+    <html lang={lang} className={`${onest.variable} ${hindSiliguri.variable}`} suppressHydrationWarning>
       <body>
-        <Providers>
-          <AuthProvider>{children}</AuthProvider>
-        </Providers>
+        <LanguageProvider lang={lang}>
+          <Providers>
+            <AuthProvider>{children}</AuthProvider>
+          </Providers>
+        </LanguageProvider>
       </body>
     </html>
   );

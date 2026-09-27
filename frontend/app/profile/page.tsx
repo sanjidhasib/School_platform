@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { apiErrorMessage } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export default function ProfilePage() {
   const { user, refreshUser } = useAuth();
@@ -40,9 +41,9 @@ export default function ProfilePage() {
     try {
       await api.patch('/profile', { phone, email });
       await refreshUser();
-      toast.success('Profile saved');
+      toast.success(t('Profile saved'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save your profile'));
+      toast.error(apiErrorMessage(err, t('Could not save your profile')));
     } finally {
       setSaving(false);
     }
@@ -51,33 +52,33 @@ export default function ProfilePage() {
   const changePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 8) {
-      setPwdError('Your new password must be at least 8 characters.');
+      setPwdError(t('Your new password must be at least 8 characters.'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPwdError('The two new passwords do not match.');
+      setPwdError(t('The two new passwords do not match.'));
       return;
     }
     setPwdError(null);
     setChanging(true);
     try {
       await authAPI.changePassword({ currentPassword, newPassword });
-      toast.success('Password changed');
+      toast.success(t('Password changed'));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setPwdError(apiErrorMessage(err, 'Could not change your password'));
+      setPwdError(apiErrorMessage(err, t('Could not change your password')));
     } finally {
       setChanging(false);
     }
   };
 
   const requirements = [
-    { label: 'At least 8 characters', met: newPassword.length >= 8 },
-    { label: 'A letter and a number', met: /[A-Za-z]/.test(newPassword) && /\d/.test(newPassword) },
+    { label: t('At least 8 characters'), met: newPassword.length >= 8 },
+    { label: t('A letter and a number'), met: /[A-Za-z]/.test(newPassword) && /\d/.test(newPassword) },
     {
-      label: 'Both new passwords match',
+      label: t('Both new passwords match'),
       met: newPassword.length > 0 && newPassword === confirmPassword,
     },
   ];
@@ -85,7 +86,7 @@ export default function ProfilePage() {
   return (
     <DashboardShell>
       <div className="max-w-3xl space-y-8">
-        <PageHeader title="Profile" />
+        <PageHeader title={t('Profile')} />
 
         <div className="flex items-center gap-4 border-b border-line pb-6">
           <PersonAvatar name={user?.username} className="h-14 w-14" />
@@ -100,12 +101,12 @@ export default function ProfilePage() {
         <form onSubmit={saveProfile}>
           <section className="space-y-3">
             <div className="space-y-0.5">
-              <h2 className="text-section text-ink">Contact details</h2>
-              <p className="text-dense text-ink-muted">How the school reaches you.</p>
+              <h2 className="text-section text-ink">{t('Contact details')}</h2>
+              <p className="text-dense text-ink-muted">{t('How the school reaches you.')}</p>
             </div>
 
             <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
-              <Row label="Email" htmlFor="profile-email">
+              <Row label={t('Email')} htmlFor="profile-email">
                 <Input
                   id="profile-email"
                   type="email"
@@ -114,7 +115,7 @@ export default function ProfilePage() {
                   autoComplete="email"
                 />
               </Row>
-              <Row label="Phone" htmlFor="profile-phone">
+              <Row label={t('Phone')} htmlFor="profile-phone">
                 <Input
                   id="profile-phone"
                   value={phone}
@@ -125,7 +126,7 @@ export default function ProfilePage() {
               </Row>
               <div className="flex justify-end border-t border-line px-4 py-3">
                 <Button type="submit" loading={saving}>
-                  Save details
+                  {t('Save details')}
                 </Button>
               </div>
             </div>
@@ -135,14 +136,14 @@ export default function ProfilePage() {
         <form onSubmit={changePassword}>
           <section className="space-y-3">
             <div className="space-y-0.5">
-              <h2 className="text-section text-ink">Password</h2>
+              <h2 className="text-section text-ink">{t('Password')}</h2>
               <p className="text-dense text-ink-muted">
-                You will stay signed in on this device after changing it.
+                {t('You will stay signed in on this device after changing it.')}
               </p>
             </div>
 
             <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
-              <Row label="Current password" htmlFor="current-password">
+              <Row label={t('Current password')} htmlFor="current-password">
                 <Input
                   id="current-password"
                   type="password"
@@ -155,7 +156,7 @@ export default function ProfilePage() {
                   required
                 />
               </Row>
-              <Row label="New password" htmlFor="new-password">
+              <Row label={t('New password')} htmlFor="new-password">
                 <Input
                   id="new-password"
                   type="password"
@@ -168,7 +169,7 @@ export default function ProfilePage() {
                   required
                 />
               </Row>
-              <Row label="Repeat new password" htmlFor="confirm-password">
+              <Row label={t('Repeat new password')} htmlFor="confirm-password">
                 <Input
                   id="confirm-password"
                   type="password"
@@ -194,7 +195,7 @@ export default function ProfilePage() {
                         strokeWidth={2.25}
                         aria-hidden="true"
                       />
-                      {r.label}
+                      {t(r.label)}
                     </li>
                   ))}
                 </ul>
@@ -208,7 +209,7 @@ export default function ProfilePage() {
 
               <div className="flex justify-end px-4 py-3">
                 <Button type="submit" loading={changing}>
-                  Change password
+                  {t('Change password')}
                 </Button>
               </div>
             </div>

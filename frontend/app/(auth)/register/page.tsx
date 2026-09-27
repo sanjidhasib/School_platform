@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { apiErrorMessage, cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * Self-registration is limited to students and guardians. Staff and admin
@@ -55,20 +56,20 @@ function RegisterScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const requirements = [
-    { label: 'At least 8 characters', met: password.length >= 8 },
-    { label: 'A letter and a number', met: /[A-Za-z]/.test(password) && /\d/.test(password) },
-    { label: 'Both passwords match', met: password.length > 0 && password === confirm },
+    { label: t('At least 8 characters'), met: password.length >= 8 },
+    { label: t('A letter and a number'), met: /[A-Za-z]/.test(password) && /\d/.test(password) },
+    { label: t('Both passwords match'), met: password.length > 0 && password === confirm },
   ];
   const allMet = requirements.every((r) => r.met);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (username.trim().length < 3) {
-      setError('Your username must be at least 3 characters.');
+      setError(t('Your username must be at least 3 characters.'));
       return;
     }
     if (!allMet) {
-      setError('Please meet all the password requirements.');
+      setError(t('Please meet all the password requirements.'));
       return;
     }
     setError(null);
@@ -80,10 +81,10 @@ function RegisterScreen() {
         password,
         role,
       });
-      toast.success('Account created — you can sign in now');
+      toast.success(t('Account created — you can sign in now'));
       router.push('/login');
     } catch (err) {
-      setError(apiErrorMessage(err, 'Could not create your account'));
+      setError(apiErrorMessage(err, t('Could not create your account')));
     } finally {
       setLoading(false);
     }
@@ -97,12 +98,12 @@ function RegisterScreen() {
             <span className="flex h-8 w-8 items-center justify-center rounded-btn bg-brand text-brand-contrast">
               <LogoMark />
             </span>
-            <span className="text-dense font-semibold text-ink">SchoolOS</span>
+            <span className="text-dense font-semibold text-ink">{t('SchoolOS')}</span>
           </Link>
         </div>
 
         <div className="space-y-1">
-          <h1 className="text-page text-ink">Create an account</h1>
+          <h1 className="text-page text-ink">{t('Create an account')}</h1>
           <p className="text-body text-ink-muted">{school.name}</p>
         </div>
 
@@ -118,7 +119,7 @@ function RegisterScreen() {
           )}
 
           <fieldset className="space-y-2">
-            <legend className="text-label font-medium text-ink">I am a</legend>
+            <legend className="text-label font-medium text-ink">{t('I am a')}</legend>
             <div className="grid gap-2 sm:grid-cols-2">
               {ACCOUNT_TYPES.map((type) => {
                 const active = role === type.value;
@@ -148,21 +149,21 @@ function RegisterScreen() {
                         active ? 'text-brand' : 'text-ink'
                       )}
                     >
-                      {type.label}
+                      {t(type.label)}
                     </span>
                     <span className="mt-0.5 block text-meta text-ink-muted">
-                      {type.description}
+                      {t(type.description)}
                     </span>
                   </button>
                 );
               })}
             </div>
             <p className="text-meta text-ink-subtle">
-              Teacher and office accounts are created by the school.
+              {t('Teacher and office accounts are created by the school.')}
             </p>
           </fieldset>
 
-          <Field label="Username" description="At least 3 characters." required>
+          <Field label={t('Username')} description={t('At least 3 characters.')} required>
             {(p) => (
               <Input
                 {...p}
@@ -178,7 +179,7 @@ function RegisterScreen() {
             )}
           </Field>
 
-          <Field label="Email" description="Optional, but useful if you forget your password.">
+          <Field label={t('Email')} description={t('Optional, but useful if you forget your password.')}>
             {(p) => (
               <Input
                 {...p}
@@ -191,7 +192,7 @@ function RegisterScreen() {
             )}
           </Field>
 
-          <Field label="Password" required>
+          <Field label={t('Password')} required>
             {(p) => (
               <div className="relative">
                 <Input
@@ -210,7 +211,7 @@ function RegisterScreen() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? t('Hide password') : t('Show password')}
                   className="absolute right-1 top-1/2 flex h-7 w-8 -translate-y-1/2 items-center justify-center rounded-chip text-ink-subtle transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {showPassword ? (
@@ -223,7 +224,7 @@ function RegisterScreen() {
             )}
           </Field>
 
-          <Field label="Repeat password" required>
+          <Field label={t('Repeat password')} required>
             {(p) => (
               <Input
                 {...p}
@@ -256,31 +257,30 @@ function RegisterScreen() {
                     strokeWidth={2.25}
                     aria-hidden="true"
                   />
-                  {r.label}
+                  {t(r.label)}
                 </li>
               ))}
             </ul>
           )}
 
           <Button type="submit" className="w-full" size="lg" loading={loading}>
-            Create account
+            {t('Create account')}
           </Button>
 
           {role === 'GUARDIAN' && (
             <p className="text-meta text-ink-subtle">
-              After you sign in, ask the school office to link your child&apos;s record to this
-              account so you can see their attendance and results.
+              {t('After you sign in, ask the school office to link your child\'s record to this account so you can see their attendance and results.')}
             </p>
           )}
         </form>
 
         <p className="text-dense text-ink-muted">
-          Already have an account?{' '}
+          {t('Already have an account?')}{' '}
           <Link
             href="/login"
             className="font-medium text-brand underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
-            Sign in
+            {t('Sign in')}
           </Link>
         </p>
       </div>

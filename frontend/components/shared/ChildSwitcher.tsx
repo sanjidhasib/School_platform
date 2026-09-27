@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { PersonAvatar } from '@/components/ui/avatar';
 import { cn, firstName } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export interface ChildOption {
   _id: string;
@@ -30,7 +31,7 @@ export function ChildSwitcher({
   return (
     <div
       role="tablist"
-      aria-label="Choose a child"
+      aria-label={t('Choose a child')}
       className="scrollbar-thin flex gap-2 overflow-x-auto pb-1"
     >
       {options.map((child) => {

@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { statusMeta, TONE_CLASSES } from '@/lib/design/status';
+import { t } from '@/lib/i18n';
 
 /**
  * The single way a status is shown anywhere in SchoolOS: always an icon and a
@@ -22,10 +23,10 @@ export function StatusPill({
         TONE_CLASSES[tone],
         className
       )}
-      title={iconOnly ? label : undefined}
+      title={iconOnly ? t(label) : undefined}
     >
       <Icon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-      {iconOnly ? <span className="sr-only">{label}</span> : label}
+      {iconOnly ? <span className="sr-only">{t(label)}</span> : t(label)}
     </span>
   );
 }

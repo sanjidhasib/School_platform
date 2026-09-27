@@ -18,6 +18,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { t } from '@/lib/i18n';
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -57,7 +58,7 @@ export function AppSidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
-            aria-label="Collapse sidebar"
+            aria-label={t('Collapse sidebar')}
             className="hidden shrink-0 rounded-chip p-1.5 text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand lg:block"
           >
             <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
@@ -65,11 +66,11 @@ export function AppSidebar({
         )}
       </div>
 
-      <nav className="scrollbar-thin flex-1 space-y-4 overflow-y-auto px-2 py-3" aria-label="Main">
+      <nav className="scrollbar-thin flex-1 space-y-4 overflow-y-auto px-2 py-3" aria-label={t('Main')}>
         {groups.map((group, gi) => (
           <div key={group.title ?? `group-${gi}`} className="space-y-0.5">
             {group.title && !collapsed && (
-              <p className="px-2 pb-1 pt-1 text-meta font-medium text-ink-subtle">{group.title}</p>
+              <p className="px-2 pb-1 pt-1 text-meta font-medium text-ink-subtle">{t(group.title)}</p>
             )}
             {group.title && collapsed && gi > 0 && <div className="mx-2 my-2 h-px bg-line" />}
             {group.items.map((item) => (
@@ -90,7 +91,7 @@ export function AppSidebar({
           <button
             type="button"
             onClick={onToggleCollapse}
-            aria-label="Expand sidebar"
+            aria-label={t('Expand sidebar')}
             className="mb-1 hidden w-full items-center justify-center rounded-btn p-2 text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand lg:flex"
           >
             <PanelLeft className="h-4 w-4" strokeWidth={1.75} />
@@ -127,19 +128,19 @@ export function AppSidebar({
             <DropdownMenuItem asChild>
               <Link href="/profile">
                 <UserIcon className="h-4 w-4" strokeWidth={1.75} />
-                Profile
+                {t('Profile')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link href="/">
                 <Home className="h-4 w-4" strokeWidth={1.75} />
-                School home page
+                {t('School home page')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem destructive onSelect={() => logout()}>
               <LogOut className="h-4 w-4" strokeWidth={1.75} />
-              Sign out
+              {t('Sign out')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -183,7 +184,7 @@ function SidebarLink({
         />
       )}
       <item.icon className="relative h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-      {!collapsed && <span className="relative truncate">{item.label}</span>}
+      {!collapsed && <span className="relative truncate">{t(item.label)}</span>}
     </Link>
   );
 

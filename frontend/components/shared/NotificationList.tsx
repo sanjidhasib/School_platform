@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn, formatDayGroup, formatRelativeTime } from '@/lib/utils';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { t } from '@/lib/i18n';
 
 /**
  * Shared by the student, guardian and admin notification pages. Grouped by
@@ -81,7 +82,7 @@ export function NotificationList({
   if (!notifications.length) {
     return (
       <div className="rounded-card border border-line bg-surface shadow-card">
-        <EmptyState icon={Bell} title={emptyTitle} description={emptyDescription} />
+        <EmptyState icon={Bell} title={t(emptyTitle)} description={t(emptyDescription)} />
       </div>
     );
   }
@@ -96,7 +97,7 @@ export function NotificationList({
     <div className="space-y-6">
       {groups.map((group) => (
         <section key={group.label} className="space-y-2">
-          <h2 className="text-meta font-medium text-ink-subtle">{group.label}</h2>
+          <h2 className="text-meta font-medium text-ink-subtle">{t(group.label)}</h2>
           <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
             {group.items.map((n) => {
               const Icon = TYPE_ICONS[n.type ?? ''] ?? Bell;
@@ -126,7 +127,7 @@ export function NotificationList({
                       </span>
                       {!n.isRead && (
                         <span className="shrink-0 rounded-chip bg-brand-wash px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-brand">
-                          New
+                          {t('New')}
                         </span>
                       )}
                     </span>

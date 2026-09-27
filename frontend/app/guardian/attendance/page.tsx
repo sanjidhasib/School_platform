@@ -13,6 +13,7 @@ import { ListSkeleton, Skeleton } from '@/components/ui/skeleton';
 import { StatusPill } from '@/components/ui/status-pill';
 import { Progress } from '@/components/ui/progress';
 import { firstName, formatDate, formatPercentage, formatTime } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export default function GuardianAttendancePage() {
   const [children, setChildren] = useState<any[]>([]);
@@ -30,7 +31,7 @@ export default function GuardianAttendancePage() {
         setChildren(list);
         if (list.length) setSelectedId(list[0]._id);
       })
-      .catch(() => toast.error('Could not load your children'))
+      .catch(() => toast.error(t('Could not load your children')))
       .finally(() => setLoadingChildren(false));
   }, []);
 
@@ -43,7 +44,7 @@ export default function GuardianAttendancePage() {
       .then((r) => setData(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load attendance');
+        toast.error(t('Could not load attendance'));
       })
       .finally(() => setLoading(false));
   }, [selectedId]);
@@ -73,12 +74,12 @@ export default function GuardianAttendancePage() {
   if (!children.length) {
     return (
       <div className="space-y-5">
-        <PageHeader title="Attendance" />
+        <PageHeader title={t('Attendance')} />
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
-            title="No children linked to your account"
-            description="Please ask the school office to link your child's record to your account."
+            title={t('No children linked to your account')}
+            description={t('Please ask the school office to link your child\'s record to your account.')}
           />
         </div>
       </div>
@@ -87,7 +88,7 @@ export default function GuardianAttendancePage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Attendance" />
+      <PageHeader title={t('Attendance')} />
 
       <ChildSwitcher
         options={children}
@@ -98,13 +99,13 @@ export default function GuardianAttendancePage() {
       {loading ? (
         <ListSkeleton rows={5} />
       ) : failed ? (
-        <ErrorState description="Attendance did not load." onRetry={load} />
+        <ErrorState description={t('Attendance did not load.')} onRetry={load} />
       ) : !records.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CheckSquare}
-            title="No attendance recorded yet"
-            description={`${firstName(child?.fullName)}'s record appears once teachers start taking attendance.`}
+            title={t('No attendance recorded yet')}
+            description={t('{firstName}\'s record appears once teachers start taking attendance.', { firstName: firstName(child?.fullName) })}
           />
         </div>
       ) : (
@@ -112,13 +113,13 @@ export default function GuardianAttendancePage() {
           <SummaryStrip
             figures={[
               {
-                label: 'Classes attended',
+                label: t('Classes attended'),
                 value: summary.present ?? 0,
                 detail: `of ${summary.total ?? 0}`,
               },
-              { label: 'Absent', value: summary.absent ?? 0 },
-              { label: 'On leave', value: summary.leave ?? 0 },
-              { label: 'Attendance', value: formatPercentage(summary.percentage ?? 0) },
+              { label: t('Absent'), value: summary.absent ?? 0 },
+              { label: t('On leave'), value: summary.leave ?? 0 },
+              { label: t('Attendance'), value: formatPercentage(summary.percentage ?? 0) },
             ]}
           />
 
@@ -132,11 +133,11 @@ export default function GuardianAttendancePage() {
                   : 'danger'
             }
             className="max-w-md"
-            label="Attendance"
+            label={t('Attendance')}
           />
 
           {absences.length > 0 && (
-            <Section title="Recent absences">
+            <Section title={t('Recent absences')}>
               <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
                 {absences.map(({ session }: any) => (
                   <li key={session._id} className="flex items-center gap-4 px-4 py-3">
@@ -153,7 +154,7 @@ export default function GuardianAttendancePage() {
             </Section>
           )}
 
-          <Section title="Every class">
+          <Section title={t('Every class')}>
             <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
               {records.map(({ session, record }: any) => (
                 <li key={session._id} className="flex items-center gap-4 px-4 py-3">

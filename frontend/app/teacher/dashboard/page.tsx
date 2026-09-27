@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { subjectTint, subjectBn } from '@/lib/design/subjects';
 import { cn, formatDateLong, formatTime, minutesFromMidnight } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export default function TeacherDashboardPage() {
   const [data, setData] = useState<any>(null);
@@ -29,7 +30,7 @@ export default function TeacherDashboardPage() {
       .then((r) => setData(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your day');
+        toast.error(t('Could not load your day'));
       })
       .finally(() => setLoading(false));
   };
@@ -73,19 +74,19 @@ export default function TeacherDashboardPage() {
   const focusIsNow = Boolean(current);
 
   if (loading) return <DashboardSkeleton />;
-  if (failed) return <ErrorState description="Your schedule did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={t('Your schedule did not load.')} onRetry={load} />;
 
   return (
     <div className="space-y-7">
       <PageHeader
-        title="Today"
+        title={t('Today')}
         description={formatDateLong(new Date())}
         actions={
           data?.pendingGrading > 0 ? (
             <Button variant="secondary" asChild>
               <Link href="/teacher/homework">
                 <ClipboardCheck className="h-4 w-4" strokeWidth={1.75} />
-                {data.pendingGrading} to grade
+                {t('{pendingGrading} to grade', { pendingGrading: data.pendingGrading })}
               </Link>
             </Button>
           ) : undefined
@@ -106,17 +107,17 @@ export default function TeacherDashboardPage() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <Badge tone={focusIsNow ? 'warning' : 'neutral'}>
-                  {focusIsNow ? 'In progress' : 'Next class'}
+                  {focusIsNow ? t('In progress') : t('Next class')}
                 </Badge>
                 {focusIsNow && minutesLeft !== null && (
                   <span className="text-meta text-ink-muted tabular">
-                    {minutesLeft} min left
+                    {t('{minutesLeft} min left', { minutesLeft })}
                   </span>
                 )}
               </div>
 
               <h2 className="mt-2 text-2xl font-semibold text-ink">
-                {focus.teacherAssignmentId?.subjectId?.name ?? 'Class'}
+                {focus.teacherAssignmentId?.subjectId?.name ?? t('Class')}
               </h2>
               {subjectBn(focus.teacherAssignmentId?.subjectId) && (
                 <p lang="bn" className="font-bn text-body text-ink-muted">
@@ -126,20 +127,20 @@ export default function TeacherDashboardPage() {
 
               <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3">
                 <div>
-                  <dt className="text-meta text-ink-subtle">Class</dt>
+                  <dt className="text-meta text-ink-subtle">{t('Class')}</dt>
                   <dd className="mt-0.5 text-dense font-medium text-ink">
                     {focus.classId?.name} {focus.classId?.section}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-meta text-ink-subtle">Time</dt>
+                  <dt className="text-meta text-ink-subtle">{t('Time')}</dt>
                   <dd className="mt-0.5 text-dense font-medium text-ink tabular">
                     {formatTime(focus.startTime)} – {formatTime(focus.endTime)}
                   </dd>
                 </div>
                 {(focus.room || focus.classId?.room) && (
                   <div>
-                    <dt className="text-meta text-ink-subtle">Room</dt>
+                    <dt className="text-meta text-ink-subtle">{t('Room')}</dt>
                     <dd className="mt-0.5 text-dense font-medium text-ink">
                       {focus.room || focus.classId?.room}
                     </dd>
@@ -151,7 +152,7 @@ export default function TeacherDashboardPage() {
             <Button size="lg" asChild>
               <Link href="/teacher/attendance">
                 <UserCheck className="h-4 w-4" strokeWidth={1.75} />
-                Take attendance
+                {t('Take attendance')}
               </Link>
             </Button>
           </div>
@@ -160,16 +161,16 @@ export default function TeacherDashboardPage() {
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CalendarClock}
-            title={schedule.length ? 'All your classes are done for today' : 'No classes today'}
+            title={schedule.length ? t('All your classes are done for today') : t('No classes today')}
             description={
               schedule.length
-                ? 'Nothing else is scheduled. Marking and homework are still open.'
-                : 'Your routine has nothing scheduled for today.'
+                ? t('Nothing else is scheduled. Marking and homework are still open.')
+                : t('Your routine has nothing scheduled for today.')
             }
             compact
             action={
               <Button variant="secondary" asChild>
-                <Link href="/teacher/schedule">See the week</Link>
+                <Link href="/teacher/schedule">{t('See the week')}</Link>
               </Button>
             }
           />
@@ -177,16 +178,16 @@ export default function TeacherDashboardPage() {
       )}
 
       <Section
-        title="Today's classes"
+        title={t('Today\'s classes')}
         actions={
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/teacher/schedule">See the week</Link>
+            <Link href="/teacher/schedule">{t('See the week')}</Link>
           </Button>
         }
       >
         {!schedule.length ? (
           <div className="rounded-card border border-line bg-surface shadow-card">
-            <EmptyState icon={CalendarClock} title="Nothing scheduled" compact />
+            <EmptyState icon={CalendarClock} title={t('Nothing scheduled')} compact />
           </div>
         ) : (
           <ol className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
@@ -211,7 +212,7 @@ export default function TeacherDashboardPage() {
                     >
                       {formatTime(slot.startTime)}
                     </p>
-                    {live && <p className="text-meta font-medium text-warning">Now</p>}
+                    {live && <p className="text-meta font-medium text-warning">{t('Now')}</p>}
                   </div>
 
                   <span
@@ -245,7 +246,7 @@ export default function TeacherDashboardPage() {
       </Section>
 
       {data?.pendingGrading > 0 && (
-        <Section title="Waiting on you">
+        <Section title={t('Waiting on you')}>
           <Link
             href="/teacher/homework"
             className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface shadow-card px-4 py-3.5 transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
@@ -257,10 +258,10 @@ export default function TeacherDashboardPage() {
               <span>
                 <span className="block text-dense font-medium text-ink">
                   {data.pendingGrading}{' '}
-                  {data.pendingGrading === 1 ? 'submission' : 'submissions'} to grade
+                  {data.pendingGrading === 1 ? t('submission') : t('submissions')}{' '}{t('to grade')}
                 </span>
                 <span className="block text-meta text-ink-muted">
-                  Students are waiting on their marks.
+                  {t('Students are waiting on their marks.')}
                 </span>
               </span>
             </span>

@@ -41,6 +41,8 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage } from '@/lib/utils';
+import { t as tr } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 /**
  * Optional fields left blank must be omitted, not sent as "". The User model
@@ -92,7 +94,7 @@ export default function StudentsPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load students');
+        toast.error(tr('Could not load students'));
       })
       .finally(() => setLoading(false));
   }, [search, classFilter, limit]);
@@ -129,9 +131,9 @@ export default function StudentsPage() {
         return {
           value: c._id,
           label: `${c.name} ${c.section}`.trim(),
-          hint: `${enrolled} of ${capacity} places filled`,
+          hint: tr('{enrolled} of {capacity} places filled', { enrolled, capacity }),
           disabled: full && !isCurrent,
-          disabledReason: full && !isCurrent ? `Full — ${enrolled} of ${capacity} places taken` : undefined,
+          disabledReason: full && !isCurrent ? tr('Full — {enrolled} of {capacity} places taken', { enrolled, capacity }) : undefined,
         };
       }),
     [classes, editing]
@@ -166,16 +168,16 @@ export default function StudentsPage() {
     try {
       if (editing) {
         await adminAPI.updateStudent(editing._id, withoutBlanks(form));
-        toast.success('Student saved');
+        toast.success(tr('Student saved'));
       } else {
         await adminAPI.createStudent(withoutBlanks(form));
-        toast.success(`${form.fullName} admitted`);
+        toast.success(tr('{fullName} admitted', { fullName: form.fullName }));
       }
       setOpen(false);
       load();
       adminAPI.getClasses().then((r) => setClasses(r.data.data));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the student'));
+      toast.error(apiErrorMessage(err, tr('Could not save the student')));
     } finally {
       setSaving(false);
     }
@@ -185,11 +187,11 @@ export default function StudentsPage() {
     setRemoving(true);
     try {
       await adminAPI.deleteStudent(deleting._id);
-      toast.success(`${deleting.fullName} deactivated`);
+      toast.success(tr('{fullName} deactivated', { fullName: deleting.fullName }));
       setDeleting(null);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not deactivate the student'));
+      toast.error(apiErrorMessage(err, tr('Could not deactivate the student')));
     } finally {
       setRemoving(false);
     }
@@ -203,11 +205,11 @@ export default function StudentsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Students"
+        title={tr('Students')}
         actions={
           <Button onClick={openAdd}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Admit a student
+            {tr('Admit a student')}
           </Button>
         }
       />
@@ -219,21 +221,21 @@ export default function StudentsPage() {
             strokeWidth={1.75}
           />
           <Input
-            placeholder="Search by name or ID"
+            placeholder={tr('Search by name or ID')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
-            aria-label="Search students"
+            aria-label={tr('Search students')}
           />
         </div>
 
         <div className="w-44">
           <Combobox
-            options={[{ value: 'all', label: 'All classes' }, ...classOptions.map((c) => ({ ...c, disabled: false, disabledReason: undefined }))]}
+            options={[{ value: 'all', label: tr('All classes') }, ...classOptions.map((c) => ({ ...c, disabled: false, disabledReason: undefined }))]}
             value={classFilter}
             onChange={setClassFilter}
-            placeholder="All classes"
-            searchPlaceholder="Find a class"
+            placeholder={tr('All classes')}
+            searchPlaceholder={tr('Find a class')}
           />
         </div>
 
@@ -245,14 +247,14 @@ export default function StudentsPage() {
           >
             {activeFilterLabel}
             <X className="h-3 w-3" strokeWidth={2} />
-            <span className="sr-only">Clear the class filter</span>
+            <span className="sr-only">{tr('Clear the class filter')}</span>
           </button>
         )}
 
         {!loading && (
           <p className="ml-auto text-meta text-ink-subtle tabular">
             {total > students.length
-              ? `Showing ${students.length} of ${total} students`
+              ? tr('Showing {length} of {total} students', { length: students.length, total })
               : `${students.length} ${students.length === 1 ? 'student' : 'students'}`}
           </p>
         )}
@@ -261,16 +263,16 @@ export default function StudentsPage() {
       {loading ? (
         <TableSkeleton cols={5} />
       ) : failed ? (
-        <ErrorState description="The student list did not load." onRetry={load} />
+        <ErrorState description={tr('The student list did not load.')} onRetry={load} />
       ) : !students.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={GraduationCap}
-            title={search || classFilter !== 'all' ? 'No students match those filters' : 'No students yet'}
+            title={search || classFilter !== 'all' ? tr('No students match those filters') : tr('No students yet')}
             description={
               search || classFilter !== 'all'
-                ? 'Try a different name, ID or class.'
-                : 'Admit the first student to get started.'
+                ? tr('Try a different name, ID or class.')
+                : tr('Admit the first student to get started.')
             }
             action={
               search || classFilter !== 'all' ? (
@@ -281,12 +283,12 @@ export default function StudentsPage() {
                     setClassFilter('all');
                   }}
                 >
-                  Clear filters
+                  {tr('Clear filters')}
                 </Button>
               ) : (
                 <Button onClick={openAdd}>
                   <Plus className="h-4 w-4" strokeWidth={1.75} />
-                  Admit a student
+                  {tr('Admit a student')}
                 </Button>
               )
             }
@@ -297,11 +299,11 @@ export default function StudentsPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Name</TableHead>
-                <TableHead>Student ID</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead className="hidden md:table-cell">Guardian</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{tr('Name')}</TableHead>
+                <TableHead>{tr('Student ID')}</TableHead>
+                <TableHead>{tr('Class')}</TableHead>
+                <TableHead className="hidden md:table-cell">{tr('Guardian')}</TableHead>
+                <TableHead>{tr('Status')}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -336,7 +338,7 @@ export default function StudentsPage() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            aria-label={`Actions for ${s.fullName}`}
+                            aria-label={tr('Actions for {fullName}', { fullName: s.fullName })}
                             className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
                           >
                             <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
@@ -346,16 +348,16 @@ export default function StudentsPage() {
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/students/${s._id}`}>
                               <Eye className="h-4 w-4" strokeWidth={1.75} />
-                              View profile
+                              {tr('View profile')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => openEdit(s)}>
                             <Pencil className="h-4 w-4" strokeWidth={1.75} />
-                            Edit
+                            {tr('Edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem destructive onSelect={() => setDeleting(s)}>
                             <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                            Deactivate
+                            {tr('Deactivate')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -372,7 +374,7 @@ export default function StudentsPage() {
       {!loading && !failed && total > students.length && (
         <div className="flex justify-center">
           <Button variant="secondary" onClick={() => setLimit((l) => l + 40)}>
-            Show more students
+            {tr('Show more students')}
           </Button>
         </div>
       )}
@@ -380,9 +382,9 @@ export default function StudentsPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit student' : 'Admit a student'}</SheetTitle>
+            <SheetTitle>{editing ? tr('Edit student') : tr('Admit a student')}</SheetTitle>
             <SheetDescription>
-              {editing ? editing.fullName : 'Creates the student record and their sign-in account.'}
+              {editing ? editing.fullName : tr('Creates the student record and their sign-in account.')}
             </SheetDescription>
           </SheetHeader>
 
@@ -391,7 +393,7 @@ export default function StudentsPage() {
               {!editing && (
                 <>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Username" required>
+                    <Field label={tr('Username')} required>
                       {(p) => (
                         <Input
                           {...p}
@@ -402,7 +404,7 @@ export default function StudentsPage() {
                         />
                       )}
                     </Field>
-                    <Field label="Password" required>
+                    <Field label={tr('Password')} required>
                       {(p) => (
                         <Input
                           {...p}
@@ -415,7 +417,7 @@ export default function StudentsPage() {
                       )}
                     </Field>
                   </div>
-                  <Field label="Email">
+                  <Field label={tr('Email')}>
                     {(p) => (
                       <Input
                         {...p}
@@ -429,7 +431,7 @@ export default function StudentsPage() {
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Full name" required>
+                <Field label={tr('Full name')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -439,7 +441,7 @@ export default function StudentsPage() {
                     />
                   )}
                 </Field>
-                <Field label="Student ID" required>
+                <Field label={tr('Student ID')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -452,8 +454,8 @@ export default function StudentsPage() {
               </div>
 
               <Field
-                label="Class"
-                description="Classes that already hold 40 students cannot take another."
+                label={tr('Class')}
+                description={tr('Classes that already hold 40 students cannot take another.')}
                 required
               >
                 {(p) => (
@@ -462,8 +464,8 @@ export default function StudentsPage() {
                     options={classOptions}
                     value={form.classId}
                     onChange={(v) => setForm((f) => ({ ...f, classId: v }))}
-                    placeholder="Choose a class"
-                    searchPlaceholder="Find a class"
+                    placeholder={tr('Choose a class')}
+                    searchPlaceholder={tr('Find a class')}
                   />
                 )}
               </Field>
@@ -475,7 +477,7 @@ export default function StudentsPage() {
                 />
               )}
 
-              <Field label="Phone">
+              <Field label={tr('Phone')}>
                 {(p) => (
                   <Input
                     {...p}
@@ -488,10 +490,10 @@ export default function StudentsPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {tr('Cancel')}
               </Button>
               <Button type="submit" loading={saving}>
-                {editing ? 'Save changes' : 'Admit student'}
+                {editing ? tr('Save changes') : tr('Admit student')}
               </Button>
             </SheetFooter>
           </form>
@@ -501,15 +503,14 @@ export default function StudentsPage() {
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="Deactivate this student?"
+        title={tr('Deactivate this student?')}
         description={
-          <>
-            <strong className="text-ink">{deleting?.fullName}</strong> ({deleting?.studentId}) will be
-            marked inactive and will no longer be able to sign in. Their attendance, homework and
-            results are kept.
-          </>
+          tNode('{name} ({id}) will be marked inactive and will no longer be able to sign in. Their attendance, homework and results are kept.', {
+            name: <strong className="text-ink">{deleting?.fullName}</strong>,
+            id: deleting?.studentId,
+          })
         }
-        confirmLabel="Deactivate"
+        confirmLabel={tr('Deactivate')}
         destructive
         loading={removing}
         onConfirm={confirmDelete}

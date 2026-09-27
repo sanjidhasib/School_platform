@@ -30,6 +30,8 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage, formatDate } from '@/lib/utils';
+import { t } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 const today = () => new Date().toISOString().split('T')[0];
 const CATEGORIES = ['GENERAL', 'ACADEMIC', 'EXAM', 'HOLIDAY', 'EVENT', 'URGENT'] as const;
@@ -67,7 +69,7 @@ export default function NoticesPage() {
       .then((r) => setNotices(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load notices');
+        toast.error(t('Could not load notices'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -108,15 +110,15 @@ export default function NoticesPage() {
       if (form.eventDate) payload.eventDate = form.eventDate;
       if (editing) {
         await adminAPI.updateNotice(editing._id, payload);
-        toast.success('Notice updated');
+        toast.success(t('Notice updated'));
       } else {
         await adminAPI.createNotice(payload);
-        toast.success('Notice published');
+        toast.success(t('Notice published'));
       }
       setOpen(false);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not publish the notice'));
+      toast.error(apiErrorMessage(err, t('Could not publish the notice')));
     } finally {
       setSaving(false);
     }
@@ -126,11 +128,11 @@ export default function NoticesPage() {
     setRemoving(true);
     try {
       await adminAPI.deleteNotice(deleting._id);
-      toast.success('Notice deleted');
+      toast.success(t('Notice deleted'));
       setDeleting(null);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not delete the notice'));
+      toast.error(apiErrorMessage(err, t('Could not delete the notice')));
     } finally {
       setRemoving(false);
     }
@@ -139,12 +141,12 @@ export default function NoticesPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Notices"
-        description="Published notices reach students, guardians and the school home page."
+        title={t('Notices')}
+        description={t('Published notices reach students, guardians and the school home page.')}
         actions={
           <Button onClick={openAdd}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Write a notice
+            {t('Write a notice')}
           </Button>
         }
       />
@@ -152,17 +154,17 @@ export default function NoticesPage() {
       {loading ? (
         <ListSkeleton rows={4} />
       ) : failed ? (
-        <ErrorState description="The notice board did not load." onRetry={load} />
+        <ErrorState description={t('The notice board did not load.')} onRetry={load} />
       ) : !notices.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Bell}
-            title="Nothing on the notice board"
-            description="Publish a notice and it appears here and on the school home page."
+            title={t('Nothing on the notice board')}
+            description={t('Publish a notice and it appears here and on the school home page.')}
             action={
               <Button onClick={openAdd}>
                 <Plus className="h-4 w-4" strokeWidth={1.75} />
-                Write a notice
+                {t('Write a notice')}
               </Button>
             }
           />
@@ -185,7 +187,7 @@ export default function NoticesPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-dense font-semibold text-ink">{n.title}</h2>
-                    {upcoming && <Badge tone="warning">Upcoming event</Badge>}
+                    {upcoming && <Badge tone="warning">{t('Upcoming event')}</Badge>}
                     {n.category && <Badge tone="outline">{n.category}</Badge>}
                   </div>
                   {n.description && (
@@ -194,24 +196,24 @@ export default function NoticesPage() {
                     </p>
                   )}
                   <p className="mt-2 text-meta text-ink-subtle">
-                    Published {formatDate(n.publishAt || n.createdAt)}
+                    {t('Published {formatDate}', { formatDate: formatDate(n.publishAt || n.createdAt) })}
                   </p>
                 </div>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${n.title}`}>
+                    <Button variant="ghost" size="icon-sm" aria-label={t('Actions for {title}', { title: n.title })}>
                       <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onSelect={() => openEdit(n)}>
                       <Pencil className="h-4 w-4" strokeWidth={1.75} />
-                      Edit
+                      {t('Edit')}
                     </DropdownMenuItem>
                     <DropdownMenuItem destructive onSelect={() => setDeleting(n)}>
                       <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                      Delete
+                      {t('Delete')}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -224,39 +226,39 @@ export default function NoticesPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit notice' : 'Write a notice'}</SheetTitle>
+            <SheetTitle>{editing ? t('Edit notice') : t('Write a notice')}</SheetTitle>
             <SheetDescription>
-              Give an event date and it also appears under upcoming events.
+              {t('Give an event date and it also appears under upcoming events.')}
             </SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
-              <Field label="Title" required>
+              <Field label={t('Title')} required>
                 {(p) => (
                   <Input
                     {...p}
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="Parent-teacher meeting"
+                    placeholder={t('Parent-teacher meeting')}
                     required
                   />
                 )}
               </Field>
 
-              <Field label="Category" required>
+              <Field label={t('Category')} required>
                 {(p) => (
                   <Combobox
                     {...p}
                     options={CATEGORIES.map((c) => ({ value: c, label: categoryLabel(c) }))}
                     value={form.category}
                     onChange={(v) => setForm((f) => ({ ...f, category: v }))}
-                    searchPlaceholder="Find a category"
+                    searchPlaceholder={t('Find a category')}
                   />
                 )}
               </Field>
 
-              <Field label="Notice" required>
+              <Field label={t('Notice')} required>
                 {(p) => (
                   <Textarea
                     {...p}
@@ -269,7 +271,7 @@ export default function NoticesPage() {
               </Field>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Publish on" required>
+                <Field label={t('Publish on')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -280,7 +282,7 @@ export default function NoticesPage() {
                     />
                   )}
                 </Field>
-                <Field label="Event date" description="Optional.">
+                <Field label={t('Event date')} description={t('Optional.')}>
                   {(p) => (
                     <Input
                       {...p}
@@ -295,10 +297,10 @@ export default function NoticesPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" loading={saving}>
-                {editing ? 'Save changes' : 'Publish'}
+                {editing ? t('Save changes') : t('Publish')}
               </Button>
             </SheetFooter>
           </form>
@@ -308,14 +310,11 @@ export default function NoticesPage() {
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="Delete this notice?"
+        title={t('Delete this notice?')}
         description={
-          <>
-            <strong className="text-ink">{deleting?.title}</strong> will be removed from the notice
-            board and from the school home page.
-          </>
+          tNode('{name} will be removed from the notice board and from the school home page.', { name: <strong className="text-ink">{deleting?.title}</strong> })
         }
-        confirmLabel="Delete"
+        confirmLabel={t('Delete')}
         destructive
         loading={removing}
         onConfirm={confirmDelete}

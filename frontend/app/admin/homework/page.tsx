@@ -21,6 +21,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { formatDate } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /** The office view of homework set across the school. Read-only. */
 export default function AdminHomeworkPage() {
@@ -42,7 +43,7 @@ export default function AdminHomeworkPage() {
       .then((r) => setRows(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load homework');
+        toast.error(t('Could not load homework'));
       })
       .finally(() => setLoading(false));
   }, [classFilter]);
@@ -51,7 +52,7 @@ export default function AdminHomeworkPage() {
 
   const classOptions = useMemo(
     () => [
-      { value: 'all', label: 'All classes' },
+      { value: 'all', label: t('All classes') },
       ...classes.map((c: any) => ({
         value: c._id,
         label: `${c.name} ${c.section ?? ''}`.trim(),
@@ -62,18 +63,18 @@ export default function AdminHomeworkPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Homework" description="Everything set across the school, newest due first." />
+      <PageHeader title={t('Homework')} description={t('Everything set across the school, newest due first.')} />
 
       <div className="flex flex-wrap items-end gap-3">
-        <Field label="Class" className="w-48">
+        <Field label={t('Class')} className="w-48">
           {(p) => (
             <Combobox
               {...p}
               options={classOptions}
               value={classFilter}
               onChange={setClassFilter}
-              placeholder="All classes"
-              searchPlaceholder="Find a class"
+              placeholder={t('All classes')}
+              searchPlaceholder={t('Find a class')}
             />
           )}
         </Field>
@@ -82,13 +83,13 @@ export default function AdminHomeworkPage() {
       {loading ? (
         <TableSkeleton cols={5} />
       ) : failed ? (
-        <ErrorState description="The homework list did not load." onRetry={load} />
+        <ErrorState description={t('The homework list did not load.')} onRetry={load} />
       ) : !rows.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={ClipboardCheck}
-            title="No homework set"
-            description="Homework appears here once a teacher publishes it."
+            title={t('No homework set')}
+            description={t('Homework appears here once a teacher publishes it.')}
           />
         </div>
       ) : (
@@ -96,13 +97,13 @@ export default function AdminHomeworkPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Title</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead className="hidden lg:table-cell">Teacher</TableHead>
-                <TableHead>Due</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden sm:table-cell">Turned in</TableHead>
+                <TableHead>{t('Title')}</TableHead>
+                <TableHead>{t('Class')}</TableHead>
+                <TableHead>{t('Subject')}</TableHead>
+                <TableHead className="hidden lg:table-cell">{t('Teacher')}</TableHead>
+                <TableHead>{t('Due')}</TableHead>
+                <TableHead>{t('Status')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('Turned in')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -129,13 +130,13 @@ export default function AdminHomeworkPage() {
                     </TableCell>
                     <TableCell className="tabular text-ink-muted">
                       {formatDate(homework.dueAt)}
-                      {overdue && <span className="ml-1.5 text-meta text-danger">Past due</span>}
+                      {overdue && <span className="ml-1.5 text-meta text-danger">{t('Past due')}</span>}
                     </TableCell>
                     <TableCell>
                       <StatusPill status={homework.status} />
                     </TableCell>
                     <TableCell className="hidden sm:table-cell tabular text-ink-muted">
-                      {total ? `${turnedIn} of ${total}` : '—'}
+                      {total ? t('{turnedIn} of {total}', { turnedIn, total }) : '—'}
                     </TableCell>
                   </TableRow>
                 );

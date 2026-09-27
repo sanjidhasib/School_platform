@@ -1,6 +1,16 @@
 import { clsx, type ClassValue } from 'clsx';
 import { extendTailwindMerge } from 'tailwind-merge';
-import { format, formatDistanceToNow, isToday, isYesterday, parseISO } from 'date-fns';
+import { format as dfFormat, formatDistanceToNow as dfDistance, isToday, isYesterday, parseISO } from 'date-fns';
+import { bn as bnLocale } from 'date-fns/locale';
+import { getLanguage, toBnDigits, t } from '@/lib/i18n';
+
+// Dates follow the interface language: Bangla month and day names, and Bangla
+// digits, when the language is Bangla.
+const isBn = () => getLanguage() === 'bn';
+const format = (d: Date, pattern: string) =>
+  isBn() ? toBnDigits(dfFormat(d, pattern, { locale: bnLocale })) : dfFormat(d, pattern);
+const formatDistanceToNow = (d: Date, opts: { addSuffix: boolean }) =>
+  isBn() ? toBnDigits(dfDistance(d, { ...opts, locale: bnLocale })) : dfDistance(d, opts);
 
 // tailwind-merge only knows Tailwind's built-in sizes. Without this, it reads
 // our custom `text-meta`/`text-dense`/… as text colours, and a later colour
@@ -54,10 +64,10 @@ export function formatRelativeTime(date: string | Date) {
 
 /** "Today" / "Yesterday" / a date — used to group notification lists. */
 export function formatDayGroup(date: string | Date) {
-  if (!isValid(date)) return 'Earlier';
+  if (!isValid(date)) return t('Earlier');
   const d = toDate(date);
-  if (isToday(d)) return 'Today';
-  if (isYesterday(d)) return 'Yesterday';
+  if (isToday(d)) return t('Today');
+  if (isYesterday(d)) return t('Yesterday');
   return formatDate(d);
 }
 
@@ -66,9 +76,14 @@ export function formatTime(hhmm?: string | null) {
   if (!hhmm) return '—';
   const [h, m] = hhmm.split(':').map(Number);
   if (Number.isNaN(h)) return hhmm;
-  const suffix = h >= 12 ? 'pm' : 'am';
   const hour = h % 12 === 0 ? 12 : h % 12;
-  return `${hour}:${String(m ?? 0).padStart(2, '0')} ${suffix}`;
+  const clock = `${hour}:${String(m ?? 0).padStart(2, '0')}`;
+  if (isBn()) {
+    // Bangla names the part of the day rather than am/pm.
+    const part = h < 6 ? 'রাত' : h < 12 ? 'সকাল' : h < 15 ? 'দুপুর' : h < 18 ? 'বিকাল' : h < 20 ? 'সন্ধ্যা' : 'রাত';
+    return `${part} ${toBnDigits(clock)}`;
+  }
+  return `${clock} ${h >= 12 ? 'pm' : 'am'}`;
 }
 
 /** Minutes since midnight, for positioning against the timetable grid. */
@@ -81,7 +96,7 @@ export function minutesFromMidnight(hhmm?: string | null): number | null {
 
 export function formatPercentage(value?: number | null) {
   if (value === null || value === undefined || Number.isNaN(value)) return '—';
-  return `${Math.round(value)}%`;
+  return isBn() ? `${toBnDigits(Math.round(value))}%` : `${Math.round(value)}%`;
 }
 
 export function getInitials(name?: string | null) {
@@ -124,12 +139,13 @@ export function apiErrorMessage(err: unknown, fallback = 'Something went wrong')
     message?: string;
   };
   const data = e?.response?.data;
-  if (data?.errors?.length) return data.errors[0];
-  return data?.error || data?.message || fallback;
+  // Server messages are English; common ones have a Bangla translation.
+  if (data?.errors?.length) return t(String(data.errors[0]));
+  return t(data?.error || data?.message || fallback);
 }
 
 const TERM_LABELS: Record<string, string> = { TERM_1: 'Term 1', TERM_2: 'Term 2', FINAL: 'Final' };
-/** "TERM_1" → "Term 1". Unknown values pass through unchanged. */
+/** "TERM_1" → "Term 1" (or its Bangla). Unknown values pass through unchanged. */
 export function termLabel(term?: string | null) {
-  return term ? TERM_LABELS[term] ?? term : '';
+  return term ? t(TERM_LABELS[term] ?? term) : '';
 }

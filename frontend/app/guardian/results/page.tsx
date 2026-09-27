@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/table';
 import { apiErrorMessage, formatDate, gradeTone, termLabel } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
+import { t } from '@/lib/i18n';
 
 export default function GuardianResultsPage() {
   const [children, setChildren] = useState<any[]>([]);
@@ -41,7 +42,7 @@ export default function GuardianResultsPage() {
         setChildren(list);
         if (list.length) setSelectedId(list[0]._id);
       })
-      .catch(() => toast.error('Could not load your children'))
+      .catch(() => toast.error(t('Could not load your children')))
       .finally(() => setLoadingChildren(false));
   }, []);
 
@@ -54,7 +55,7 @@ export default function GuardianResultsPage() {
       .then((r) => setData(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load results');
+        toast.error(t('Could not load results'));
       })
       .finally(() => setLoading(false));
   }, [selectedId]);
@@ -77,9 +78,9 @@ export default function GuardianResultsPage() {
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success('Progress report downloaded');
+      toast.success(t('Progress report downloaded'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not download the progress report'));
+      toast.error(apiErrorMessage(err, t('Could not download the progress report')));
     } finally {
       setDownloading(false);
     }
@@ -98,12 +99,12 @@ export default function GuardianResultsPage() {
   if (!children.length) {
     return (
       <div className="space-y-5">
-        <PageHeader title="Results" />
+        <PageHeader title={t('Results')} />
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
-            title="No children linked to your account"
-            description="Please ask the school office to link your child's record to your account."
+            title={t('No children linked to your account')}
+            description={t('Please ask the school office to link your child\'s record to your account.')}
           />
         </div>
       </div>
@@ -115,12 +116,12 @@ export default function GuardianResultsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Results"
+        title={t('Results')}
         actions={
           hasAnything ? (
             <Button variant="secondary" onClick={downloadReport} loading={downloading}>
               <Download className="h-4 w-4" strokeWidth={1.75} />
-              Download progress report
+              {t('Download progress report')}
             </Button>
           ) : undefined
         }
@@ -135,19 +136,19 @@ export default function GuardianResultsPage() {
       {loading ? (
         <TableSkeleton cols={4} />
       ) : failed ? (
-        <ErrorState description="Results did not load." onRetry={load} />
+        <ErrorState description={t('Results did not load.')} onRetry={load} />
       ) : !hasAnything ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={BarChart3}
-            title="No results published yet"
-            description="Grades appear here once teachers publish them."
+            title={t('No results published yet')}
+            description={t('Grades appear here once teachers publish them.')}
           />
         </div>
       ) : (
         <>
           {grades.length >= 3 && (
-            <Section title="Progress at a glance">
+            <Section title={t('Progress at a glance')}>
               <Panel>
                 <GradeChart
                   data={grades.map((g: any) => ({
@@ -163,16 +164,16 @@ export default function GuardianResultsPage() {
           )}
 
           {grades.length > 0 && (
-            <Section title="Subject grades">
+            <Section title={t('Subject grades')}>
               <TableWrap>
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Subject</TableHead>
-                      <TableHead className="hidden sm:table-cell">Term</TableHead>
-                      <TableHead numeric>Percentage</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead numeric>GPA</TableHead>
+                      <TableHead>{t('Subject')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{t('Term')}</TableHead>
+                      <TableHead numeric>{t('Percentage')}</TableHead>
+                      <TableHead>{t('Grade')}</TableHead>
+                      <TableHead numeric>{t('GPA')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -206,15 +207,15 @@ export default function GuardianResultsPage() {
           )}
 
           {marks.length > 0 && (
-            <Section title="Test and exam marks">
+            <Section title={t('Test and exam marks')}>
               <TableWrap>
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Assessment</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead className="hidden sm:table-cell">Date</TableHead>
-                      <TableHead numeric>Marks</TableHead>
+                      <TableHead>{t('Assessment')}</TableHead>
+                      <TableHead>{t('Subject')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{t('Date')}</TableHead>
+                      <TableHead numeric>{t('Marks')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -233,7 +234,7 @@ export default function GuardianResultsPage() {
                         </TableCell>
                         <TableCell numeric>
                           {m.absent ? (
-                            <span className="text-danger">Absent</span>
+                            <span className="text-danger">{t('Absent')}</span>
                           ) : (
                             <span className="text-ink">
                               {m.obtainedMarks}

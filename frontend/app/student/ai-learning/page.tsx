@@ -25,6 +25,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from '@/components/ui/sheet';
 import { apiErrorMessage, cn, formatRelativeTime } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
+import { t } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 type Lang = 'EN' | 'BN';
 
@@ -75,7 +77,7 @@ function AILearningPage() {
       setCtx(ctxRes.data.data);
       setSessions(sessRes.data.data ?? []);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not load your subjects'));
+      toast.error(apiErrorMessage(err, t('Could not load your subjects')));
     } finally {
       setLoadingCtx(false);
     }
@@ -91,7 +93,7 @@ function AILearningPage() {
 
   const createSession = async () => {
     if (!subjectId) {
-      toast.error('Choose a subject first');
+      toast.error(t('Choose a subject first'));
       return;
     }
     setCreating(true);
@@ -104,7 +106,7 @@ function AILearningPage() {
       setHistoryOpen(false);
       setTimeout(() => composerRef.current?.focus(), 50);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not start a new chat'));
+      toast.error(apiErrorMessage(err, t('Could not start a new chat')));
     } finally {
       setCreating(false);
     }
@@ -121,7 +123,7 @@ function AILearningPage() {
       const lang = res.data.data.session?.preferredLanguage;
       if (lang === 'EN' || lang === 'BN') setLanguage(lang);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not open that chat'));
+      toast.error(apiErrorMessage(err, t('Could not open that chat')));
     } finally {
       setLoadingChat(false);
     }
@@ -133,7 +135,7 @@ function AILearningPage() {
     if (!sessionId) return;
     setSessions((prev) => prev.map((s) => (s._id === sessionId ? { ...s, preferredLanguage: lang } : s)));
     aiAPI.updateSession(sessionId, { preferredLanguage: lang }).catch(() => {
-      toast.error('Could not change the answer language');
+      toast.error(t('Could not change the answer language'));
     });
   };
 
@@ -147,9 +149,9 @@ function AILearningPage() {
         setMessages([]);
       }
       setDeleting(null);
-      toast.success('Chat deleted');
+      toast.success(t('Chat deleted'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not delete the chat'));
+      toast.error(apiErrorMessage(err, t('Could not delete the chat')));
     } finally {
       setRemoving(false);
     }
@@ -194,7 +196,7 @@ function AILearningPage() {
           role: 'assistant',
           content: apiErrorMessage(
             err,
-            'The study helper could not answer just now. Please try again in a moment.'
+            t('The study helper could not answer just now. Please try again in a moment.')
           ),
           createdAt: new Date().toISOString(),
           _error: true,
@@ -213,7 +215,7 @@ function AILearningPage() {
   const subjectOptions = subjects.map((s: any) => ({
     value: s._id,
     label: s.name,
-    hint: [subjectBn(s), s.aiReady ? 'Book ready' : 'No book yet'].filter(Boolean).join(' · '),
+    hint: [subjectBn(s), t(s.aiReady ? 'Book ready' : 'No book yet')].filter(Boolean).join(' · '),
   }));
 
   const className = ctx?.class ? `${ctx.class.name}${ctx.class.section ? ` ${ctx.class.section}` : ''}` : '';
@@ -224,18 +226,18 @@ function AILearningPage() {
         options={subjectOptions}
         value={subjectId}
         onChange={setSubjectId}
-        placeholder="Choose a subject"
-        searchPlaceholder="Find a subject"
+        placeholder={t('Choose a subject')}
+        searchPlaceholder={t('Find a subject')}
       />
       <LanguageSwitch value={language} onChange={setLanguage} />
       {chosenSubject && !chosenSubject.aiReady && (
         <p className="text-left text-meta text-ink-subtle">
-          This subject&apos;s textbook hasn&apos;t been added yet, so answers can&apos;t come from the book.
+          {t('This subject\'s textbook hasn\'t been added yet, so answers can\'t come from the book.')}
         </p>
       )}
       <Button className="w-full" onClick={createSession} loading={creating} disabled={!subjectId}>
         <Plus className="h-4 w-4" strokeWidth={1.75} />
-        New chat
+        {t('New chat')}
       </Button>
     </div>
   );
@@ -243,7 +245,7 @@ function AILearningPage() {
   const SessionList = (
     <div className="space-y-1">
       {!sessions.length ? (
-        <p className="px-2 py-4 text-dense text-ink-subtle">No chats yet.</p>
+        <p className="px-2 py-4 text-dense text-ink-subtle">{t('No chats yet.')}</p>
       ) : (
         sessions.map((s) => (
           <div
@@ -266,7 +268,7 @@ function AILearningPage() {
                   hasBangla(s.title ?? '') && 'font-bn'
                 )}
               >
-                {s.title || s.subjectId?.name || 'Chat'}
+                {s.title || s.subjectId?.name || t('Chat')}
               </span>
               <span className="block truncate text-meta text-ink-subtle">
                 {s.subjectId?.name ? `${s.subjectId.name} · ` : ''}
@@ -277,7 +279,7 @@ function AILearningPage() {
               variant="ghost"
               size="icon-sm"
               onClick={() => setDeleting(s)}
-              aria-label={`Delete chat ${s.title ?? ''}`}
+              aria-label={t('Delete chat {value}', { value: s.title ?? '' })}
               className="mr-1 shrink-0 opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
             >
               <Trash2 className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -304,7 +306,7 @@ function AILearningPage() {
         <div className="space-y-3 rounded-card border border-line bg-surface p-3 shadow-card">
           {className && (
             <p className="text-meta text-ink-subtle">
-              Answers from the NCTB books for <span className="font-medium text-ink">{className}</span>
+              {t('Answers from the NCTB books for')}{' '}<span className="font-medium text-ink">{className}</span>
             </p>
           )}
           {startControls(true)}
@@ -321,7 +323,7 @@ function AILearningPage() {
             size="icon-sm"
             className="lg:hidden"
             onClick={() => setHistoryOpen(true)}
-            aria-label="Chats and subject"
+            aria-label={t('Chats and subject')}
           >
             <PanelLeft className="h-4 w-4" strokeWidth={1.75} />
           </Button>
@@ -330,7 +332,7 @@ function AILearningPage() {
             <>
               <BookOpen className="h-4 w-4 shrink-0 text-ink-subtle" strokeWidth={1.75} />
               <p className="min-w-0 truncate text-dense font-medium text-ink">
-                {activeSubject?.name ?? 'Textbook'}
+                {activeSubject?.name ?? t('Textbook')}
               </p>
               {subjectBn(activeSubject) && (
                 <span lang="bn" className="hidden truncate font-bn text-meta text-ink-muted sm:inline">
@@ -345,7 +347,7 @@ function AILearningPage() {
               </div>
             </>
           ) : (
-            <p className="text-dense text-ink-subtle">Choose a subject to begin</p>
+            <p className="text-dense text-ink-subtle">{t('Choose a subject to begin')}</p>
           )}
         </div>
 
@@ -353,8 +355,7 @@ function AILearningPage() {
           <div className="flex shrink-0 items-start gap-2 border-b border-line bg-info-bg px-4 py-2 text-meta text-info">
             <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
             <span>
-              Full AI answers aren&apos;t switched on yet. For now you&apos;ll get the matching pages from your
-              textbook — tap a page to read it.
+              {t('Full AI answers aren\'t switched on yet. For now you\'ll get the matching pages from your textbook — tap a page to read it.')}
             </span>
           </div>
         )}
@@ -363,17 +364,15 @@ function AILearningPage() {
           <div className="flex flex-1 items-center justify-center overflow-y-auto p-6">
             <EmptyState
               icon={MessageSquare}
-              title="Ask about your textbook"
-              description={`Pick a subject and ask in Bangla or English. Answers come from your ${
-                className ? `${className} ` : ''
-              }NCTB textbook, and each one shows the page it came from.`}
+              title={t('Ask about your textbook')}
+              description={t('Pick a subject and ask in Bangla or English. Answers come from your {value}NCTB textbook, and each one shows the page it came from.', { value: className ? `${className} ` : '' })}
               action={
                 <div className="space-y-3">
                   {startControls()}
                   <Button variant="ghost" size="sm" asChild>
                     <Link href="/student/library">
                       <Library className="h-4 w-4" strokeWidth={1.75} />
-                      Read your books in the library
+                      {t('Read your books in the library')}
                     </Link>
                   </Button>
                 </div>
@@ -398,7 +397,7 @@ function AILearningPage() {
                         {subjectBn(activeSubject) ?? activeSubject?.name} নিয়ে তোমার প্রথম প্রশ্নটি লেখো।
                       </span>
                     ) : (
-                      `Ask your first question about ${activeSubject?.name ?? 'this subject'}.`
+                      t('Ask your first question about {value}.', { value: activeSubject?.name ?? 'this subject' })
                     )}
                   </p>
                 )}
@@ -413,7 +412,7 @@ function AILearningPage() {
                       className="space-y-1.5"
                     >
                       <p className="text-meta font-medium text-ink-subtle">
-                        {isUser(msg.role) ? 'You' : 'Study helper'}
+                        {isUser(msg.role) ? t('You') : t('Study helper')}
                       </p>
 
                       <div
@@ -451,7 +450,7 @@ function AILearningPage() {
 
                 {sending && (
                   <div className="space-y-1.5">
-                    <p className="text-meta font-medium text-ink-subtle">Study helper</p>
+                    <p className="text-meta font-medium text-ink-subtle">{t('Study helper')}</p>
                     <div className="inline-flex items-center gap-1.5 rounded-card border border-line bg-surface px-4 py-3">
                       {[0, 1, 2].map((i) => (
                         <span
@@ -460,7 +459,7 @@ function AILearningPage() {
                           style={{ animationDelay: `${i * 0.15}s` }}
                         />
                       ))}
-                      <span className="sr-only">Looking in your textbook</span>
+                      <span className="sr-only">{t('Looking in your textbook')}</span>
                     </div>
                   </div>
                 )}
@@ -517,8 +516,8 @@ function AILearningPage() {
                       }
                     }}
                     rows={1}
-                    placeholder={language === 'BN' ? 'তোমার প্রশ্ন লেখো…' : 'Ask about your textbook…'}
-                    aria-label="Your question"
+                    placeholder={language === 'BN' ? 'তোমার প্রশ্ন লেখো…' : t('Ask about your textbook…')}
+                    aria-label={t('Your question')}
                     lang={hasBangla(input) || language === 'BN' ? 'bn' : undefined}
                     className={cn(
                       'max-h-40 min-h-[2.5rem] flex-1 resize-none rounded-chip border border-line bg-surface px-3 py-2',
@@ -527,7 +526,7 @@ function AILearningPage() {
                       (hasBangla(input) || language === 'BN') && 'font-bn'
                     )}
                   />
-                  <Button type="submit" size="icon" disabled={sending || !input.trim()} aria-label="Send">
+                  <Button type="submit" size="icon" disabled={sending || !input.trim()} aria-label={t('Send')}>
                     <Send className="h-4 w-4" strokeWidth={1.75} />
                   </Button>
                 </form>
@@ -540,12 +539,12 @@ function AILearningPage() {
       <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>Your chats</SheetTitle>
+            <SheetTitle>{t('Your chats')}</SheetTitle>
           </SheetHeader>
           <SheetBody className="space-y-4">
             {className && (
               <p className="text-meta text-ink-subtle">
-                Answers from the NCTB books for <span className="font-medium text-ink">{className}</span>
+                {t('Answers from the NCTB books for')}{' '}<span className="font-medium text-ink">{className}</span>
               </p>
             )}
             {startControls(true)}
@@ -557,14 +556,11 @@ function AILearningPage() {
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="Delete this chat?"
+        title={t('Delete this chat?')}
         description={
-          <>
-            <strong className="text-ink">{deleting?.title || 'This chat'}</strong> and all its messages will
-            be removed.
-          </>
+          tNode('{name} and all its messages will be removed.', { name: <strong className="text-ink">{deleting?.title || t('This chat')}</strong> })
         }
-        confirmLabel="Delete"
+        confirmLabel={t('Delete')}
         destructive
         loading={removing}
         onConfirm={confirmDelete}
@@ -582,7 +578,7 @@ function SourceChips({ message }: { message: any }) {
 
   if (message.mode === 'NOT_FOUND' || (!sources.length && message.mode)) {
     return (
-      <p className="text-meta text-ink-subtle">Not found in your textbook — ask your teacher to be sure.</p>
+      <p className="text-meta text-ink-subtle">{t('Not found in your textbook — ask your teacher to be sure.')}</p>
     );
   }
   if (!sources.length) return null;
@@ -595,7 +591,7 @@ function SourceChips({ message }: { message: any }) {
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
-      <span className="text-meta text-ink-subtle">From your textbook:</span>
+      <span className="text-meta text-ink-subtle">{t('From your textbook:')}</span>
       {unique.map((s, i) => {
         const bangla = s.language === 'BN';
         const label = bangla ? `বাংলা ভার্সন · পৃ. ${bnDigits(s.pageNumber)}` : `English version · p. ${s.pageNumber}`;
@@ -635,12 +631,12 @@ function SourceChips({ message }: { message: any }) {
 
 function LanguageSwitch({ value, onChange }: { value: Lang; onChange: (lang: Lang) => void }) {
   return (
-    <div className="flex rounded-btn border border-line p-0.5" role="group" aria-label="Answer language">
+    <div className="flex rounded-btn border border-line p-0.5" role="group" aria-label={t('Answer language')}>
       <LanguageButton active={value === 'BN'} onClick={() => onChange('BN')} bangla>
         বাংলা
       </LanguageButton>
       <LanguageButton active={value === 'EN'} onClick={() => onChange('EN')}>
-        English
+        {t('English')}
       </LanguageButton>
     </div>
   );

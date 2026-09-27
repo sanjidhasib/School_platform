@@ -21,6 +21,7 @@ import {
   Award,
   type LucideIcon,
 } from 'lucide-react';
+import { t } from '@/lib/i18n';
 
 /**
  * One definition of navigation per role, shared by the sidebar, the mobile
@@ -167,7 +168,7 @@ export function titleForPath(role: string | null | undefined, pathname: string):
   const match = flatNav(role)
     .filter((i) => pathname === i.href || pathname.startsWith(`${i.href}/`))
     .sort((a, b) => b.href.length - a.href.length)[0];
-  if (match) return match.label;
-  if (pathname.startsWith('/profile')) return 'Profile';
+  if (match) return t(match.label);
+  if (pathname.startsWith('/profile')) return t('Profile');
   return 'SchoolOS';
 }

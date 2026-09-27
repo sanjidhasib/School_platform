@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { apiErrorMessage, cn, formatTime } from '@/lib/utils';
 import { DAYS } from '@/lib/constants';
+import { t } from '@/lib/i18n';
 
 /**
  * Sectioned settings in the GitHub/Vercel shape: what the setting is on the
@@ -58,7 +59,7 @@ export default function SettingsPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load settings');
+        toast.error(t('Could not load settings'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -70,10 +71,10 @@ export default function SettingsPage() {
     setSavingIdentity(true);
     try {
       await adminAPI.updateSettings(identity);
-      toast.success('School details saved');
+      toast.success(t('School details saved'));
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the school details'));
+      toast.error(apiErrorMessage(err, t('Could not save the school details')));
     } finally {
       setSavingIdentity(false);
     }
@@ -83,10 +84,10 @@ export default function SettingsPage() {
     setSavingWeek(true);
     try {
       await adminAPI.updateSettings({ activeDays: [...activeDays].sort((a, b) => a - b) });
-      toast.success('School week saved');
+      toast.success(t('School week saved'));
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the school week'));
+      toast.error(apiErrorMessage(err, t('Could not save the school week')));
     } finally {
       setSavingWeek(false);
     }
@@ -99,10 +100,10 @@ export default function SettingsPage() {
         halfYearlyExamDate: exams.halfYearlyExamDate ? new Date(`${exams.halfYearlyExamDate}T00:00:00`).toISOString() : null,
         annualExamDate: exams.annualExamDate ? new Date(`${exams.annualExamDate}T00:00:00`).toISOString() : null,
       });
-      toast.success('Exam dates saved');
+      toast.success(t('Exam dates saved'));
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the exam dates'));
+      toast.error(apiErrorMessage(err, t('Could not save the exam dates')));
     } finally {
       setSavingExams(false);
     }
@@ -124,18 +125,18 @@ export default function SettingsPage() {
     );
   }
 
-  if (failed) return <ErrorState description="School settings did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={t('School settings did not load.')} onRetry={load} />;
 
   return (
     <div className="max-w-3xl space-y-8">
-      <PageHeader title="Settings" description="How the school identifies itself across SchoolOS." />
+      <PageHeader title={t('Settings')} description={t('How the school identifies itself across SchoolOS.')} />
 
       <form onSubmit={saveIdentity}>
         <SettingsSection
-          title="School details"
-          description="Used in the sidebar, the home page and on report cards."
+          title={t('School details')}
+          description={t('Used in the sidebar, the home page and on report cards.')}
         >
-          <SettingRow label="School name" htmlFor="school-name">
+          <SettingRow label={t('School name')} htmlFor="school-name">
             <Input
               id="school-name"
               value={identity.name}
@@ -144,7 +145,7 @@ export default function SettingsPage() {
             />
           </SettingRow>
 
-          <SettingRow label="Address" htmlFor="school-address">
+          <SettingRow label={t('Address')} htmlFor="school-address">
             <Input
               id="school-address"
               value={identity.address}
@@ -152,7 +153,7 @@ export default function SettingsPage() {
             />
           </SettingRow>
 
-          <SettingRow label="Phone" htmlFor="school-phone">
+          <SettingRow label={t('Phone')} htmlFor="school-phone">
             <Input
               id="school-phone"
               value={identity.contactPhone}
@@ -160,7 +161,7 @@ export default function SettingsPage() {
             />
           </SettingRow>
 
-          <SettingRow label="Email" htmlFor="school-email">
+          <SettingRow label={t('Email')} htmlFor="school-email">
             <Input
               id="school-email"
               type="email"
@@ -169,7 +170,7 @@ export default function SettingsPage() {
             />
           </SettingRow>
 
-          <SettingRow label="Logo URL" description="Optional." htmlFor="school-logo">
+          <SettingRow label={t('Logo URL')} description={t('Optional.')} htmlFor="school-logo">
             <Input
               id="school-logo"
               value={identity.logoUrl}
@@ -179,19 +180,19 @@ export default function SettingsPage() {
 
           <div className="flex justify-end border-t border-line px-4 py-3">
             <Button type="submit" loading={savingIdentity}>
-              Save details
+              {t('Save details')}
             </Button>
           </div>
         </SettingsSection>
       </form>
 
       <SettingsSection
-        title="School week"
-        description="Which days the routine covers. Bangladeshi schools usually run Sunday to Thursday."
+        title={t('School week')}
+        description={t('Which days the routine covers. Bangladeshi schools usually run Sunday to Thursday.')}
       >
         <div className="px-4 py-4">
           <fieldset>
-            <legend className="sr-only">Teaching days</legend>
+            <legend className="sr-only">{t('Teaching days')}</legend>
             <div className="flex flex-wrap gap-2">
               {DAYS.map((day, i) => {
                 const on = activeDays.includes(i);
@@ -210,7 +211,7 @@ export default function SettingsPage() {
                         : 'border-line text-ink-muted hover:bg-surface-sunken'
                     )}
                   >
-                    {day}
+                    {t(day)}
                   </button>
                 );
               })}
@@ -220,19 +221,19 @@ export default function SettingsPage() {
 
         <div className="flex items-center justify-between gap-3 border-t border-line px-4 py-3">
           <p className="text-meta text-ink-subtle">
-            {activeDays.length} teaching {activeDays.length === 1 ? 'day' : 'days'} a week
+            {t('{length} teaching', { length: activeDays.length })}{' '}{activeDays.length === 1 ? t('day') : t('days')}{' '}{t('a week')}
           </p>
           <Button onClick={saveWeek} loading={savingWeek} disabled={!weekChanged}>
-            Save week
+            {t('Save week')}
           </Button>
         </div>
       </SettingsSection>
 
       <SettingsSection
-        title="Exam dates"
-        description="Teachers' attendance registers count attendance up to the day before the half-yearly exam."
+        title={t('Exam dates')}
+        description={t('Teachers\' attendance registers count attendance up to the day before the half-yearly exam.')}
       >
-        <SettingRow label="Half-yearly exam" htmlFor="exam-half">
+        <SettingRow label={t('Half-yearly exam')} htmlFor="exam-half">
           <Input
             id="exam-half"
             type="date"
@@ -240,7 +241,7 @@ export default function SettingsPage() {
             onChange={(e) => setExams((x) => ({ ...x, halfYearlyExamDate: e.target.value }))}
           />
         </SettingRow>
-        <SettingRow label="Annual exam" htmlFor="exam-annual">
+        <SettingRow label={t('Annual exam')} htmlFor="exam-annual">
           <Input
             id="exam-annual"
             type="date"
@@ -250,14 +251,14 @@ export default function SettingsPage() {
         </SettingRow>
         <div className="flex justify-end border-t border-line px-4 py-3">
           <Button onClick={saveExams} loading={savingExams}>
-            Save exam dates
+            {t('Save exam dates')}
           </Button>
         </div>
       </SettingsSection>
 
       <SettingsSection
-        title="Periods"
-        description="The period times the routine is built on. Changing these is a database task for now."
+        title={t('Periods')}
+        description={t('The period times the routine is built on. Changing these is a database task for now.')}
       >
         <ul className="divide-y divide-line">
           {(settings?.periods ?? []).map((p: any) => (
@@ -269,14 +270,14 @@ export default function SettingsPage() {
             </li>
           ))}
           {!settings?.periods?.length && (
-            <li className="px-4 py-4 text-dense text-ink-subtle">No periods configured.</li>
+            <li className="px-4 py-4 text-dense text-ink-subtle">{t('No periods configured.')}</li>
           )}
         </ul>
       </SettingsSection>
 
       <SettingsSection
-        title="Grading scale"
-        description="Used to turn a percentage into a grade and a grade point on every report card."
+        title={t('Grading scale')}
+        description={t('Used to turn a percentage into a grade and a grade point on every report card.')}
       >
         <ul className="divide-y divide-line">
           {(settings?.gradingScale ?? []).map((g: any) => (
@@ -285,13 +286,13 @@ export default function SettingsPage() {
                 {g.grade}
               </Badge>
               <span className="flex-1 text-dense text-ink-muted tabular">
-                {g.minPercentage}% to {g.maxPercentage}%
+                {t('{minPercentage}% to {maxPercentage}%', { minPercentage: g.minPercentage, maxPercentage: g.maxPercentage })}
               </span>
               <span className="text-dense text-ink tabular">{g.gradePoint?.toFixed(2)}</span>
             </li>
           ))}
           {!settings?.gradingScale?.length && (
-            <li className="px-4 py-4 text-dense text-ink-subtle">No grading scale configured.</li>
+            <li className="px-4 py-4 text-dense text-ink-subtle">{t('No grading scale configured.')}</li>
           )}
         </ul>
       </SettingsSection>

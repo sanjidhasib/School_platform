@@ -14,6 +14,7 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { apiErrorMessage, firstName, formatPercentage, gradeTone } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export default function GuardianDashboardPage() {
   const [data, setData] = useState<any>(null);
@@ -34,7 +35,7 @@ export default function GuardianDashboardPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your dashboard');
+        toast.error(t('Could not load your dashboard'));
       })
       .finally(() => setLoading(false));
   };
@@ -54,26 +55,26 @@ export default function GuardianDashboardPage() {
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success('Progress report downloaded');
+      toast.success(t('Progress report downloaded'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not download the progress report'));
+      toast.error(apiErrorMessage(err, t('Could not download the progress report')));
     } finally {
       setDownloading(false);
     }
   };
 
   if (loading) return <DashboardSkeleton />;
-  if (failed) return <ErrorState description="Your dashboard did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={t('Your dashboard did not load.')} onRetry={load} />;
 
   if (!data?.children?.length) {
     return (
       <div className="space-y-5">
-        <PageHeader title="Your children" />
+        <PageHeader title={t('Your children')} />
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
-            title="No children linked to your account"
-            description="Please ask the school office to link your child's record to your account."
+            title={t('No children linked to your account')}
+            description={t('Please ask the school office to link your child\'s record to your account.')}
           />
         </div>
       </div>
@@ -87,11 +88,11 @@ export default function GuardianDashboardPage() {
   return (
     <div className="space-y-7">
       <PageHeader
-        title={`${firstName(student.fullName)}'s progress`}
+        title={t('{firstName}\'s progress', { firstName: firstName(student.fullName) })}
         actions={
           <Button variant="secondary" onClick={downloadReport} loading={downloading}>
             <Download className="h-4 w-4" strokeWidth={1.75} />
-            Download progress report
+            {t('Download progress report')}
           </Button>
         }
       />
@@ -104,17 +105,17 @@ export default function GuardianDashboardPage() {
 
       <dl className="flex flex-wrap gap-x-10 gap-y-4 border-b border-line pb-5">
         <div>
-          <dt className="text-meta text-ink-subtle">Class</dt>
+          <dt className="text-meta text-ink-subtle">{t('Class')}</dt>
           <dd className="mt-0.5 text-dense font-medium text-ink">
             {student.classId?.name} {student.classId?.section}
           </dd>
         </div>
         <div>
-          <dt className="text-meta text-ink-subtle">Student ID</dt>
+          <dt className="text-meta text-ink-subtle">{t('Student ID')}</dt>
           <dd className="mt-0.5 text-dense font-medium text-ink tabular">{student.studentId}</dd>
         </div>
         <div>
-          <dt className="text-meta text-ink-subtle">Status</dt>
+          <dt className="text-meta text-ink-subtle">{t('Status')}</dt>
           <dd className="mt-1">
             <StatusPill status={student.status} />
           </dd>
@@ -123,10 +124,10 @@ export default function GuardianDashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Section
-          title="Attendance"
+          title={t('Attendance')}
           actions={
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/guardian/attendance">See the record</Link>
+              <Link href="/guardian/attendance">{t('See the record')}</Link>
             </Button>
           }
         >
@@ -137,40 +138,40 @@ export default function GuardianDashboardPage() {
                   {formatPercentage(attendance)}
                 </p>
                 <p className="mt-1 text-dense text-ink-muted tabular">
-                  {child.presentCount} of {child.totalSessions} classes attended
+                  {t('{presentCount} of {totalSessions} classes attended', { presentCount: child.presentCount, totalSessions: child.totalSessions })}
                 </p>
                 <Progress
                   value={attendance}
                   tone={attendance >= 90 ? 'success' : attendance >= 75 ? 'warning' : 'danger'}
                   className="mt-3"
-                  label="Attendance"
+                  label={t('Attendance')}
                 />
               </>
             ) : (
               <EmptyState
                 icon={CheckSquare}
-                title="No attendance recorded yet"
-                description="It appears once teachers start taking attendance."
+                title={t('No attendance recorded yet')}
+                description={t('It appears once teachers start taking attendance.')}
                 compact
               />
             )}
           </div>
         </Section>
 
-        <Section title="Homework">
+        <Section title={t('Homework')}>
           <div className="rounded-card border border-line bg-surface shadow-card p-5">
             {child.pendingHomework > 0 ? (
               <>
                 <p className="text-3xl font-semibold text-ink tabular">{child.pendingHomework}</p>
                 <p className="mt-1 text-dense text-ink-muted">
-                  {child.pendingHomework === 1 ? 'piece' : 'pieces'} of homework still to hand in
+                  {child.pendingHomework === 1 ? t('piece') : t('pieces')}{' '}{t('of homework still to hand in')}
                 </p>
               </>
             ) : (
               <EmptyState
                 icon={BookMarked}
-                title="Nothing outstanding"
-                description={`${firstName(student.fullName)} has handed in everything that was set.`}
+                title={t('Nothing outstanding')}
+                description={t('{firstName} has handed in everything that was set.', { firstName: firstName(student.fullName) })}
                 compact
               />
             )}
@@ -179,10 +180,10 @@ export default function GuardianDashboardPage() {
       </div>
 
       <Section
-        title="Subject grades"
+        title={t('Subject grades')}
         actions={
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/guardian/results">See all results</Link>
+            <Link href="/guardian/results">{t('See all results')}</Link>
           </Button>
         }
       >
@@ -190,8 +191,8 @@ export default function GuardianDashboardPage() {
           <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={BarChart3}
-              title="No grades published yet"
-              description="Grades appear here once teachers publish them."
+              title={t('No grades published yet')}
+              description={t('Grades appear here once teachers publish them.')}
               compact
             />
           </div>

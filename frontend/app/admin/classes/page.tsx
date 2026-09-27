@@ -37,6 +37,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 const emptyForm = { name: '', section: '', room: '', capacity: 40 };
 
@@ -57,7 +58,7 @@ export default function ClassesPage() {
       .then((r) => setClasses(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load classes');
+        toast.error(t('Could not load classes'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -87,7 +88,7 @@ export default function ClassesPage() {
     try {
       if (editing) {
         await adminAPI.updateClass(editing._id, form);
-        toast.success('Class saved');
+        toast.success(t('Class saved'));
       } else {
         await adminAPI.createClass(form);
         toast.success(`${form.name} ${form.section} created`.trim());
@@ -95,7 +96,7 @@ export default function ClassesPage() {
       setOpen(false);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the class'));
+      toast.error(apiErrorMessage(err, t('Could not save the class')));
     } finally {
       setSaving(false);
     }
@@ -107,16 +108,16 @@ export default function ClassesPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Classes"
+        title={t('Classes')}
         description={
           classes.length
-            ? `${totalEnrolled} of ${totalCapacity} places filled across ${classes.length} classes`
+            ? t('{totalEnrolled} of {totalCapacity} places filled across {length} classes', { totalEnrolled, totalCapacity, length: classes.length })
             : undefined
         }
         actions={
           <Button onClick={openAdd}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Add a class
+            {t('Add a class')}
           </Button>
         }
       />
@@ -124,17 +125,17 @@ export default function ClassesPage() {
       {loading ? (
         <TableSkeleton cols={4} />
       ) : failed ? (
-        <ErrorState description="The class list did not load." onRetry={load} />
+        <ErrorState description={t('The class list did not load.')} onRetry={load} />
       ) : !classes.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Grid3X3}
-            title="No classes yet"
-            description="Create Class 3 through Class 10 so students can be admitted."
+            title={t('No classes yet')}
+            description={t('Create Class 3 through Class 10 so students can be admitted.')}
             action={
               <Button onClick={openAdd}>
                 <Plus className="h-4 w-4" strokeWidth={1.75} />
-                Add a class
+                {t('Add a class')}
               </Button>
             }
           />
@@ -144,9 +145,9 @@ export default function ClassesPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Class</TableHead>
-                <TableHead className="hidden sm:table-cell">Room</TableHead>
-                <TableHead className="w-56">Enrolment</TableHead>
+                <TableHead>{t('Class')}</TableHead>
+                <TableHead className="hidden sm:table-cell">{t('Room')}</TableHead>
+                <TableHead className="w-56">{t('Enrolment')}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -178,7 +179,7 @@ export default function ClassesPage() {
                           <Button
                             variant="ghost"
                             size="icon-sm"
-                            aria-label={`Actions for ${c.name} ${c.section}`}
+                            aria-label={t('Actions for {name} {section}', { name: c.name, section: c.section })}
                             className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
                           >
                             <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
@@ -188,12 +189,12 @@ export default function ClassesPage() {
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/classes/${c._id}`}>
                               <Eye className="h-4 w-4" strokeWidth={1.75} />
-                              View class
+                              {t('View class')}
                             </Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem onSelect={() => openEdit(c)}>
                             <Pencil className="h-4 w-4" strokeWidth={1.75} />
-                            Edit
+                            {t('Edit')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -209,27 +210,27 @@ export default function ClassesPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit class' : 'Add a class'}</SheetTitle>
+            <SheetTitle>{editing ? t('Edit class') : t('Add a class')}</SheetTitle>
             <SheetDescription>
-              {editing ? `${editing.name} ${editing.section}` : 'Classes 3 to 10, one section each.'}
+              {editing ? `${editing.name} ${editing.section}` : t('Classes 3 to 10, one section each.')}
             </SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Name" required>
+                <Field label={t('Name')} required>
                   {(p) => (
                     <Input
                       {...p}
                       value={form.name}
                       onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="Class 7"
+                      placeholder={t('Class 7')}
                       required
                     />
                   )}
                 </Field>
-                <Field label="Section" required>
+                <Field label={t('Section')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -243,17 +244,17 @@ export default function ClassesPage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Room">
+                <Field label={t('Room')}>
                   {(p) => (
                     <Input
                       {...p}
                       value={form.room}
                       onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))}
-                      placeholder="Room 107"
+                      placeholder={t('Room 107')}
                     />
                   )}
                 </Field>
-                <Field label="Capacity" description="The school caps a class at 40." required>
+                <Field label={t('Capacity')} description={t('The school caps a class at 40.')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -273,10 +274,10 @@ export default function ClassesPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" loading={saving}>
-                {editing ? 'Save changes' : 'Add class'}
+                {editing ? t('Save changes') : t('Add class')}
               </Button>
             </SheetFooter>
           </form>

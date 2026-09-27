@@ -10,6 +10,7 @@ import { adminAPI } from '@/lib/api/admin';
 import { cn, formatRelativeTime } from '@/lib/utils';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { EmptyState } from '@/components/shared/EmptyState';
+import { t as tr } from '@/lib/i18n';
 
 /** Where a role's own notification list lives. Admin got one in this branch. */
 const LIST_PATH: Record<string, string> = {
@@ -66,7 +67,7 @@ export function NotificationBell() {
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label={unread ? `Notifications, ${unread} unread` : 'Notifications'}
+          aria-label={unread ? tr('Notifications, {unread} unread', { unread }) : tr('Notifications')}
           className="relative flex h-8 w-8 items-center justify-center rounded-btn text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <Bell className="h-4 w-4" strokeWidth={1.75} />
@@ -88,8 +89,8 @@ export function NotificationBell() {
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
         <div className="flex items-center justify-between border-b border-line px-3 py-2.5">
-          <p className="text-dense font-semibold text-ink">Notifications</p>
-          {unread > 0 && <span className="text-meta text-ink-subtle tabular">{unread} unread</span>}
+          <p className="text-dense font-semibold text-ink">{tr('Notifications')}</p>
+          {unread > 0 && <span className="text-meta text-ink-subtle tabular">{tr('{unread} unread', { unread })}</span>}
         </div>
         <div className="scrollbar-thin max-h-80 overflow-y-auto">
           {loading ? (
@@ -102,7 +103,7 @@ export function NotificationBell() {
               ))}
             </div>
           ) : !items.length ? (
-            <EmptyState icon={Bell} title="Nothing new" compact />
+            <EmptyState icon={Bell} title={tr('Nothing new')} compact />
           ) : (
             <ul className="divide-y divide-line">
               {items.slice(0, 6).map((n) => (
@@ -124,7 +125,7 @@ export function NotificationBell() {
               href={listPath}
               className="block rounded-chip px-2 py-1.5 text-center text-dense font-medium text-brand transition-colors hover:bg-wash focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              See all notifications
+              {tr('See all notifications')}
             </Link>
           </div>
         )}

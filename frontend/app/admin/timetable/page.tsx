@@ -25,6 +25,8 @@ import {
 import { DAYS, SHORT_DAYS, PERIODS } from '@/lib/constants';
 import { apiErrorMessage, cn, formatTime } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
+import { t } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 const emptyForm = {
   dayOfWeek: 0,
@@ -66,7 +68,7 @@ export default function TimetablePage() {
         setClasses(list);
         if (list.length) setSelectedClass(list[0]._id);
       })
-      .catch(() => toast.error('Could not load classes'))
+      .catch(() => toast.error(t('Could not load classes')))
       .finally(() => setLoading(false));
     adminAPI.getAssignments().then((r) => setAssignments(r.data.data ?? [])).catch(() => setAssignments([]));
     // The school week and period times are configured, not hardcoded.
@@ -81,7 +83,7 @@ export default function TimetablePage() {
       .then((r) => setTimetable(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load the routine');
+        toast.error(t('Could not load the routine'));
       });
   }, [selectedClass]);
 
@@ -107,7 +109,7 @@ export default function TimetablePage() {
         .filter((a: any) => a.classId?._id === selectedClass)
         .map((a: any) => ({
           value: a._id,
-          label: a.subjectId?.name ?? 'Subject',
+          label: a.subjectId?.name ?? t('Subject'),
           hint: [subjectBn(a.subjectId), a.teacherId?.fullName].filter(Boolean).join(' · '),
         })),
     [assignments, selectedClass]
@@ -160,15 +162,15 @@ export default function TimetablePage() {
     try {
       if (editing) {
         await adminAPI.updateTimetableEntry(editing._id, { ...form, classId: selectedClass });
-        toast.success('Routine updated');
+        toast.success(t('Routine updated'));
       } else {
         await adminAPI.createTimetableEntry({ ...form, classId: selectedClass });
-        toast.success('Class added to the routine');
+        toast.success(t('Class added to the routine'));
       }
       setOpen(false);
       loadTimetable();
     } catch (err) {
-      setConflict(apiErrorMessage(err, 'Could not save this routine entry'));
+      setConflict(apiErrorMessage(err, t('Could not save this routine entry')));
     } finally {
       setSaving(false);
     }
@@ -178,12 +180,12 @@ export default function TimetablePage() {
     setRemoving(true);
     try {
       await adminAPI.deleteTimetableEntry(deleting._id);
-      toast.success('Removed from the routine');
+      toast.success(t('Removed from the routine'));
       setDeleting(null);
       setOpen(false);
       loadTimetable();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not remove this entry'));
+      toast.error(apiErrorMessage(err, t('Could not remove this entry')));
     } finally {
       setRemoving(false);
     }
@@ -204,12 +206,12 @@ export default function TimetablePage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Routine"
-        description="Sunday to Thursday, 9:00 am to 2:00 pm."
+        title={t('Routine')}
+        description={t('Sunday to Thursday, 9:00 am to 2:00 pm.')}
         actions={
           <Button onClick={openBlank} disabled={!selectedClass}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Add a class
+            {t('Add a class')}
           </Button>
         }
       />
@@ -220,8 +222,8 @@ export default function TimetablePage() {
             options={classOptions}
             value={selectedClass}
             onChange={setSelectedClass}
-            placeholder="Choose a class"
-            searchPlaceholder="Find a class"
+            placeholder={t('Choose a class')}
+            searchPlaceholder={t('Find a class')}
           />
         </div>
         {currentClass?.room && (
@@ -233,12 +235,12 @@ export default function TimetablePage() {
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CalendarDays}
-            title="No class selected"
-            description="Choose a class to see its routine."
+            title={t('No class selected')}
+            description={t('Choose a class to see its routine.')}
           />
         </div>
       ) : failed ? (
-        <ErrorState description="The routine did not load." onRetry={loadTimetable} />
+        <ErrorState description={t('The routine did not load.')} onRetry={loadTimetable} />
       ) : (
         <>
           {/* Desktop and tablet: the full week, as it hangs on the notice board. */}
@@ -257,7 +259,7 @@ export default function TimetablePage() {
           <div className="space-y-3 sm:hidden">
             <div
               role="tablist"
-              aria-label="Day"
+              aria-label={t('Day')}
               className="flex gap-1 overflow-x-auto rounded-btn border border-line p-0.5"
             >
               {days.map((d) => (
@@ -271,7 +273,7 @@ export default function TimetablePage() {
                     mobileDay === d ? 'bg-wash text-brand' : 'text-ink-muted'
                   )}
                 >
-                  {SHORT_DAYS[d]}
+                  {t(SHORT_DAYS[d])}
                 </button>
               ))}
             </div>
@@ -289,9 +291,9 @@ export default function TimetablePage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit this period' : 'Add to the routine'}</SheetTitle>
+            <SheetTitle>{editing ? t('Edit this period') : t('Add to the routine')}</SheetTitle>
             <SheetDescription>
-              {DAYS[form.dayOfWeek]}, {formatTime(form.startTime)} to {formatTime(form.endTime)}
+              {t('{value}, {formatTime} to {formatTime2}', { value: t(DAYS[form.dayOfWeek]), formatTime: formatTime(form.startTime), formatTime2: formatTime(form.endTime) })}
               {currentClass ? ` · ${currentClass.name} ${currentClass.section ?? ''}`.trim() : ''}
             </SheetDescription>
           </SheetHeader>
@@ -305,13 +307,13 @@ export default function TimetablePage() {
                 >
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-danger" strokeWidth={1.75} />
                   <div>
-                    <p className="text-dense font-medium text-danger">Clash in the routine</p>
+                    <p className="text-dense font-medium text-danger">{t('Clash in the routine')}</p>
                     <p className="mt-0.5 text-dense text-danger">{conflict}</p>
                   </div>
                 </div>
               )}
 
-              <Field label="Subject and teacher" required>
+              <Field label={t('Subject and teacher')} required>
                 {(p) =>
                   assignmentOptions.length ? (
                     <Combobox
@@ -319,44 +321,44 @@ export default function TimetablePage() {
                       options={assignmentOptions}
                       value={form.teacherAssignmentId}
                       onChange={(v) => setForm((f) => ({ ...f, teacherAssignmentId: v }))}
-                      placeholder="Choose a subject"
-                      searchPlaceholder="Find a subject"
+                      placeholder={t('Choose a subject')}
+                      searchPlaceholder={t('Find a subject')}
                     />
                   ) : (
                     <p className="rounded-chip border border-line bg-surface-sunken px-3 py-2 text-dense text-ink-muted">
-                      No teachers are assigned to this class yet.
+                      {t('No teachers are assigned to this class yet.')}
                     </p>
                   )
                 }
               </Field>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Day" required>
+                <Field label={t('Day')} required>
                   {(p) => (
                     <Combobox
                       {...p}
-                      options={days.map((d) => ({ value: String(d), label: DAYS[d] }))}
+                      options={days.map((d) => ({ value: String(d), label: t(DAYS[d]) }))}
                       value={String(form.dayOfWeek)}
                       onChange={(v) => setForm((f) => ({ ...f, dayOfWeek: parseInt(v, 10) }))}
-                      placeholder="Choose a day"
-                      searchPlaceholder="Find a day"
+                      placeholder={t('Choose a day')}
+                      searchPlaceholder={t('Find a day')}
                     />
                   )}
                 </Field>
-                <Field label="Room">
+                <Field label={t('Room')}>
                   {(p) => (
                     <Input
                       {...p}
                       value={form.room}
                       onChange={(e) => setForm((f) => ({ ...f, room: e.target.value }))}
-                      placeholder={currentClass?.room || 'Room 107'}
+                      placeholder={currentClass?.room || t('Room 107')}
                     />
                   )}
                 </Field>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Starts" required>
+                <Field label={t('Starts')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -367,7 +369,7 @@ export default function TimetablePage() {
                     />
                   )}
                 </Field>
-                <Field label="Ends" required>
+                <Field label={t('Ends')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -390,17 +392,17 @@ export default function TimetablePage() {
                   onClick={() => setDeleting(editing)}
                 >
                   <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                  Remove
+                  {t('Remove')}
                 </Button>
               ) : (
                 <span className="hidden sm:block" />
               )}
               <div className="flex flex-col-reverse gap-2 sm:flex-row">
                 <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                  Cancel
+                  {t('Cancel')}
                 </Button>
                 <Button type="submit" loading={saving} disabled={!form.teacherAssignmentId}>
-                  {editing ? 'Save changes' : 'Add to routine'}
+                  {editing ? t('Save changes') : t('Add to routine')}
                 </Button>
               </div>
             </SheetFooter>
@@ -411,17 +413,16 @@ export default function TimetablePage() {
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="Remove this from the routine?"
+        title={t('Remove this from the routine?')}
         description={
-          <>
-            <strong className="text-ink">
-              {deleting?.teacherAssignmentId?.subjectId?.name ?? 'This class'}
-            </strong>{' '}
-            on {DAYS[deleting?.dayOfWeek ?? 0]} at {formatTime(deleting?.startTime)} will be removed
-            from {currentClass?.name} {currentClass?.section}.
-          </>
+          tNode('{name} on {day} at {time} will be removed from {cls}.', {
+            name: <strong className="text-ink">{deleting?.teacherAssignmentId?.subjectId?.name ?? t('This class')}</strong>,
+            day: t(DAYS[deleting?.dayOfWeek ?? 0]),
+            time: formatTime(deleting?.startTime),
+            cls: `${currentClass?.name ?? ''} ${currentClass?.section ?? ''}`,
+          })
         }
-        confirmLabel="Remove"
+        confirmLabel={t('Remove')}
         destructive
         loading={removing}
         onConfirm={confirmDelete}

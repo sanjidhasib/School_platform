@@ -23,6 +23,7 @@ import { Panel } from '@/components/ui/card';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter } from '@/components/ui/sheet';
 import { apiErrorMessage, cn, termLabel } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
+import { t as tr } from '@/lib/i18n';
 
 const fmtDay = (d?: string) => (d ? new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '');
 const inDays = (n: number) => new Date(Date.now() + n * 864e5).toLocaleDateString('en-CA');
@@ -73,7 +74,7 @@ export default function ClassDetailPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load this class');
+        toast.error(tr('Could not load this class'));
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -105,10 +106,10 @@ export default function ClassDetailPage() {
     setAssigning(subject._id);
     try {
       await adminAPI.assignClassTeacher(id, { subjectId: subject._id, teacherId });
-      toast.success(teacherId ? `${subject.name}: teacher assigned` : `${subject.name}: teacher removed`);
+      toast.success(teacherId ? tr('{name}: teacher assigned', { name: subject.name }) : tr('{name}: teacher removed', { name: subject.name }));
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not change the teacher'));
+      toast.error(apiErrorMessage(err, tr('Could not change the teacher')));
     } finally {
       setAssigning(null);
     }
@@ -136,11 +137,11 @@ export default function ClassDetailPage() {
         dueDate: req.dueDate || undefined,
         message: req.message,
       });
-      toast.success(`Sent ${r.data.data.sent} ${r.data.data.sent === 1 ? 'request' : 'requests'} — teachers see them on their profile`);
+      toast.success(tr('Sent {sent} {value} — teachers see them on their profile', { sent: r.data.data.sent, value: r.data.data.sent === 1 ? 'request' : 'requests' }));
       setReqOpen(false);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not send the request'));
+      toast.error(apiErrorMessage(err, tr('Could not send the request')));
     } finally {
       setSending(false);
     }
@@ -149,24 +150,24 @@ export default function ClassDetailPage() {
   const cancelRequest = async (r: any) => {
     try {
       await adminAPI.cancelTeacherRequest(r._id);
-      toast.success('Request withdrawn');
+      toast.success(tr('Request withdrawn'));
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not withdraw the request'));
+      toast.error(apiErrorMessage(err, tr('Could not withdraw the request')));
     }
   };
 
   const openCount = useMemo(() => rows.reduce((n, r) => n + r.requests.filter((x: any) => x.status === 'OPEN').length, 0), [rows]);
 
   if (loading) return <DetailSkeleton />;
-  if (failed || !cls) return <ErrorState description="This class did not load." onRetry={load} />;
+  if (failed || !cls) return <ErrorState description={tr('This class did not load.')} onRetry={load} />;
 
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
         <Link href="/admin/classes">
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-          All classes
+          {tr('All classes')}
         </Link>
       </Button>
 
@@ -177,23 +178,23 @@ export default function ClassDetailPage() {
             <Button variant="secondary" asChild>
               <Link href="/admin/timetable">
                 <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
-                Edit routine
+                {tr('Edit routine')}
               </Link>
             </Button>
             <Button onClick={() => openRequest()} disabled={!assigned.length}>
               <Send className="h-4 w-4" strokeWidth={1.75} />
-              Request from teachers
+              {tr('Request from teachers')}
             </Button>
           </>
         }
       />
 
       <div className="grid gap-3 sm:grid-cols-4">
-        <Fact label="Room" value={cls.room || '—'} />
-        <Fact label="Subjects" value={`${rows.length}`} sub={`${assigned.length} with a teacher`} />
-        <Fact label="Open requests" value={String(openCount)} />
+        <Fact label={tr('Room')} value={cls.room || '—'} />
+        <Fact label={tr('Subjects')} value={`${rows.length}`} sub={tr('{length} with a teacher', { length: assigned.length })} />
+        <Fact label={tr('Open requests')} value={String(openCount)} />
         <div className="rounded-[18px] border border-line bg-surface p-4 shadow-card">
-          <p className="mb-2 text-meta text-ink-subtle">Enrolment</p>
+          <p className="mb-2 text-meta text-ink-subtle">{tr('Enrolment')}</p>
           <CapacityBar enrolled={students.length} capacity={capacity} />
         </div>
       </div>
@@ -201,13 +202,13 @@ export default function ClassDetailPage() {
       <Tabs defaultValue="subjects">
         <TabsList>
           <TabsTrigger value="subjects" indicatorId="class-tabs">
-            Subjects & teachers
+            {tr('Subjects & teachers')}
           </TabsTrigger>
           <TabsTrigger value="students" indicatorId="class-tabs">
-            Students <span className="ml-1.5 text-meta text-ink-subtle tabular">{students.length}</span>
+            {tr('Students')}{' '}<span className="ml-1.5 text-meta text-ink-subtle tabular">{students.length}</span>
           </TabsTrigger>
           <TabsTrigger value="routine" indicatorId="class-tabs">
-            Routine
+            {tr('Routine')}
           </TabsTrigger>
         </TabsList>
 
@@ -216,11 +217,11 @@ export default function ClassDetailPage() {
             <div className="rounded-[18px] border border-line bg-surface shadow-card">
               <EmptyState
                 icon={BookOpen}
-                title="This class has no subjects yet"
-                description="Add the NCTB subjects for this class first."
+                title={tr('This class has no subjects yet')}
+                description={tr('Add the NCTB subjects for this class first.')}
                 action={
                   <Button asChild>
-                    <Link href="/admin/subjects">Go to Subjects</Link>
+                    <Link href="/admin/subjects">{tr('Go to Subjects')}</Link>
                   </Button>
                 }
               />
@@ -260,13 +261,13 @@ export default function ClassDetailPage() {
                             options={teacherOptions(r.subject)}
                             value={r.assignment?.teacher?._id ?? ''}
                             onChange={(v) => v !== r.assignment?.teacher?._id && assign(r.subject, v)}
-                            placeholder="Assign a teacher"
-                            searchPlaceholder="Find a teacher"
+                            placeholder={tr('Assign a teacher')}
+                            searchPlaceholder={tr('Find a teacher')}
                             disabled={assigning === r.subject._id}
                           />
                         </div>
                         {r.assignment && (
-                          <Button variant="ghost" size="icon-sm" aria-label={`Remove the ${r.subject.name} teacher`} onClick={() => assign(r.subject, null)}>
+                          <Button variant="ghost" size="icon-sm" aria-label={tr('Remove the {name} teacher', { name: r.subject.name })} onClick={() => assign(r.subject, null)}>
                             <X className="h-4 w-4" strokeWidth={1.75} />
                           </Button>
                         )}
@@ -276,14 +277,14 @@ export default function ClassDetailPage() {
                         {r.finalGrades.map((f: any) => (
                           <span key={f.term} className="inline-flex items-center gap-1 rounded-full bg-success-bg px-2 py-0.5 text-meta font-medium text-success">
                             <CheckCircle2 className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
-                            {termLabel(f.term)} grades in
+                            {tr('{termLabel} grades in', { termLabel: termLabel(f.term) })}
                           </span>
                         ))}
                         <Button variant="secondary" size="sm" disabled={!r.assignment} onClick={() => openRequest(r.subject._id, 'grades')}>
-                          Request grades
+                          {tr('Request grades')}
                         </Button>
                         <Button variant="secondary" size="sm" disabled={!r.assignment} onClick={() => openRequest(r.subject._id, 'attendance')}>
-                          Request attendance
+                          {tr('Request attendance')}
                         </Button>
                       </div>
                     </div>
@@ -293,9 +294,9 @@ export default function ClassDetailPage() {
                         {openReqs.map((x: any) => (
                           <span key={x._id} className="inline-flex items-center gap-1.5 rounded-full bg-warning-bg px-2.5 py-1 text-meta font-medium text-warning">
                             <Clock className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
-                            {x.type === 'GRADES' ? `${termLabel(x.term)} grades` : 'Attendance'} requested
-                            {x.dueDate ? ` · due ${fmtDay(x.dueDate)}` : ''}
-                            <button type="button" onClick={() => cancelRequest(x)} className="ml-0.5 rounded-full hover:text-ink" aria-label="Withdraw request">
+                            {x.type === 'GRADES' ? tr('{termLabel} grades', { termLabel: termLabel(x.term) }) : tr('Attendance')}{' '}{tr('requested')}
+                            {x.dueDate ? tr(' · due {fmtDay}', { fmtDay: fmtDay(x.dueDate) }) : ''}
+                            <button type="button" onClick={() => cancelRequest(x)} className="ml-0.5 rounded-full hover:text-ink" aria-label={tr('Withdraw request')}>
                               <X className="h-3 w-3" strokeWidth={2} />
                             </button>
                           </span>
@@ -303,7 +304,7 @@ export default function ClassDetailPage() {
                         {doneReqs.map((x: any) => (
                           <span key={x._id} className="inline-flex items-center gap-1.5 rounded-full bg-success-bg px-2.5 py-1 text-meta font-medium text-success">
                             <CheckCircle2 className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
-                            {x.type === 'GRADES' ? `${termLabel(x.term)} grades` : 'Attendance'} submitted {fmtDay(x.completedAt)}
+                            {x.type === 'GRADES' ? tr('{termLabel} grades', { termLabel: termLabel(x.term) }) : tr('Attendance')}{' '}{tr('submitted {fmtDay}', { fmtDay: fmtDay(x.completedAt) })}
                           </span>
                         ))}
                       </div>
@@ -316,16 +317,16 @@ export default function ClassDetailPage() {
         </TabsContent>
 
         <TabsContent value="students" className="pt-5">
-          <Panel title={`${students.length} students`}>
+          <Panel title={tr('{length} students', { length: students.length })}>
             {!students.length ? (
               <EmptyState
                 icon={GraduationCap}
-                title="No students in this class"
-                description="Admit a student and assign them to this class."
+                title={tr('No students in this class')}
+                description={tr('Admit a student and assign them to this class.')}
                 compact
                 action={
                   <Button size="sm" asChild>
-                    <Link href="/admin/students">Admit a student</Link>
+                    <Link href="/admin/students">{tr('Admit a student')}</Link>
                   </Button>
                 }
               />
@@ -355,30 +356,30 @@ export default function ClassDetailPage() {
       <Sheet open={reqOpen} onOpenChange={(o) => !sending && setReqOpen(o)}>
         <SheetContent className="sm:max-w-lg">
           <SheetHeader>
-            <SheetTitle>Request from teachers</SheetTitle>
+            <SheetTitle>{tr('Request from teachers')}</SheetTitle>
             <SheetDescription>
-              {cls.name} {cls.section}. Each teacher gets a notification and sees the request on their profile.
+              {tr('{name} {section}. Each teacher gets a notification and sees the request on their profile.', { name: cls.name, section: cls.section })}
             </SheetDescription>
           </SheetHeader>
           <SheetBody className="space-y-5">
             <div>
-              <p className="mb-2 text-dense font-medium text-ink">Ask for</p>
+              <p className="mb-2 text-dense font-medium text-ink">{tr('Ask for')}</p>
               <div className="grid grid-cols-2 gap-2">
-                <Toggle on={req.grades} onClick={() => setReq((r) => ({ ...r, grades: !r.grades }))} title="Final grades" text="For the term below" />
-                <Toggle on={req.attendance} onClick={() => setReq((r) => ({ ...r, attendance: !r.attendance }))} title="Attendance" text="Register brought up to date" />
+                <Toggle on={req.grades} onClick={() => setReq((r) => ({ ...r, grades: !r.grades }))} title={tr('Final grades')} text={tr('For the term below')} />
+                <Toggle on={req.attendance} onClick={() => setReq((r) => ({ ...r, attendance: !r.attendance }))} title={tr('Attendance')} text={tr('Register brought up to date')} />
               </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               {req.grades && (
-                <Field label="Term">
+                <Field label={tr('Term')}>
                   {(p) => (
                     <Combobox
                       {...p}
                       options={[
-                        { value: 'TERM_1', label: 'Term 1 (half-yearly)' },
-                        { value: 'TERM_2', label: 'Term 2' },
-                        { value: 'FINAL', label: 'Final (annual)' },
+                        { value: 'TERM_1', label: tr('Term 1 (half-yearly)') },
+                        { value: 'TERM_2', label: tr('Term 2') },
+                        { value: 'FINAL', label: tr('Final (annual)') },
                       ]}
                       value={req.term}
                       onChange={(v) => setReq((r) => ({ ...r, term: v }))}
@@ -387,17 +388,17 @@ export default function ClassDetailPage() {
                 </Field>
               )}
               {req.attendance && (
-                <Field label="Attendance up to" description="Optional, e.g. the day before the exam.">
+                <Field label={tr('Attendance up to')} description={tr('Optional, e.g. the day before the exam.')}>
                   {(p) => <Input {...p} type="date" value={req.upTo} onChange={(e) => setReq((r) => ({ ...r, upTo: e.target.value }))} />}
                 </Field>
               )}
-              <Field label="Due by">
+              <Field label={tr('Due by')}>
                 {(p) => <Input {...p} type="date" value={req.dueDate} onChange={(e) => setReq((r) => ({ ...r, dueDate: e.target.value }))} />}
               </Field>
             </div>
 
             <div>
-              <p className="mb-2 text-dense font-medium text-ink">Teachers</p>
+              <p className="mb-2 text-dense font-medium text-ink">{tr('Teachers')}</p>
               <ul className="space-y-1.5">
                 {assigned.map((r) => {
                   const on = req.subjectIds.includes(r.subject._id);
@@ -424,19 +425,19 @@ export default function ClassDetailPage() {
               </ul>
             </div>
 
-            <Field label="Message" description="Optional.">
+            <Field label={tr('Message')} description={tr('Optional.')}>
               {(p) => (
-                <Textarea {...p} rows={3} value={req.message} onChange={(e) => setReq((r) => ({ ...r, message: e.target.value }))} placeholder="Needed for the half-yearly result sheet." />
+                <Textarea {...p} rows={3} value={req.message} onChange={(e) => setReq((r) => ({ ...r, message: e.target.value }))} placeholder={tr('Needed for the half-yearly result sheet.')} />
               )}
             </Field>
           </SheetBody>
           <SheetFooter>
             <Button variant="secondary" onClick={() => setReqOpen(false)}>
-              Cancel
+              {tr('Cancel')}
             </Button>
             <Button onClick={sendRequest} loading={sending} disabled={!req.subjectIds.length || (!req.grades && !req.attendance)}>
               <Send className="h-4 w-4" strokeWidth={1.75} />
-              Send to {req.subjectIds.length} {req.subjectIds.length === 1 ? 'teacher' : 'teachers'}
+              {tr('Send to {length}', { length: req.subjectIds.length })}{' '}{req.subjectIds.length === 1 ? tr('teacher') : tr('teachers')}
             </Button>
           </SheetFooter>
         </SheetContent>

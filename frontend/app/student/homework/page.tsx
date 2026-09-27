@@ -26,6 +26,7 @@ import {
 import { apiErrorMessage, cn, formatDate, formatRelativeTime } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
 import { HOMEWORK_TYPES, homeworkType, type HomeworkType } from '@/lib/design/homework';
+import { t as tr } from '@/lib/i18n';
 
 type Filter = 'all' | 'pending' | 'submitted' | 'graded' | 'overdue';
 
@@ -53,7 +54,7 @@ export default function StudentHomeworkPage() {
       .then((r) => setHomeworks(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your homework');
+        toast.error(tr('Could not load your homework'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -101,18 +102,18 @@ export default function StudentHomeworkPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!answer.trim()) {
-      setError('Write your answer before turning it in.');
+      setError(tr('Write your answer before turning it in.'));
       return;
     }
     setError(null);
     setSubmitting(true);
     try {
       await studentAPI.submitHomework(selected._id, { answerText: answer });
-      toast.success('Turned in');
+      toast.success(tr('Turned in'));
       setSelected(null);
       load();
     } catch (err) {
-      setError(apiErrorMessage(err, 'Could not turn in your work'));
+      setError(apiErrorMessage(err, tr('Could not turn in your work')));
     } finally {
       setSubmitting(false);
     }
@@ -123,10 +124,10 @@ export default function StudentHomeworkPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Homework" />
+      <PageHeader title={tr('Homework')} />
 
-      <div className="flex flex-wrap gap-2" role="group" aria-label="Kind of work">
-        {([{ value: 'ALL', plural: 'Everything' }, ...HOMEWORK_TYPES] as { value: HomeworkType | 'ALL'; plural: string }[]).map((t) => {
+      <div className="flex flex-wrap gap-2" role="group" aria-label={tr('Kind of work')}>
+        {([{ value: 'ALL', plural: tr('Everything') }, ...HOMEWORK_TYPES] as { value: HomeworkType | 'ALL'; plural: string }[]).map((t) => {
           const n = t.value === 'ALL' ? homeworks.length : homeworks.filter((h) => (h.type ?? 'HOMEWORK') === t.value).length;
           return (
             <button
@@ -140,7 +141,7 @@ export default function StudentHomeworkPage() {
                 kind === t.value ? 'border-brand bg-brand text-brand-contrast' : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
               )}
             >
-              {t.plural}
+              {tr(t.plural)}
               <span className={cn('text-meta tabular', kind === t.value ? 'opacity-80' : 'text-ink-subtle')}>{n}</span>
             </button>
           );
@@ -159,7 +160,7 @@ export default function StudentHomeworkPage() {
             ] as [Filter, string][]
           ).map(([value, label]) => (
             <TabsTrigger key={value} value={value} indicatorId="homework-tabs">
-              {label}
+              {tr(label)}
               {counts[value] > 0 && (
                 <span className="ml-1.5 text-meta text-ink-subtle tabular">{counts[value]}</span>
               )}
@@ -171,26 +172,26 @@ export default function StudentHomeworkPage() {
           {loading ? (
             <ListSkeleton rows={4} />
           ) : failed ? (
-            <ErrorState description="Your homework did not load." onRetry={load} />
+            <ErrorState description={tr('Your homework did not load.')} onRetry={load} />
           ) : !visible.length ? (
             <div className="rounded-card border border-line bg-surface shadow-card">
               <EmptyState
                 icon={BookMarked}
                 title={
                   filter === 'overdue'
-                    ? 'Nothing overdue'
+                    ? tr('Nothing overdue')
                     : filter === 'pending'
-                      ? 'Nothing to do'
+                      ? tr('Nothing to do')
                       : filter === 'graded'
-                        ? 'Nothing graded yet'
+                        ? tr('Nothing graded yet')
                         : filter === 'submitted'
-                          ? 'Nothing turned in yet'
-                          : 'No homework set'
+                          ? tr('Nothing turned in yet')
+                          : tr('No homework set')
                 }
                 description={
                   filter === 'all'
-                    ? 'Homework your teachers set will appear here.'
-                    : 'Try another tab to see the rest of your homework.'
+                    ? tr('Homework your teachers set will appear here.')
+                    : tr('Try another tab to see the rest of your homework.')
                 }
               />
             </div>
@@ -221,11 +222,11 @@ export default function StudentHomeworkPage() {
                         <span className="flex flex-wrap items-center gap-2">
                           <span className="truncate text-dense font-medium text-ink">{hw.title}</span>
                           <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', homeworkType(hw.type).tone)}>
-                            {homeworkType(hw.type).label}
+                            {tr(homeworkType(hw.type).label)}
                           </span>
                           {!overdue && <StatusPill status={status} />}
-                          {overdue && <Badge tone="danger">Overdue</Badge>}
-                          {dueSoon && <Badge tone="warning">Due soon</Badge>}
+                          {overdue && <Badge tone="danger">{tr('Overdue')}</Badge>}
+                          {dueSoon && <Badge tone="warning">{tr('Due soon')}</Badge>}
                         </span>
                         <span className="mt-1 block">
                           <SubjectLabel
@@ -236,13 +237,13 @@ export default function StudentHomeworkPage() {
                         </span>
                         {hw.submission?.marks !== undefined && hw.submission?.marks !== null && (
                           <span className="mt-1 block text-meta font-medium text-success tabular">
-                            {hw.submission.marks} out of {hw.maxMarks}
+                            {tr('{marks} out of {maxMarks}', { marks: hw.submission.marks, maxMarks: hw.maxMarks })}
                           </span>
                         )}
                       </span>
 
                       <span className="shrink-0 text-right">
-                        <span className="block text-meta text-ink-subtle">Due</span>
+                        <span className="block text-meta text-ink-subtle">{tr('Due')}</span>
                         <span
                           className={cn(
                             'block text-dense tabular',
@@ -266,7 +267,7 @@ export default function StudentHomeworkPage() {
           <SheetHeader>
             <SheetTitle>{selected?.title}</SheetTitle>
             <SheetDescription>
-              <SubjectLabel subject={selected?.subjectId} inline /> · due {formatDate(selected?.dueAt)}
+              <SubjectLabel subject={selected?.subjectId} inline />{' '}{tr('· due {formatDate}', { formatDate: formatDate(selected?.dueAt) })}
             </SheetDescription>
           </SheetHeader>
 
@@ -274,25 +275,25 @@ export default function StudentHomeworkPage() {
             <SheetBody className="space-y-4">
               {selected?.description && (
                 <div>
-                  <p className="mb-1 text-meta font-medium text-ink-subtle">What to do</p>
+                  <p className="mb-1 text-meta font-medium text-ink-subtle">{tr('What to do')}</p>
                   <p className="whitespace-pre-line text-body text-ink">{selected.description}</p>
                 </div>
               )}
 
               <dl className="flex flex-wrap gap-x-8 gap-y-2 border-y border-line py-3">
                 <div>
-                  <dt className="text-meta text-ink-subtle">Status</dt>
+                  <dt className="text-meta text-ink-subtle">{tr('Status')}</dt>
                   <dd className="mt-1">
                     <StatusPill status={submissionStatus(selected)} />
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-meta text-ink-subtle">Out of</dt>
+                  <dt className="text-meta text-ink-subtle">{tr('Out of')}</dt>
                   <dd className="mt-1 text-dense text-ink tabular">{selected?.maxMarks}</dd>
                 </div>
                 {selected?.submission?.submittedAt && (
                   <div>
-                    <dt className="text-meta text-ink-subtle">Turned in</dt>
+                    <dt className="text-meta text-ink-subtle">{tr('Turned in')}</dt>
                     <dd className="mt-1 text-dense text-ink">
                       {formatRelativeTime(selected.submission.submittedAt)}
                     </dd>
@@ -303,14 +304,14 @@ export default function StudentHomeworkPage() {
               {submissionStatus(selected) === 'GRADED' ? (
                 <div className="space-y-3">
                   <div className="rounded-card border border-success/30 bg-success-bg p-4">
-                    <p className="text-meta text-success">Your marks</p>
+                    <p className="text-meta text-success">{tr('Your marks')}</p>
                     <p className="mt-0.5 text-2xl font-semibold text-success tabular">
                       {selected.submission.marks} <span className="text-body">/ {selected.maxMarks}</span>
                     </p>
                   </div>
                   {selected.submission?.feedback && (
                     <div>
-                      <p className="mb-1 text-meta font-medium text-ink-subtle">Feedback</p>
+                      <p className="mb-1 text-meta font-medium text-ink-subtle">{tr('Feedback')}</p>
                       <p className="whitespace-pre-line text-body text-ink">
                         {selected.submission.feedback}
                       </p>
@@ -318,7 +319,7 @@ export default function StudentHomeworkPage() {
                   )}
                   {selected.submission?.answerText && (
                     <div>
-                      <p className="mb-1 text-meta font-medium text-ink-subtle">What you handed in</p>
+                      <p className="mb-1 text-meta font-medium text-ink-subtle">{tr('What you handed in')}</p>
                       <p className="whitespace-pre-line rounded-card border border-line bg-surface-sunken p-3 text-dense text-ink">
                         {selected.submission.answerText}
                       </p>
@@ -330,10 +331,10 @@ export default function StudentHomeworkPage() {
                   <div className="flex items-start gap-2.5 rounded-card border border-success/30 bg-success-bg px-3 py-2.5">
                     <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" strokeWidth={2} />
                     <p className="text-dense text-success">
-                      Turned in. You can replace your answer until your teacher grades it.
+                      {tr('Turned in. You can replace your answer until your teacher grades it.')}
                     </p>
                   </div>
-                  <Field label="Your answer" error={error}>
+                  <Field label={tr('Your answer')} error={error}>
                     {(p) => (
                       <Textarea
                         {...p}
@@ -348,7 +349,7 @@ export default function StudentHomeworkPage() {
                   </Field>
                 </div>
               ) : (
-                <Field label="Your answer" error={error} required>
+                <Field label={tr('Your answer')} error={error} required>
                   {(p) => (
                     <Textarea
                       {...p}
@@ -358,7 +359,7 @@ export default function StudentHomeworkPage() {
                         setAnswer(e.target.value);
                         setError(null);
                       }}
-                      placeholder="Write your answer here"
+                      placeholder={tr('Write your answer here')}
                     />
                   )}
                 </Field>
@@ -367,11 +368,11 @@ export default function StudentHomeworkPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setSelected(null)}>
-                Close
+                {tr('Close')}
               </Button>
               {submissionStatus(selected) !== 'GRADED' && (
                 <Button type="submit" loading={submitting}>
-                  {alreadySubmitted ? 'Replace answer' : 'Turn in'}
+                  {alreadySubmitted ? tr('Replace answer') : tr('Turn in')}
                 </Button>
               )}
             </SheetFooter>

@@ -2,6 +2,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export interface SummaryFigure {
   label: string;
@@ -35,7 +36,7 @@ export function SummaryStrip({
     >
       {figures.map((f) => (
         <div key={f.label} className="min-w-0">
-          <dt className="text-meta text-ink-muted">{f.label}</dt>
+          <dt className="text-meta text-ink-muted">{t(f.label)}</dt>
           <dd className="mt-0.5 flex items-baseline gap-1.5">
             <CountUp value={f.value} />
             {f.detail && <span className="text-meta text-ink-subtle tabular">{f.detail}</span>}

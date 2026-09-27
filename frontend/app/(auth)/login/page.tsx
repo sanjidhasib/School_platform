@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
 import { apiErrorMessage } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 const REDIRECTS: Record<string, string> = {
   ADMIN: '/admin/dashboard',
@@ -58,17 +59,17 @@ function LoginScreen() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim() || !password.trim()) {
-      setError('Enter your username and password.');
+      setError(t('Enter your username and password.'));
       return;
     }
     setError(null);
     setLoading(true);
     try {
       const user = await login({ username: username.trim(), password });
-      toast.success(`Signed in as ${user.username}`);
+      toast.success(t('Signed in as {username}', { username: user.username }));
       router.push(REDIRECTS[user.role] || '/');
     } catch (err) {
-      setError(apiErrorMessage(err, 'Could not sign you in'));
+      setError(apiErrorMessage(err, t('Could not sign you in')));
     } finally {
       setLoading(false);
     }
@@ -82,12 +83,12 @@ function LoginScreen() {
             <span className="flex h-8 w-8 items-center justify-center rounded-btn bg-brand text-brand-contrast">
               <LogoMark />
             </span>
-            <span className="text-dense font-semibold text-ink">SchoolOS</span>
+            <span className="text-dense font-semibold text-ink">{t('SchoolOS')}</span>
           </Link>
         </div>
 
         <div className="space-y-1">
-          <h1 className="text-page text-ink">Sign in</h1>
+          <h1 className="text-page text-ink">{t('Sign in')}</h1>
           <p className="text-body text-ink-muted">{school.name}</p>
         </div>
 
@@ -102,7 +103,7 @@ function LoginScreen() {
             </div>
           )}
 
-          <Field label="Username or email" required>
+          <Field label={t('Username or email')} required>
             {(p) => (
               <Input
                 {...p}
@@ -119,7 +120,7 @@ function LoginScreen() {
             )}
           </Field>
 
-          <Field label="Password" required>
+          <Field label={t('Password')} required>
             {(p) => (
               <div className="relative">
                 <Input
@@ -138,7 +139,7 @@ function LoginScreen() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? t('Hide password') : t('Show password')}
                   className="absolute right-1 top-1/2 flex h-7 w-8 -translate-y-1/2 items-center justify-center rounded-chip text-ink-subtle transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
                   {showPassword ? (
@@ -159,20 +160,20 @@ function LoginScreen() {
                 onChange={(e) => setRemember(e.target.checked)}
                 className="h-4 w-4 rounded border-line text-brand focus:ring-2 focus:ring-brand/25"
               />
-              Keep me signed in
+              {t('Keep me signed in')}
             </label>
             <span className="text-meta text-ink-subtle">
-              Forgot it? Ask the school office.
+              {t('Forgot it? Ask the school office.')}
             </span>
           </div>
 
           <Button type="submit" className="w-full" size="lg" loading={loading}>
-            Sign in
+            {t('Sign in')}
           </Button>
         </form>
 
         <div className="rounded-card border border-line bg-surface shadow-card p-3">
-          <p className="mb-1.5 text-meta font-medium text-ink">Demo accounts</p>
+          <p className="mb-1.5 text-meta font-medium text-ink">{t('Demo accounts')}</p>
           <dl className="space-y-0.5 text-meta text-ink-muted">
             {[
               ['Admin', 'admin', 'Admin@123'],

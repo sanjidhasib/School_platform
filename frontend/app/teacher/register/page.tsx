@@ -10,6 +10,8 @@ import { Combobox } from '@/components/ui/combobox';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiErrorMessage, cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
+import { num } from '@/lib/i18n';
 
 type Status = 'PRESENT' | 'ABSENT' | 'LEAVE';
 type Cell = Status | null;
@@ -57,7 +59,7 @@ export default function AttendanceRegisterPage() {
         setAssignments(list);
         if (list.length) setAssignmentId(list[0]._id);
       })
-      .catch(() => toast.error('Could not load your classes'));
+      .catch(() => toast.error(t('Could not load your classes')));
   }, []);
 
   const load = useCallback(() => {
@@ -73,7 +75,7 @@ export default function AttendanceRegisterPage() {
       })
       .catch((err) => {
         setFailed(true);
-        toast.error(apiErrorMessage(err, 'Could not load the register'));
+        toast.error(apiErrorMessage(err, t('Could not load the register')));
       })
       .finally(() => setLoading(false));
   }, [assignmentId, from, to]);
@@ -94,7 +96,7 @@ export default function AttendanceRegisterPage() {
   }, [dirty]);
 
   const choosePreset = (p: Preset) => {
-    if (dirty && !window.confirm('You have unsaved changes. Discard them?')) return;
+    if (dirty && !window.confirm(t('You have unsaved changes. Discard them?'))) return;
     setPreset(p);
     const today = todayKey();
     const year = data?.academicYear;
@@ -178,7 +180,7 @@ export default function AttendanceRegisterPage() {
   const addDate = () => {
     const d = newDate || todayKey();
     if (d > todayKey()) {
-      toast.error('You can’t mark attendance for a future day');
+      toast.error(t('You can’t mark attendance for a future day'));
       return;
     }
     if (!dates.includes(d)) setExtraDates((x) => [...x, d]);
@@ -198,10 +200,10 @@ export default function AttendanceRegisterPage() {
     setSaving(true);
     try {
       await teacherAPI.saveRegister({ assignmentId, changes });
-      toast.success(`Saved ${changes.length} ${changes.length === 1 ? 'mark' : 'marks'}`);
+      toast.success(t('Saved {length} {value}', { length: changes.length, value: changes.length === 1 ? 'mark' : 'marks' }));
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the register'));
+      toast.error(apiErrorMessage(err, t('Could not save the register')));
     } finally {
       setSaving(false);
     }
@@ -210,7 +212,7 @@ export default function AttendanceRegisterPage() {
   const exportCsv = () => {
     const a = data?.assignment;
     const esc = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const header = ['Roll', 'Student', ...dates, 'Present', 'Absent', 'Leave', 'Attendance %'];
+    const header = [t('Roll'), t('Student'), ...dates, t('Present'), t('Absent'), t('Leave'), t('Attendance %')];
     const rows = students.map((s) => {
       const sum = summary[s._id];
       return [
@@ -265,28 +267,28 @@ export default function AttendanceRegisterPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Attendance register"
-        description="Every class day for a subject, like the paper register — with each student's percentage for any period."
+        title={t('Attendance register')}
+        description={t('Every class day for a subject, like the paper register — with each student\'s percentage for any period.')}
       />
 
       {/* Controls */}
       <div className="flex flex-col gap-3 rounded-[18px] border border-line bg-surface p-4 shadow-card lg:flex-row lg:items-end">
         <div className="w-full lg:w-72">
-          <p className="mb-1.5 text-meta font-medium text-ink-muted">Class and subject</p>
+          <p className="mb-1.5 text-meta font-medium text-ink-muted">{t('Class and subject')}</p>
           <Combobox
             options={assignmentOptions}
             value={assignmentId}
             onChange={(v) => {
-              if (dirty && !window.confirm('You have unsaved changes. Discard them?')) return;
+              if (dirty && !window.confirm(t('You have unsaved changes. Discard them?'))) return;
               setAssignmentId(v);
             }}
-            placeholder="Choose a class"
-            searchPlaceholder="Find a class"
+            placeholder={t('Choose a class')}
+            searchPlaceholder={t('Find a class')}
           />
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="mb-1.5 text-meta font-medium text-ink-muted">Period</p>
+          <p className="mb-1.5 text-meta font-medium text-ink-muted">{t('Period')}</p>
           <div className="flex flex-wrap gap-1.5">
             {(
               [
@@ -302,7 +304,7 @@ export default function AttendanceRegisterPage() {
                 type="button"
                 onClick={() => (p === 'custom' ? setPreset('custom') : choosePreset(p))}
                 disabled={p === 'halfYearly' && !hy}
-                title={p === 'halfYearly' && !hy ? 'The school office hasn’t set the half-yearly exam date yet' : undefined}
+                title={p === 'halfYearly' && !hy ? t('The school office hasn’t set the half-yearly exam date yet') : undefined}
                 aria-pressed={preset === p}
                 className={cn(
                   'rounded-full border px-3 py-1.5 text-dense font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45',
@@ -310,7 +312,7 @@ export default function AttendanceRegisterPage() {
                   preset === p ? 'border-brand bg-brand text-brand-contrast' : 'border-line text-ink-muted hover:border-line-strong hover:text-ink'
                 )}
               >
-                {label}
+                {t(label)}
               </button>
             ))}
           </div>
@@ -318,16 +320,16 @@ export default function AttendanceRegisterPage() {
             <div className="mt-2 flex flex-wrap items-center gap-2 text-dense">
               <input
                 type="date"
-                aria-label="From"
+                aria-label={t('From')}
                 value={from ?? data?.range?.from ?? ''}
                 max={todayKey()}
                 onChange={(e) => setFrom(e.target.value || undefined)}
                 className="h-9 rounded-chip border border-line bg-surface px-2 text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25"
               />
-              <span className="text-ink-subtle">to</span>
+              <span className="text-ink-subtle">{t('to')}</span>
               <input
                 type="date"
-                aria-label="To"
+                aria-label={t('To')}
                 value={to ?? data?.range?.to ?? ''}
                 max={todayKey()}
                 onChange={(e) => setTo(e.target.value || undefined)}
@@ -340,11 +342,11 @@ export default function AttendanceRegisterPage() {
 
       {!assignments.length && !loading ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
-          <EmptyState icon={SheetIcon} title="No classes assigned" description="Your classes appear here once the office assigns them." />
+          <EmptyState icon={SheetIcon} title={t('No classes assigned')} description={t('Your classes appear here once the office assigns them.')} />
         </div>
       ) : loading || !data ? (
         failed ? (
-          <ErrorState description="The register did not load." onRetry={load} />
+          <ErrorState description={t('The register did not load.')} onRetry={load} />
         ) : (
           <Skeleton className="h-[480px] w-full rounded-[18px]" />
         )
@@ -355,12 +357,12 @@ export default function AttendanceRegisterPage() {
             <p className="flex items-center gap-2 text-dense text-ink-muted">
               <CalendarRange className="h-4 w-4 text-brand" strokeWidth={1.75} aria-hidden="true" />
               <span>
-                <span className="font-medium text-ink">{fmtShort(data.range.from)}</span> to{' '}
+                <span className="font-medium text-ink">{fmtShort(data.range.from)}</span>{' '}{t('to')}{' '}
                 <span className="font-medium text-ink">{fmtShort(data.range.to)}</span> ·{' '}
-                <span className="tabular">{dates.length}</span> class {dates.length === 1 ? 'day' : 'days'}
+                <span className="tabular">{dates.length}</span>{' '}{t('class')}{' '}{dates.length === 1 ? t('day') : t('days')}
                 {classAverage !== null && (
                   <>
-                    {' '}· class average <span className="font-semibold text-ink tabular">{classAverage}%</span>
+                    {' '}· {t('class average')} <span className="font-semibold text-ink tabular">{num(classAverage)}%</span>
                   </>
                 )}
               </span>
@@ -369,7 +371,7 @@ export default function AttendanceRegisterPage() {
               <div className="flex items-center gap-1.5">
                 <input
                   type="date"
-                  aria-label="Day to add"
+                  aria-label={t('Day to add')}
                   value={newDate}
                   max={todayKey()}
                   onChange={(e) => setNewDate(e.target.value)}
@@ -377,29 +379,29 @@ export default function AttendanceRegisterPage() {
                 />
                 <Button variant="secondary" onClick={addDate}>
                   <Plus className="h-4 w-4" strokeWidth={1.75} />
-                  {newDate ? 'Add day' : 'Add today'}
+                  {newDate ? t('Add day') : t('Add today')}
                 </Button>
               </div>
               <Button variant="secondary" onClick={exportCsv} disabled={!students.length}>
                 <Download className="h-4 w-4" strokeWidth={1.75} />
-                Excel (CSV)
+                {t('Excel (CSV)')}
               </Button>
               {dirty > 0 && (
                 <Button variant="ghost" onClick={() => { setEdits({}); setExtraDates([]); }}>
                   <Undo2 className="h-4 w-4" strokeWidth={1.75} />
-                  Discard
+                  {t('Discard')}
                 </Button>
               )}
               <Button onClick={save} loading={saving} disabled={!dirty}>
                 <Save className="h-4 w-4" strokeWidth={1.75} />
-                {dirty ? `Save ${dirty} ${dirty === 1 ? 'change' : 'changes'}` : 'Saved'}
+                {dirty ? t('Save {dirty} {value}', { dirty, value: dirty === 1 ? 'change' : 'changes' }) : t('Saved')}
               </Button>
             </div>
           </div>
 
           {!students.length ? (
             <div className="rounded-card border border-line bg-surface shadow-card">
-              <EmptyState icon={SheetIcon} title="No students in this class" />
+              <EmptyState icon={SheetIcon} title={t('No students in this class')} />
             </div>
           ) : (
             <div className="overflow-hidden rounded-[18px] border border-line bg-surface shadow-card">
@@ -408,10 +410,10 @@ export default function AttendanceRegisterPage() {
                   <thead>
                     <tr>
                       <th className="sticky left-0 top-0 z-30 w-14 border-b border-r border-line bg-surface-sunken px-2 py-2 text-left text-meta font-semibold text-ink-muted">
-                        Roll
+                        {t('Roll')}
                       </th>
                       <th className="sticky left-14 top-0 z-30 min-w-[12rem] border-b border-r border-line bg-surface-sunken px-3 py-2 text-left text-meta font-semibold text-ink-muted">
-                        Student
+                        {t('Student')}
                       </th>
                       {dates.map((d, c) => {
                         const dt = new Date(`${d}T12:00:00`);
@@ -424,14 +426,14 @@ export default function AttendanceRegisterPage() {
                               isToday ? 'bg-brand-wash text-brand' : 'bg-surface-sunken text-ink-muted',
                               extraDates.includes(d) && !data.dates.includes(d) && 'bg-highlighter-wash'
                             )}
-                            title={`${dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })} — click to mark everyone present`}
+                            title={t('{toLocaleDateString} — click to mark everyone present', { toLocaleDateString: dt.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' }) })}
                           >
                             <button
                               type="button"
                               onClick={() => markColumn(d, 'PRESENT')}
                               disabled={locked.has(d)}
                               className="flex w-full flex-col items-center leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
-                              aria-label={`Mark everyone present on ${fmtShort(d)}`}
+                              aria-label={t('Mark everyone present on {fmtShort}', { fmtShort: fmtShort(d) })}
                             >
                               <span className="text-[10px] uppercase tracking-wide opacity-75">
                                 {dt.toLocaleDateString('en-GB', { month: 'short' })}
@@ -512,7 +514,7 @@ export default function AttendanceRegisterPage() {
                     <tr>
                       <td className="sticky bottom-0 left-0 z-20 border-r border-t border-line bg-surface-sunken px-2 py-2" />
                       <td className="sticky bottom-0 left-14 z-20 border-r border-t border-line bg-surface-sunken px-3 py-2 text-meta font-semibold text-ink-muted">
-                        Present each day
+                        {t('Present each day')}
                       </td>
                       {dates.map((d) => (
                         <td key={d} className="sticky bottom-0 z-10 border-r border-t border-line bg-surface-sunken text-center text-meta font-semibold text-ink tabular">
@@ -532,11 +534,11 @@ export default function AttendanceRegisterPage() {
 
           <p className="flex flex-wrap items-center gap-x-4 gap-y-2 text-meta text-ink-muted">
             <Info className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-            <Legend tone={CELL_TONE.PRESENT} letter="P" label="Present" />
-            <Legend tone={CELL_TONE.ABSENT} letter="A" label="Absent" />
-            <Legend tone={CELL_TONE.LEAVE} letter="L" label="Leave" />
-            <span>Click a cell to change it, or type P, A or L. Arrow keys move. Click a date to mark everyone present.</span>
-            <span>Percentage = days present ÷ days marked.</span>
+            <Legend tone={CELL_TONE.PRESENT} letter="P" label={t('Present')} />
+            <Legend tone={CELL_TONE.ABSENT} letter="A" label={t('Absent')} />
+            <Legend tone={CELL_TONE.LEAVE} letter="L" label={t('Leave')} />
+            <span>{t('Click a cell to change it, or type P, A or L. Arrow keys move. Click a date to mark everyone present.')}</span>
+            <span>{t('Percentage = days present ÷ days marked.')}</span>
           </p>
         </>
       )}

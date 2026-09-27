@@ -12,6 +12,7 @@ import { AppSidebar } from './AppSidebar';
 import { Topbar } from './Topbar';
 import { MobileNav } from './MobileNav';
 import { CommandPalette, useCommandPalette } from './CommandPalette';
+import { t } from '@/lib/i18n';
 
 const COLLAPSE_KEY = 'schoolos.sidebar.collapsed';
 
@@ -59,7 +60,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <DialogPrimitive.Portal>
               <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-ink/40 data-[state=open]:animate-fade-in md:hidden" />
               <DialogPrimitive.Content className="fixed inset-y-0 left-0 z-50 w-60 data-[state=open]:animate-fade-in md:hidden">
-                <DialogPrimitive.Title className="sr-only">Navigation</DialogPrimitive.Title>
+                <DialogPrimitive.Title className="sr-only">{t('Navigation')}</DialogPrimitive.Title>
                 <AppSidebar onNavigate={() => setMobileOpen(false)} />
               </DialogPrimitive.Content>
             </DialogPrimitive.Portal>

@@ -25,6 +25,7 @@ import {
 import { apiErrorMessage, cn, formatDate, gradeTone, termLabel } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
 import { homeworkType } from '@/lib/design/homework';
+import { t as tr } from '@/lib/i18n';
 
 export default function StudentResultsPage() {
   const [data, setData] = useState<any>(null);
@@ -41,7 +42,7 @@ export default function StudentResultsPage() {
       .then((r) => setData(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your results');
+        toast.error(tr('Could not load your results'));
       })
       .finally(() => setLoading(false));
   };
@@ -73,9 +74,9 @@ export default function StudentResultsPage() {
       link.click();
       link.parentNode?.removeChild(link);
       window.URL.revokeObjectURL(url);
-      toast.success('Report card downloaded');
+      toast.success(tr('Report card downloaded'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not download your report card'));
+      toast.error(apiErrorMessage(err, tr('Could not download your report card')));
     } finally {
       setDownloading(false);
     }
@@ -90,19 +91,19 @@ export default function StudentResultsPage() {
     );
   }
 
-  if (failed) return <ErrorState description="Your results did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={tr('Your results did not load.')} onRetry={load} />;
 
   const hasAnything = grades.length > 0 || marks.length > 0 || homework.length > 0;
 
   return (
     <div className="space-y-7">
       <PageHeader
-        title="Results"
+        title={tr('Results')}
         actions={
           hasAnything ? (
             <Button variant="secondary" onClick={downloadReport} loading={downloading}>
               <Download className="h-4 w-4" strokeWidth={1.75} />
-              Download report card
+              {tr('Download report card')}
             </Button>
           ) : undefined
         }
@@ -112,19 +113,19 @@ export default function StudentResultsPage() {
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={BarChart3}
-            title="No results yet"
-            description="Your grades appear here once your teachers publish them."
+            title={tr('No results yet')}
+            description={tr('Your grades appear here once your teachers publish them.')}
           />
         </div>
       ) : (
         <>
           {terms.length > 1 && (
-            <Field label="Term" className="w-48">
+            <Field label={tr('Term')} className="w-48">
               {(p) => (
                 <Combobox
                   {...p}
                   options={[
-                    { value: 'all', label: 'All terms' },
+                    { value: 'all', label: tr('All terms') },
                     ...terms.map((t) => ({ value: t, label: termLabel(t) })),
                   ]}
                   value={term}
@@ -137,7 +138,7 @@ export default function StudentResultsPage() {
           {/* Only when there's enough data for a chart to say more than the
               table already does — two bars would just be decoration. */}
           {visibleGrades.length >= 3 && (
-            <Section title="Progress at a glance">
+            <Section title={tr('Progress at a glance')}>
               <Panel>
                 <GradeChart
                   data={visibleGrades.map((g: any) => ({
@@ -152,13 +153,13 @@ export default function StudentResultsPage() {
             </Section>
           )}
 
-          <Section title="Final grades" description="Submitted by your subject teachers.">
+          <Section title={tr('Final grades')} description={tr('Submitted by your subject teachers.')}>
             {!visibleGrades.length ? (
               <div className="rounded-card border border-line bg-surface shadow-card">
                 <EmptyState
                   icon={BarChart3}
-                  title={grades.length ? 'No grades for this term' : 'No final grades yet'}
-                  description={grades.length ? 'Try another term.' : 'Your grades appear here once your subject teachers submit them.'}
+                  title={grades.length ? tr('No grades for this term') : tr('No final grades yet')}
+                  description={grades.length ? tr('Try another term.') : tr('Your grades appear here once your subject teachers submit them.')}
                   compact
                 />
               </div>
@@ -167,11 +168,11 @@ export default function StudentResultsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Subject</TableHead>
-                      <TableHead className="hidden sm:table-cell">Term</TableHead>
-                      <TableHead numeric>Percentage</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead numeric>GPA</TableHead>
+                      <TableHead>{tr('Subject')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{tr('Term')}</TableHead>
+                      <TableHead numeric>{tr('Percentage')}</TableHead>
+                      <TableHead>{tr('Grade')}</TableHead>
+                      <TableHead numeric>{tr('GPA')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -205,15 +206,15 @@ export default function StudentResultsPage() {
           </Section>
 
           {homework.length > 0 && (
-            <Section title="Homework results" description="Marks and feedback on the work you handed in.">
+            <Section title={tr('Homework results')} description={tr('Marks and feedback on the work you handed in.')}>
               <TableWrap>
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Homework</TableHead>
-                      <TableHead className="hidden md:table-cell">Subject</TableHead>
-                      <TableHead numeric>Marks</TableHead>
-                      <TableHead className="hidden lg:table-cell">Teacher&apos;s feedback</TableHead>
+                      <TableHead>{tr('Homework')}</TableHead>
+                      <TableHead className="hidden md:table-cell">{tr('Subject')}</TableHead>
+                      <TableHead numeric>{tr('Marks')}</TableHead>
+                      <TableHead className="hidden lg:table-cell">{tr('Teacher\'s feedback')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -225,7 +226,7 @@ export default function StudentResultsPage() {
                           <TableCell>
                             <span className="block font-medium text-ink">{h.homework?.title}</span>
                             <span className="mt-1 flex flex-wrap items-center gap-1.5">
-                              <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', t.tone)}>{t.label}</span>
+                              <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', t.tone)}>{tr(t.label)}</span>
                               <span className="text-meta text-ink-subtle md:hidden">{h.homework?.subjectId?.name}</span>
                             </span>
                             {h.feedback && <span className="mt-1 block text-meta text-ink-muted lg:hidden">“{h.feedback}”</span>}
@@ -248,15 +249,15 @@ export default function StudentResultsPage() {
           )}
 
           {marks.length > 0 && (
-            <Section title="Test and exam marks">
+            <Section title={tr('Test and exam marks')}>
               <TableWrap>
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Assessment</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead className="hidden sm:table-cell">Date</TableHead>
-                      <TableHead numeric>Marks</TableHead>
+                      <TableHead>{tr('Assessment')}</TableHead>
+                      <TableHead>{tr('Subject')}</TableHead>
+                      <TableHead className="hidden sm:table-cell">{tr('Date')}</TableHead>
+                      <TableHead numeric>{tr('Marks')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -275,7 +276,7 @@ export default function StudentResultsPage() {
                         </TableCell>
                         <TableCell numeric>
                           {m.absent ? (
-                            <span className="text-danger">Absent</span>
+                            <span className="text-danger">{tr('Absent')}</span>
                           ) : (
                             <span className="text-ink">
                               {m.obtainedMarks}

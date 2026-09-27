@@ -124,7 +124,9 @@
   body {
     background-color: rgb(var(--paper));
     color: rgb(var(--ink));
-    font-family: var(--font-ui), ui-sans-serif, system-ui, sans-serif;
+    /* Onest has no Bangla glyphs, so Bangla text falls through to Hind
+       Siliguri letter by letter — mixed Bangla/English lines just work. */
+    font-family: var(--font-ui), var(--font-bn), ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -133,7 +135,9 @@
     Bangla gets its own stack and a taller line, rather than falling back to a
     Latin face. The matra headline and the deeper descenders need the room.
   */
-  :lang(bn),
+  /* Only explicitly Bangla passages — not the whole page when the interface
+     language is Bangla, which would stretch every button and table row. */
+  [lang='bn']:not(html),
   .font-bn {
     font-family: var(--font-bn), var(--font-ui), sans-serif;
     line-height: 1.75;

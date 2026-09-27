@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { t as tr } from '@/lib/i18n';
 
 export interface CarouselSlide {
   id: string;
@@ -96,7 +97,7 @@ export function SchoolCarousel({
     <div
       role="region"
       aria-roledescription="carousel"
-      aria-label="About SchoolOS"
+      aria-label={tr('About SchoolOS')}
       tabIndex={0}
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -173,7 +174,7 @@ export function SchoolCarousel({
                 type="button"
                 onClick={() => goTo(slideIndex)}
                 tabIndex={-1}
-                aria-label={`Show slide: ${slide.title}`}
+                aria-label={tr('Show slide: {title}', { title: slide.title })}
                 className="absolute inset-0 flex items-end bg-gradient-to-t from-black/75 via-black/10 to-transparent p-3 text-left"
               >
                 <span className="line-clamp-2 text-dense font-semibold leading-snug text-white">
@@ -201,10 +202,10 @@ export function SchoolCarousel({
 
       {n > 1 && (
         <div className="absolute inset-x-0 bottom-6 z-20 flex items-center justify-center gap-3 sm:bottom-8 md:left-12 md:right-auto md:justify-start lg:left-16">
-          <NavButton label="Previous slide" onClick={prev}>
+          <NavButton label={tr('Previous slide')} onClick={prev}>
             <ChevronLeft className="h-5 w-5" strokeWidth={2} />
           </NavButton>
-          <NavButton label="Next slide" onClick={next}>
+          <NavButton label={tr('Next slide')} onClick={next}>
             <ChevronRight className="h-5 w-5" strokeWidth={2} />
           </NavButton>
           <div className="ml-2 flex items-center gap-1.5" aria-hidden="true">
@@ -255,7 +256,7 @@ function SlideContent({ slide, index, total }: { slide: CarouselSlide; index: nu
           href={slide.href}
           className="group inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-dense font-semibold text-[#1B2240] transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black"
         >
-          {slide.cta ?? 'Explore SchoolOS'}
+          {slide.cta ?? tr('Explore SchoolOS')}
           <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2} />
         </Link>
       </motion.div>

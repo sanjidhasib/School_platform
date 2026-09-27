@@ -24,6 +24,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { formatTime, formatDateLong } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * The office view of attendance across the school for one day. Read-only:
@@ -52,7 +53,7 @@ export default function AdminAttendancePage() {
       .then((r) => setRows(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load attendance');
+        toast.error(t('Could not load attendance'));
       })
       .finally(() => setLoading(false));
   }, [date, classFilter]);
@@ -61,7 +62,7 @@ export default function AdminAttendancePage() {
 
   const classOptions = useMemo(
     () => [
-      { value: 'all', label: 'All classes' },
+      { value: 'all', label: t('All classes') },
       ...classes.map((c: any) => ({
         value: c._id,
         label: `${c.name} ${c.section ?? ''}`.trim(),
@@ -83,23 +84,23 @@ export default function AdminAttendancePage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Attendance" description={formatDateLong(date)} />
+      <PageHeader title={t('Attendance')} description={formatDateLong(date)} />
 
       <div className="flex flex-wrap items-end gap-3">
-        <Field label="Date" className="w-44">
+        <Field label={t('Date')} className="w-44">
           {(p) => (
             <Input {...p} type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           )}
         </Field>
-        <Field label="Class" className="w-48">
+        <Field label={t('Class')} className="w-48">
           {(p) => (
             <Combobox
               {...p}
               options={classOptions}
               value={classFilter}
               onChange={setClassFilter}
-              placeholder="All classes"
-              searchPlaceholder="Find a class"
+              placeholder={t('All classes')}
+              searchPlaceholder={t('Find a class')}
             />
           )}
         </Field>
@@ -108,13 +109,13 @@ export default function AdminAttendancePage() {
       {loading ? (
         <TableSkeleton cols={5} />
       ) : failed ? (
-        <ErrorState description="Attendance did not load." onRetry={load} />
+        <ErrorState description={t('Attendance did not load.')} onRetry={load} />
       ) : !rows.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={UserCheck}
-            title="No attendance taken on this day"
-            description="Sessions appear here once a teacher opens a class and saves attendance."
+            title={t('No attendance taken on this day')}
+            description={t('Sessions appear here once a teacher opens a class and saves attendance.')}
           />
         </div>
       ) : (
@@ -123,10 +124,10 @@ export default function AdminAttendancePage() {
           {marked > 0 && (
             <SummaryStrip
               figures={[
-                { label: 'Sessions', value: rows.length },
-                { label: 'Present', value: totals.present, detail: `of ${marked}` },
-                { label: 'Absent', value: totals.absent },
-                { label: 'On leave', value: totals.leave },
+                { label: t('Sessions'), value: rows.length },
+                { label: t('Present'), value: totals.present, detail: `of ${marked}` },
+                { label: t('Absent'), value: totals.absent },
+                { label: t('On leave'), value: totals.leave },
               ]}
             />
           )}
@@ -135,12 +136,12 @@ export default function AdminAttendancePage() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-20">Time</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>Subject</TableHead>
-                  <TableHead className="hidden md:table-cell">Teacher</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="w-48">Present</TableHead>
+                  <TableHead className="w-20">{t('Time')}</TableHead>
+                  <TableHead>{t('Class')}</TableHead>
+                  <TableHead>{t('Subject')}</TableHead>
+                  <TableHead className="hidden md:table-cell">{t('Teacher')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead className="w-48">{t('Present')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -168,9 +169,9 @@ export default function AdminAttendancePage() {
                         {total ? (
                           <div className="space-y-1">
                             <p className="text-meta text-ink-muted tabular">
-                              {counts.PRESENT} of {total}
-                              {counts.ABSENT ? ` · ${counts.ABSENT} absent` : ''}
-                              {counts.LEAVE ? ` · ${counts.LEAVE} on leave` : ''}
+                              {t('{PRESENT} of {total}', { PRESENT: counts.PRESENT, total })}
+                              {counts.ABSENT ? t(' · {ABSENT} absent', { ABSENT: counts.ABSENT }) : ''}
+                              {counts.LEAVE ? t(' · {LEAVE} on leave', { LEAVE: counts.LEAVE }) : ''}
                             </p>
                             <Progress
                               value={pct}
@@ -179,7 +180,7 @@ export default function AdminAttendancePage() {
                             />
                           </div>
                         ) : (
-                          <span className="text-meta text-ink-subtle">Not marked yet</span>
+                          <span className="text-meta text-ink-subtle">{t('Not marked yet')}</span>
                         )}
                       </TableCell>
                     </TableRow>

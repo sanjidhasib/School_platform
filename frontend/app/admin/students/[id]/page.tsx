@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Panel } from '@/components/ui/card';
 import { formatDate, gradeTone, termLabel } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * A student's record, gathered from the endpoints that serve the admin office.
@@ -40,7 +41,7 @@ export default function StudentProfilePage() {
       .then((r) => setStudent(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load this student');
+        toast.error(t('Could not load this student'));
       })
       .finally(() => setLoading(false));
   }, [id]);
@@ -63,14 +64,14 @@ export default function StudentProfilePage() {
 
   if (loading) return <ProfileSkeleton />;
   if (failed || !student)
-    return <ErrorState description="This student record did not load." onRetry={load} />;
+    return <ErrorState description={t('This student record did not load.')} onRetry={load} />;
 
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" asChild className="-ml-2">
         <Link href="/admin/students">
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-          All students
+          {t('All students')}
         </Link>
       </Button>
 
@@ -79,18 +80,18 @@ export default function StudentProfilePage() {
         <div className="min-w-0 flex-1">
           <PageHeader title={student.fullName} />
           <dl className="mt-2 flex flex-wrap gap-x-8 gap-y-2">
-            <Fact label="Student ID" value={student.studentId} mono />
+            <Fact label={t('Student ID')} value={student.studentId} mono />
             <Fact
-              label="Class"
+              label={t('Class')}
               value={
                 student.classId
                   ? `${student.classId.name} ${student.classId.section ?? ''}`.trim()
                   : '—'
               }
             />
-            {student.classId?.room && <Fact label="Room" value={student.classId.room} />}
+            {student.classId?.room && <Fact label={t('Room')} value={student.classId.room} />}
             <div>
-              <dt className="text-meta text-ink-subtle">Status</dt>
+              <dt className="text-meta text-ink-subtle">{t('Status')}</dt>
               <dd className="mt-0.5">
                 <StatusPill status={student.status} />
               </dd>
@@ -102,41 +103,41 @@ export default function StudentProfilePage() {
       <Tabs defaultValue="details">
         <TabsList>
           <TabsTrigger value="details" indicatorId="student-tabs">
-            Details
+            {t('Details')}
           </TabsTrigger>
           <TabsTrigger value="guardians" indicatorId="student-tabs">
-            Guardians
+            {t('Guardians')}
           </TabsTrigger>
           <TabsTrigger value="results" indicatorId="student-tabs">
-            Results
+            {t('Results')}
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="details" className="pt-5">
-          <Panel title="Record">
+          <Panel title={t('Record')}>
             <dl className="grid gap-x-8 gap-y-4 p-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Fact label="Full name" value={student.fullName} />
-              <Fact label="Student ID" value={student.studentId} mono />
-              <Fact label="Roll number" value={student.rollNumber || '—'} />
-              <Fact label="Date of birth" value={student.dateOfBirth ? formatDate(student.dateOfBirth) : '—'} />
-              <Fact label="Gender" value={student.gender || '—'} />
-              <Fact label="Blood group" value={student.bloodGroup || '—'} />
-              <Fact label="Phone" value={student.phone || '—'} />
-              <Fact label="Email" value={student.userId?.email || student.email || '—'} />
-              <Fact label="Username" value={student.userId?.username || '—'} mono />
-              <Fact label="Admitted" value={student.admissionDate ? formatDate(student.admissionDate) : '—'} />
-              <Fact label="Address" value={student.address || '—'} />
+              <Fact label={t('Full name')} value={student.fullName} />
+              <Fact label={t('Student ID')} value={student.studentId} mono />
+              <Fact label={t('Roll number')} value={student.rollNumber || '—'} />
+              <Fact label={t('Date of birth')} value={student.dateOfBirth ? formatDate(student.dateOfBirth) : '—'} />
+              <Fact label={t('Gender')} value={student.gender || '—'} />
+              <Fact label={t('Blood group')} value={student.bloodGroup || '—'} />
+              <Fact label={t('Phone')} value={student.phone || '—'} />
+              <Fact label={t('Email')} value={student.userId?.email || student.email || '—'} />
+              <Fact label={t('Username')} value={student.userId?.username || '—'} mono />
+              <Fact label={t('Admitted')} value={student.admissionDate ? formatDate(student.admissionDate) : '—'} />
+              <Fact label={t('Address')} value={student.address || '—'} />
             </dl>
           </Panel>
         </TabsContent>
 
         <TabsContent value="guardians" className="pt-5">
-          <Panel title="Linked guardians">
+          <Panel title={t('Linked guardians')}>
             {!student.guardianIds?.length ? (
               <EmptyState
                 icon={Users}
-                title="No guardian linked"
-                description="This student has no guardian account attached to their record."
+                title={t('No guardian linked')}
+                description={t('This student has no guardian account attached to their record.')}
                 compact
               />
             ) : (
@@ -160,12 +161,12 @@ export default function StudentProfilePage() {
         </TabsContent>
 
         <TabsContent value="results" className="pt-5">
-          <Panel title="Subject grades">
+          <Panel title={t('Subject grades')}>
             {!results.length ? (
               <EmptyState
                 icon={BarChart3}
-                title="No grades published"
-                description="Grades appear here once a teacher publishes them for this class."
+                title={t('No grades published')}
+                description={t('Grades appear here once a teacher publishes them for this class.')}
                 compact
               />
             ) : (

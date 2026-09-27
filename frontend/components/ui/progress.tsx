@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * Fills once on mount and then stays put. Progress is not ambient decoration;
@@ -74,15 +75,15 @@ export function CapacityBar({
       {showLabel && (
         <div className="flex items-baseline justify-between gap-2 text-meta tabular">
           <span className={cn(full ? 'font-medium text-danger' : 'text-ink-muted')}>
-            {enrolled} of {safeCapacity}
+            {t('{enrolled} of {safeCapacity}', { enrolled, safeCapacity })}
           </span>
-          {full && <span className="font-medium text-danger">Full</span>}
+          {full && <span className="font-medium text-danger">{t('Full')}</span>}
         </div>
       )}
       <Progress
         value={pct}
         tone={tone}
-        label={`${enrolled} of ${safeCapacity} places filled`}
+        label={t('{enrolled} of {safeCapacity} places filled', { enrolled, safeCapacity })}
       />
     </div>
   );

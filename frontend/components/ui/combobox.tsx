@@ -5,6 +5,7 @@ import { Command } from 'cmdk';
 import { Check, ChevronsUpDown, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverTrigger, PopoverContent } from './popover';
+import { t } from '@/lib/i18n';
 
 export interface ComboboxOption {
   value: string;
@@ -67,7 +68,7 @@ export function Combobox({
             className
           )}
         >
-          <span className="truncate">{selected?.label ?? placeholder}</span>
+          <span className="truncate">{t(selected?.label ?? placeholder)}</span>
           <ChevronsUpDown className="h-4 w-4 shrink-0 text-ink-subtle" strokeWidth={1.75} />
         </button>
       </PopoverTrigger>
@@ -83,13 +84,13 @@ export function Combobox({
           <div className="flex items-center gap-2 border-b border-line px-3">
             <Search className="h-4 w-4 shrink-0 text-ink-subtle" strokeWidth={1.75} />
             <Command.Input
-              placeholder={searchPlaceholder}
+              placeholder={t(searchPlaceholder)}
               className="h-9 w-full bg-transparent text-dense text-ink placeholder:text-ink-subtle focus:outline-none"
             />
           </div>
           <Command.List className="scrollbar-thin max-h-64 overflow-y-auto p-1">
             <Command.Empty className="px-2 py-6 text-center text-dense text-ink-subtle">
-              {emptyText}
+              {t(emptyText)}
             </Command.Empty>
             {options.map((opt) => (
               <Command.Item
@@ -109,7 +110,7 @@ export function Combobox({
                 )}
               >
                 <span className="min-w-0">
-                  <span className="block truncate">{opt.label}</span>
+                  <span className="block truncate">{t(opt.label)}</span>
                   {(opt.disabled && opt.disabledReason ? opt.disabledReason : opt.hint) && (
                     <span
                       className={cn(

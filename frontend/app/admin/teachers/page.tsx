@@ -40,6 +40,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage, cn, formatDate } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
+import { t as tr } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 /**
  * Optional fields left blank must be omitted, not sent as "". The User model
@@ -109,7 +111,7 @@ export default function TeachersPage() {
       .then((r) => setTeachers(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load teachers');
+        toast.error(tr('Could not load teachers'));
       })
       .finally(() => setLoading(false));
   }, [search]);
@@ -188,15 +190,15 @@ export default function TeachersPage() {
     try {
       if (editing) {
         await adminAPI.updateTeacher(editing._id, withoutBlanks(form));
-        toast.success('Teacher saved');
+        toast.success(tr('Teacher saved'));
       } else {
         await adminAPI.createTeacher(withoutBlanks(form));
-        toast.success(`${form.fullName} added`);
+        toast.success(tr('{fullName} added', { fullName: form.fullName }));
       }
       setOpen(false);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the teacher'));
+      toast.error(apiErrorMessage(err, tr('Could not save the teacher')));
     } finally {
       setSaving(false);
     }
@@ -206,11 +208,11 @@ export default function TeachersPage() {
     setRemoving(true);
     try {
       await adminAPI.deleteTeacher(deleting._id);
-      toast.success(`${deleting.fullName} deactivated`);
+      toast.success(tr('{fullName} deactivated', { fullName: deleting.fullName }));
       setDeleting(null);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not deactivate the teacher'));
+      toast.error(apiErrorMessage(err, tr('Could not deactivate the teacher')));
     } finally {
       setRemoving(false);
     }
@@ -219,11 +221,11 @@ export default function TeachersPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Teachers"
+        title={tr('Teachers')}
         actions={
           <Button onClick={openAdd}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Add a teacher
+            {tr('Add a teacher')}
           </Button>
         }
       />
@@ -235,32 +237,32 @@ export default function TeachersPage() {
             strokeWidth={1.75}
           />
           <Input
-            placeholder="Search by name or ID"
+            placeholder={tr('Search by name or ID')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8"
-            aria-label="Search teachers"
+            aria-label={tr('Search teachers')}
           />
         </div>
 
         <div className="ml-auto flex items-center gap-2">
           {!loading && (
             <p className="text-meta text-ink-subtle tabular">
-              {teachers.length} {teachers.length === 1 ? 'teacher' : 'teachers'}
+              {teachers.length} {teachers.length === 1 ? tr('teacher') : tr('teachers')}
             </p>
           )}
           <div className="flex rounded-btn border border-line p-0.5">
             <ViewButton
               active={view === 'grid'}
               onClick={() => setViewPersisted('grid')}
-              label="Card view"
+              label={tr('Card view')}
             >
               <LayoutGrid className="h-4 w-4" strokeWidth={1.75} />
             </ViewButton>
             <ViewButton
               active={view === 'list'}
               onClick={() => setViewPersisted('list')}
-              label="List view"
+              label={tr('List view')}
             >
               <List className="h-4 w-4" strokeWidth={1.75} />
             </ViewButton>
@@ -269,11 +271,11 @@ export default function TeachersPage() {
       </div>
 
       {!loading && bySubject.list.length > 0 && (
-        <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Filter by subject">
+        <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label={tr('Filter by subject')}>
           {[
-            { id: 'all', label: 'All subjects', n: teachers.length },
+            { id: 'all', label: tr('All subjects'), n: teachers.length },
             ...bySubject.list.map((sec) => ({ id: sec.subject?._id, label: sec.subject?.name, n: sec.teachers.length })),
-            ...(bySubject.unassigned.length ? [{ id: 'none', label: 'Not assigned', n: bySubject.unassigned.length }] : []),
+            ...(bySubject.unassigned.length ? [{ id: 'none', label: tr('Not assigned'), n: bySubject.unassigned.length }] : []),
           ].map((c) => (
             <button
               key={c.id}
@@ -286,7 +288,7 @@ export default function TeachersPage() {
                 subjectFilter === c.id ? 'border-brand bg-brand text-brand-contrast' : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
               )}
             >
-              {c.label}
+              {tr(c.label)}
               <span className={cn('text-meta tabular', subjectFilter === c.id ? 'opacity-80' : 'text-ink-subtle')}>{c.n}</span>
             </button>
           ))}
@@ -304,22 +306,22 @@ export default function TeachersPage() {
           <TableSkeleton cols={5} />
         )
       ) : failed ? (
-        <ErrorState description="The teacher directory did not load." onRetry={load} />
+        <ErrorState description={tr('The teacher directory did not load.')} onRetry={load} />
       ) : !teachers.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
-            title={search ? 'No teachers match that search' : 'No teachers yet'}
-            description={search ? 'Try a different name or ID.' : 'Add the first teacher to get started.'}
+            title={search ? tr('No teachers match that search') : tr('No teachers yet')}
+            description={search ? tr('Try a different name or ID.') : tr('Add the first teacher to get started.')}
             action={
               search ? (
                 <Button variant="secondary" onClick={() => setSearch('')}>
-                  Clear search
+                  {tr('Clear search')}
                 </Button>
               ) : (
                 <Button onClick={openAdd}>
                   <Plus className="h-4 w-4" strokeWidth={1.75} />
-                  Add a teacher
+                  {tr('Add a teacher')}
                 </Button>
               )
             }
@@ -343,7 +345,7 @@ export default function TeachersPage() {
                           {sec.subject.nameBn} ·{' '}
                         </span>
                       )}
-                      {sec.teachers.length} {sec.teachers.length === 1 ? 'teacher' : 'teachers'}
+                      {sec.teachers.length} {sec.teachers.length === 1 ? tr('teacher') : tr('teachers')}
                     </p>
                   </div>
                 </div>
@@ -359,8 +361,8 @@ export default function TeachersPage() {
           {bySubject.unassigned.length > 0 && (subjectFilter === 'all' || subjectFilter === 'none') && (
             <section className="space-y-3">
               <div>
-                <h2 className="text-section text-ink">Not teaching a class yet</h2>
-                <p className="text-meta text-ink-muted">Assign them a subject on a class page.</p>
+                <h2 className="text-section text-ink">{tr('Not teaching a class yet')}</h2>
+                <p className="text-meta text-ink-muted">{tr('Assign them a subject on a class page.')}</p>
               </div>
               <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {bySubject.unassigned.map((t) => (
@@ -377,12 +379,12 @@ export default function TeachersPage() {
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead>Name</TableHead>
-                <TableHead>Teacher ID</TableHead>
-                <TableHead className="hidden md:table-cell">Degree</TableHead>
-                <TableHead className="hidden lg:table-cell">Subject</TableHead>
-                <TableHead className="hidden lg:table-cell">Phone</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{tr('Name')}</TableHead>
+                <TableHead>{tr('Teacher ID')}</TableHead>
+                <TableHead className="hidden md:table-cell">{tr('Degree')}</TableHead>
+                <TableHead className="hidden lg:table-cell">{tr('Subject')}</TableHead>
+                <TableHead className="hidden lg:table-cell">{tr('Phone')}</TableHead>
+                <TableHead>{tr('Status')}</TableHead>
                 <TableHead className="w-12" />
               </TableRow>
             </TableHeader>
@@ -427,9 +429,9 @@ export default function TeachersPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit teacher' : 'Add a teacher'}</SheetTitle>
+            <SheetTitle>{editing ? tr('Edit teacher') : tr('Add a teacher')}</SheetTitle>
             <SheetDescription>
-              {editing ? editing.fullName : 'Creates the staff record and their sign-in account.'}
+              {editing ? editing.fullName : tr('Creates the staff record and their sign-in account.')}
             </SheetDescription>
           </SheetHeader>
 
@@ -438,7 +440,7 @@ export default function TeachersPage() {
               {!editing && (
                 <>
                   <div className="grid gap-4 sm:grid-cols-2">
-                    <Field label="Username" required>
+                    <Field label={tr('Username')} required>
                       {(p) => (
                         <Input
                           {...p}
@@ -449,7 +451,7 @@ export default function TeachersPage() {
                         />
                       )}
                     </Field>
-                    <Field label="Password" required>
+                    <Field label={tr('Password')} required>
                       {(p) => (
                         <Input
                           {...p}
@@ -466,7 +468,7 @@ export default function TeachersPage() {
               )}
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Full name" required>
+                <Field label={tr('Full name')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -476,7 +478,7 @@ export default function TeachersPage() {
                     />
                   )}
                 </Field>
-                <Field label="Teacher ID" required>
+                <Field label={tr('Teacher ID')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -489,30 +491,30 @@ export default function TeachersPage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Degree" description="As it should appear in the directory.">
+                <Field label={tr('Degree')} description={tr('As it should appear in the directory.')}>
                   {(p) => (
                     <Input
                       {...p}
                       value={form.degree}
                       onChange={(e) => setForm((f) => ({ ...f, degree: e.target.value }))}
-                      placeholder="M.Sc., B.Ed."
+                      placeholder={tr('M.Sc., B.Ed.')}
                     />
                   )}
                 </Field>
-                <Field label="Subject">
+                <Field label={tr('Subject')}>
                   {(p) => (
                     <Input
                       {...p}
                       value={form.specialization}
                       onChange={(e) => setForm((f) => ({ ...f, specialization: e.target.value }))}
-                      placeholder="Mathematics"
+                      placeholder={tr('Mathematics')}
                     />
                   )}
                 </Field>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Phone">
+                <Field label={tr('Phone')}>
                   {(p) => (
                     <Input
                       {...p}
@@ -521,7 +523,7 @@ export default function TeachersPage() {
                     />
                   )}
                 </Field>
-                <Field label="Email">
+                <Field label={tr('Email')}>
                   {(p) => (
                     <Input
                       {...p}
@@ -533,7 +535,7 @@ export default function TeachersPage() {
                 </Field>
               </div>
 
-              <Field label="Joining date">
+              <Field label={tr('Joining date')}>
                 {(p) => (
                   <Input
                     {...p}
@@ -547,10 +549,10 @@ export default function TeachersPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {tr('Cancel')}
               </Button>
               <Button type="submit" loading={saving}>
-                {editing ? 'Save changes' : 'Add teacher'}
+                {editing ? tr('Save changes') : tr('Add teacher')}
               </Button>
             </SheetFooter>
           </form>
@@ -560,15 +562,14 @@ export default function TeachersPage() {
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="Deactivate this teacher?"
+        title={tr('Deactivate this teacher?')}
         description={
-          <>
-            <strong className="text-ink">{deleting?.fullName}</strong> ({deleting?.teacherId}) will be
-            marked inactive, their sign-in disabled and their class assignments ended. Past
-            attendance, homework and marks are kept.
-          </>
+          tNode('{name} ({id}) will be marked inactive, their sign-in disabled and their class assignments ended. Past attendance, homework and marks are kept.', {
+            name: <strong className="text-ink">{deleting?.fullName}</strong>,
+            id: deleting?.teacherId,
+          })
         }
-        confirmLabel="Deactivate"
+        confirmLabel={tr('Deactivate')}
         destructive
         loading={removing}
         onConfirm={confirmDelete}
@@ -616,18 +617,18 @@ function TeacherMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${name}`}>
+        <Button variant="ghost" size="icon-sm" aria-label={tr('Actions for {name}', { name })}>
           <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onSelect={onEdit}>
           <Pencil className="h-4 w-4" strokeWidth={1.75} />
-          Edit
+          {tr('Edit')}
         </DropdownMenuItem>
         <DropdownMenuItem destructive onSelect={onDelete}>
           <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-          Deactivate
+          {tr('Deactivate')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -651,7 +652,7 @@ function TeacherCard({ t, classes, onEdit, onDelete }: { t: any; classes: string
           <div className="flex flex-wrap gap-1">
             {classes.map((c) => (
               <span key={c} className="rounded-chip bg-wash px-1.5 py-0.5 text-meta font-medium text-brand tabular">
-                Class {c}
+                {tr('Class {c}', { c })}
               </span>
             ))}
           </div>

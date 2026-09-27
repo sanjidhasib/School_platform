@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { primaryNav, navForRole } from '@/lib/nav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from '@/components/ui/sheet';
+import { t } from '@/lib/i18n';
 
 /**
  * Phones get a bottom bar of at most four destinations plus More, with 44px
@@ -27,7 +28,7 @@ export function MobileNav() {
   return (
     <>
       <nav
-        aria-label="Primary"
+        aria-label={t('Primary')}
         className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
         <ul className="grid grid-cols-5">
@@ -44,7 +45,7 @@ export function MobileNav() {
                   )}
                 >
                   <item.icon className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate">{t(item.label)}</span>
                 </Link>
               </li>
             );
@@ -56,7 +57,7 @@ export function MobileNav() {
               className="flex min-h-[3.25rem] w-full flex-col items-center justify-center gap-0.5 px-1 py-1.5 text-[11px] font-medium text-ink-subtle"
             >
               <MoreHorizontal className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
-              More
+              {t('More')}
             </button>
           </li>
         </ul>
@@ -65,7 +66,7 @@ export function MobileNav() {
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom">
           <SheetHeader>
-            <SheetTitle>All pages</SheetTitle>
+            <SheetTitle>{t('All pages')}</SheetTitle>
           </SheetHeader>
           <SheetBody className="space-y-5 pb-[env(safe-area-inset-bottom)]">
             {groups.map((group, gi) => (
@@ -84,7 +85,7 @@ export function MobileNav() {
                     )}
                   >
                     <item.icon className="h-4.5 w-4.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-                    {item.label}
+                    {t(item.label)}
                   </Link>
                 ))}
               </div>
@@ -97,7 +98,7 @@ export function MobileNav() {
                 className="flex min-h-[2.75rem] items-center gap-3 rounded-btn px-2 text-body text-ink"
               >
                 <UserIcon className="h-4.5 w-4.5 shrink-0" strokeWidth={1.75} />
-                Profile
+                {t('Profile')}
               </Link>
               <button
                 type="button"
@@ -108,7 +109,7 @@ export function MobileNav() {
                 className="flex min-h-[2.75rem] w-full items-center gap-3 rounded-btn px-2 text-left text-body text-danger"
               >
                 <LogOut className="h-4.5 w-4.5 shrink-0" strokeWidth={1.75} />
-                Sign out
+                {t('Sign out')}
               </button>
             </div>
           </SheetBody>

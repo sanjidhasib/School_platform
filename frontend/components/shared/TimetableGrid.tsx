@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { cn, formatTime, minutesFromMidnight } from '@/lib/utils';
 import { DAYS, SHORT_DAYS, PERIODS } from '@/lib/constants';
 import { subjectTint, subjectBn } from '@/lib/design/subjects';
+import { t } from '@/lib/i18n';
 
 /**
  * The routine (রুটিন) as it hangs on a Bangladeshi school notice board: days
@@ -95,12 +96,12 @@ export function TimetableGrid({
     <div className={cn('scrollbar-thin overflow-x-auto rounded-card border border-line bg-surface shadow-card', className)}>
       <table className="w-full min-w-[720px] border-collapse">
         <caption className="sr-only">
-          Class routine, {DAYS[days[0]]} to {DAYS[days[days.length - 1]]}
+          {t('Class routine, {value} to {value2}', { value: t(DAYS[days[0]]), value2: t(DAYS[days[days.length - 1]]) })}
         </caption>
         <thead>
           <tr className="border-b border-line">
             <th scope="col" className="w-24 px-3 py-2 text-left text-meta font-medium text-ink-subtle">
-              Time
+              {t('Time')}
             </th>
             {days.map((d) => (
               <th
@@ -111,10 +112,10 @@ export function TimetableGrid({
                   d === today ? 'text-ink' : 'text-ink-subtle'
                 )}
               >
-                <span className="hidden sm:inline">{DAYS[d]}</span>
-                <span className="sm:hidden">{SHORT_DAYS[d]}</span>
+                <span className="hidden sm:inline">{t(DAYS[d])}</span>
+                <span className="sm:hidden">{t(SHORT_DAYS[d])}</span>
                 {d === today && (
-                  <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-highlighter align-middle" aria-label="Today" />
+                  <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-highlighter align-middle" aria-label={t('Today')} />
                 )}
               </th>
             ))}
@@ -132,7 +133,7 @@ export function TimetableGrid({
                   <span className="block text-meta font-medium text-ink-muted tabular">
                     {formatTime(p.start)}
                   </span>
-                  <span className="block text-[11px] text-ink-subtle">{p.label}</span>
+                  <span className="block text-[11px] text-ink-subtle">{t(p.label)}</span>
                   {live && (
                     <span
                       className="absolute -right-1 top-2 h-2 w-2 rounded-full bg-highlighter ring-2 ring-surface"
@@ -166,7 +167,7 @@ export function TimetableGrid({
                           nowCell={nowCell}
                         >
                           <span className="block truncate text-[12px] font-semibold text-ink">
-                            {subject?.name ?? 'Subject'}
+                            {subject?.name ?? t('Subject')}
                           </span>
                           {subjectBn(subject) && (
                             <span
@@ -193,7 +194,7 @@ export function TimetableGrid({
                         <button
                           type="button"
                           onClick={() => onSelectSlot(d, { start: p.start, end: p.end })}
-                          aria-label={`Add a class on ${DAYS[d]} at ${formatTime(p.start)}`}
+                          aria-label={t('Add a class on {d} at {formatTime}', { d: t(DAYS[d]), formatTime: formatTime(p.start) })}
                           className="group flex h-full min-h-[4.25rem] w-full items-center justify-center rounded-chip border border-dashed border-line text-ink-subtle transition-colors hover:border-brand hover:bg-brand-wash hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                         >
                           <Plus className="h-4 w-4 opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" strokeWidth={1.75} />
@@ -276,7 +277,7 @@ export function TimetableDayList({
           <li key={p.start} className={cn('flex gap-3 p-3', live && 'bg-highlighter-wash')}>
             <div className="w-16 shrink-0">
               <p className="text-meta font-medium text-ink-muted tabular">{formatTime(p.start)}</p>
-              {live && <p className="text-[11px] font-medium text-warning">Now</p>}
+              {live && <p className="text-[11px] font-medium text-warning">{t('Now')}</p>}
             </div>
             {entry ? (
               <button
@@ -307,7 +308,7 @@ export function TimetableDayList({
                 </span>
               </button>
             ) : (
-              <p className="flex-1 self-center text-dense text-ink-subtle">Free period</p>
+              <p className="flex-1 self-center text-dense text-ink-subtle">{t('Free period')}</p>
             )}
           </li>
         );

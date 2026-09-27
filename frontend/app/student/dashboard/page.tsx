@@ -25,6 +25,7 @@ import { Progress } from '@/components/ui/progress';
 import { subjectTint, subjectBn } from '@/lib/design/subjects';
 import { HOMEWORK_TYPES } from '@/lib/design/homework';
 import { cn, firstName, formatDateLong, formatPercentage, formatTime, minutesFromMidnight } from '@/lib/utils';
+import { t as tr, getLanguage } from '@/lib/i18n';
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const DAY_BN = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
@@ -56,7 +57,7 @@ export default function StudentDashboardPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your dashboard');
+        toast.error(tr('Could not load your dashboard'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -85,11 +86,11 @@ export default function StudentDashboardPage() {
   }, [routine]);
 
   if (loading) return <DashboardSkeleton />;
-  if (failed) return <ErrorState description="Your dashboard did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={tr('Your dashboard did not load.')} onRetry={load} />;
 
   const student = data?.student;
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = tr(hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening');
   const days = routine?.days?.length ? routine.days : Array.from(byDay.keys()).sort();
   const todayEntries = byDay.get(today) ?? [];
   const attendancePct = data?.attendancePercentage;
@@ -102,9 +103,9 @@ export default function StudentDashboardPage() {
       />
 
       {/* ── The whole week ── */}
-      <Section title="Weekly routine" description="Every class this week, with the teacher who takes it.">
+      <Section title={tr('Weekly routine')} description={tr('Every class this week, with the teacher who takes it.')}>
         {!days.length ? (
-          <Empty icon={CalendarClock} title="No routine yet" text="Your class routine appears here once the school publishes it." />
+          <Empty icon={CalendarClock} title={tr('No routine yet')} text={tr('Your class routine appears here once the school publishes it.')} />
         ) : (
           <div className="space-y-3">
             {days.map((day) => (
@@ -116,11 +117,11 @@ export default function StudentDashboardPage() {
 
       {/* ── Today, period by period ── */}
       <Section
-        title="Today's routine"
-        description={`${DAY_NAMES[today]} · ${todayEntries.length} ${todayEntries.length === 1 ? 'class' : 'classes'}`}
+        title={tr('Today\'s routine')}
+        description={tr(todayEntries.length === 1 ? '{day} · {n} class' : '{day} · {n} classes', { day: tr(DAY_NAMES[today]), n: todayEntries.length })}
       >
         {!todayEntries.length ? (
-          <Empty icon={Sun} title="No classes today" text="Enjoy your day off — your routine picks up on the next school day." />
+          <Empty icon={Sun} title={tr('No classes today')} text={tr('Enjoy your day off — your routine picks up on the next school day.')} />
         ) : (
           <ol className="space-y-3">
             {todayEntries.map((e, i) => (
@@ -134,10 +135,10 @@ export default function StudentDashboardPage() {
       <NextDayWork work={data?.nextDayWork ?? []} nextDay={data?.nextSchoolDay} />
 
       <div className="grid gap-8 lg:grid-cols-3">
-        <Section title="Your attendance">
+        <Section title={tr('Your attendance')}>
           <div className="rounded-card border border-line bg-surface p-5 shadow-card">
             {!data?.totalSessions ? (
-              <EmptyState icon={CheckSquare} title="No attendance recorded yet" compact />
+              <EmptyState icon={CheckSquare} title={tr('No attendance recorded yet')} compact />
             ) : (
               <>
                 <p className="text-3xl font-semibold text-ink tabular">{formatPercentage(attendancePct)}</p>
@@ -145,39 +146,39 @@ export default function StudentDashboardPage() {
                   value={attendancePct}
                   tone={attendancePct >= 90 ? 'success' : attendancePct >= 75 ? 'warning' : 'danger'}
                   className="mt-3"
-                  label="Attendance"
+                  label={tr('Attendance')}
                 />
                 <Button variant="ghost" size="sm" asChild className="-ml-2 mt-3">
-                  <Link href="/student/attendance">See your record</Link>
+                  <Link href="/student/attendance">{tr('See your record')}</Link>
                 </Button>
               </>
             )}
           </div>
         </Section>
 
-        <Section title="Stuck on something?">
+        <Section title={tr('Stuck on something?')}>
           <div className="rounded-card border border-line bg-surface p-5 shadow-card">
-            <p className="text-dense text-ink-muted">Ask the AI study helper about your textbook, in Bangla or English.</p>
+            <p className="text-dense text-ink-muted">{tr('Ask the AI study helper about your textbook, in Bangla or English.')}</p>
             <Button asChild className="mt-4">
               <Link href="/student/ai-learning">
                 <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
-                Ask a question
+                {tr('Ask a question')}
               </Link>
             </Button>
           </div>
         </Section>
 
         <Section
-          title="From the school"
+          title={tr('From the school')}
           actions={
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/student/notifications">All</Link>
+              <Link href="/student/notifications">{tr('All')}</Link>
             </Button>
           }
         >
           {!data?.recentNotices?.length ? (
             <div className="rounded-card border border-line bg-surface shadow-card">
-              <EmptyState icon={Bell} title="Nothing new" compact />
+              <EmptyState icon={Bell} title={tr('Nothing new')} compact />
             </div>
           ) : (
             <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
@@ -212,22 +213,24 @@ function DayRow({ day, entries, isToday }: { day: number; entries: Entry[]; isTo
         )}
       >
         <div>
-          <p className={cn('text-dense font-semibold', !isToday && 'text-ink')}>{DAY_NAMES[day]}</p>
-          <p lang="bn" className={cn('font-bn text-meta', isToday ? 'opacity-85' : 'text-ink-muted')}>
-            {DAY_BN[day]}
-          </p>
+          <p className={cn('text-dense font-semibold', !isToday && 'text-ink')}>{tr(DAY_NAMES[day])}</p>
+          {getLanguage() !== 'bn' && (
+            <p lang="bn" className={cn('font-bn text-meta', isToday ? 'opacity-85' : 'text-ink-muted')}>
+              {DAY_BN[day]}
+            </p>
+          )}
         </div>
         {isToday ? (
-          <span className="rounded-full bg-white/20 px-2 py-0.5 text-meta font-semibold">Today</span>
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-meta font-semibold">{tr('Today')}</span>
         ) : (
           <span className="text-meta text-ink-subtle tabular md:mt-1">
-            {entries.length} {entries.length === 1 ? 'class' : 'classes'}
+            {entries.length} {entries.length === 1 ? tr('class') : tr('classes')}
           </span>
         )}
       </div>
 
       {!entries.length ? (
-        <p className="flex-1 px-4 py-4 text-dense text-ink-subtle">No classes.</p>
+        <p className="flex-1 px-4 py-4 text-dense text-ink-subtle">{tr('No classes.')}</p>
       ) : (
         // Scrolls sideways on narrow screens; a clean row on wide ones.
         <ol className="scrollbar-thin flex flex-1 gap-2.5 overflow-x-auto p-3">
@@ -243,8 +246,8 @@ function DayRow({ day, entries, isToday }: { day: number; entries: Entry[]; isTo
               <div className="mt-2 flex items-start gap-2">
                 <span className={cn('mt-0.5 h-8 w-1 shrink-0 rounded-full', subjectTint(e.subject))} aria-hidden="true" />
                 <div className="min-w-0">
-                  <p className="truncate text-dense font-semibold text-ink">{e.subject?.name ?? 'Class'}</p>
-                  <p className="truncate text-meta text-ink-muted">{e.teacher?.fullName ?? 'Teacher to be assigned'}</p>
+                  <p className="truncate text-dense font-semibold text-ink">{e.subject?.name ?? tr('Class')}</p>
+                  <p className="truncate text-meta text-ink-muted">{e.teacher?.fullName ?? tr('Teacher to be assigned')}</p>
                 </div>
               </div>
             </li>
@@ -296,13 +299,13 @@ function TodayCard({
       <span className={cn('absolute inset-y-0 left-0 w-1.5', subjectTint(e.subject))} aria-hidden="true" />
 
       <div className="flex items-center gap-3 pl-2 sm:w-44 sm:shrink-0 sm:flex-col sm:items-start sm:gap-1">
-        <span className="text-meta font-semibold uppercase tracking-wide text-ink-subtle">Period {index + 1}</span>
+        <span className="text-meta font-semibold uppercase tracking-wide text-ink-subtle">{tr('Period {value}', { value: index + 1 })}</span>
         <span className="text-lg font-bold text-ink tabular">{formatTime(e.startTime)}</span>
-        <span className="text-meta text-ink-subtle tabular">to {formatTime(e.endTime)}</span>
+        <span className="text-meta text-ink-subtle tabular">{tr('to {formatTime}', { formatTime: formatTime(e.endTime) })}</span>
       </div>
 
       <div className="min-w-0 flex-1 pl-2 sm:pl-0">
-        <p className="text-lg font-semibold text-ink">{e.subject?.name ?? 'Class'}</p>
+        <p className="text-lg font-semibold text-ink">{e.subject?.name ?? tr('Class')}</p>
         {bn && (
           <p lang="bn" className="font-bn text-dense text-ink-muted">
             {bn}
@@ -313,8 +316,8 @@ function TodayCard({
       <div className="flex items-center gap-3 pl-2 sm:w-56 sm:shrink-0 sm:pl-0">
         <PersonAvatar name={e.teacher?.fullName} className="h-10 w-10" />
         <div className="min-w-0">
-          <p className="text-meta text-ink-subtle">Teacher</p>
-          <p className="truncate text-dense font-medium text-ink">{e.teacher?.fullName ?? 'To be assigned'}</p>
+          <p className="text-meta text-ink-subtle">{tr('Teacher')}</p>
+          <p className="truncate text-dense font-medium text-ink">{e.teacher?.fullName ?? tr('To be assigned')}</p>
         </div>
       </div>
 
@@ -328,13 +331,13 @@ function TodayCard({
           <span />
         )}
         {live ? (
-          <span className="rounded-full bg-highlighter px-2.5 py-0.5 text-meta font-semibold text-[#1B2240]">Now</span>
+          <span className="rounded-full bg-highlighter px-2.5 py-0.5 text-meta font-semibold text-[#1B2240]">{tr('Now')}</span>
         ) : isNext ? (
-          <span className="rounded-full bg-brand-wash px-2.5 py-0.5 text-meta font-semibold text-brand">Next</span>
+          <span className="rounded-full bg-brand-wash px-2.5 py-0.5 text-meta font-semibold text-brand">{tr('Next')}</span>
         ) : done ? (
           <span className="inline-flex items-center gap-1 text-meta text-ink-subtle">
             <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
-            Done
+            {tr('Done')}
           </span>
         ) : null}
       </div>
@@ -349,16 +352,16 @@ function NextDayWork({ work, nextDay }: { work: any[]; nextDay?: string }) {
   const tomorrow = new Date();
   tomorrow.setDate(tomorrow.getDate() + 1);
   const isTomorrow = date ? date.toDateString() === tomorrow.toDateString() : true;
-  const dayLabel = isTomorrow ? 'tomorrow' : `on ${DAY_NAMES[date!.getDay()]}`;
+  const dayLabel = isTomorrow ? tr('tomorrow') : tr('on {day}', { day: tr(DAY_NAMES[date!.getDay()]) });
 
   return (
     <Section
-      title={isTomorrow ? 'For tomorrow' : `For ${DAY_NAMES[date!.getDay()]}`}
-      description="Assignments, homework and what to prepare before your next classes."
+      title={isTomorrow ? tr('For tomorrow') : tr('For {value}', { value: tr(DAY_NAMES[date!.getDay()]) })}
+      description={tr('Assignments, homework and what to prepare before your next classes.')}
       actions={
         <Button variant="ghost" size="sm" asChild>
           <Link href="/student/homework">
-            All homework
+            {tr('All homework')}
             <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
           </Link>
         </Button>
@@ -369,8 +372,8 @@ function NextDayWork({ work, nextDay }: { work: any[]; nextDay?: string }) {
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-bg text-success">
             <PartyPopper className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
           </span>
-          <p className="text-lg font-semibold text-ink">No homework {dayLabel}</p>
-          <p className="text-body text-ink-muted">Have a good day!</p>
+          <p className="text-lg font-semibold text-ink">{tr('No homework {dayLabel}', { dayLabel })}</p>
+          <p className="text-body text-ink-muted">{tr('Have a good day!')}</p>
         </div>
       ) : (
         <div className="grid gap-4 lg:grid-cols-3">
@@ -383,15 +386,17 @@ function NextDayWork({ work, nextDay }: { work: any[]; nextDay?: string }) {
                     <t.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-dense font-semibold text-ink">{t.plural}</p>
-                    <p lang="bn" className="font-bn text-meta text-ink-muted">
-                      {t.labelBn}
-                    </p>
+                    <p className="text-dense font-semibold text-ink">{tr(t.plural)}</p>
+                    {getLanguage() !== 'bn' && (
+                      <p lang="bn" className="font-bn text-meta text-ink-muted">
+                        {t.labelBn}
+                      </p>
+                    )}
                   </div>
                   <span className="text-meta font-medium text-ink-subtle tabular">{items.length}</span>
                 </div>
                 {!items.length ? (
-                  <p className="px-4 py-6 text-center text-dense text-ink-subtle">Nothing {dayLabel}.</p>
+                  <p className="px-4 py-6 text-center text-dense text-ink-subtle">{tr('Nothing {dayLabel}.', { dayLabel })}</p>
                 ) : (
                   <ul className="divide-y divide-line">
                     {items.map((w) => {
@@ -412,7 +417,7 @@ function NextDayWork({ work, nextDay }: { work: any[]; nextDay?: string }) {
                             </span>
                             {handedIn ? (
                               <span className="shrink-0 rounded-full bg-success-bg px-2 py-0.5 text-meta font-medium text-success">
-                                Done
+                                {tr('Done')}
                               </span>
                             ) : (
                               <span className="shrink-0 text-meta text-ink-subtle tabular">

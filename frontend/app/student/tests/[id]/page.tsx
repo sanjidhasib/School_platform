@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { apiErrorMessage, cn } from '@/lib/utils';
 import { formatClock } from '@/lib/design/classTests';
+import { t as tr } from '@/lib/i18n';
 
 const LETTERS = 'ABCDEF';
 const hasBangla = (t?: string) => !!t && /[ঀ-৿]/.test(t);
@@ -44,12 +45,12 @@ function TakeTest({ id }: { id: string }) {
       .getTests()
       .then((r) => {
         const t = (r.data.data ?? []).find((x: any) => x._id === id);
-        if (!t) setError('This test isn’t available to you.');
+        if (!t) setError(tr('This test isn’t available to you.'));
         else setIntro(t);
         // Mid-test (a reload, or coming back): go straight back in.
         if (t?.attempt?.status === 'IN_PROGRESS') start();
       })
-      .catch((err) => setError(apiErrorMessage(err, 'This test did not load.')));
+      .catch((err) => setError(apiErrorMessage(err, tr('This test did not load.'))));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -59,7 +60,7 @@ function TakeTest({ id }: { id: string }) {
       const r = await studentAPI.startTest(id);
       setPaper(r.data.data);
     } catch (err) {
-      setError(apiErrorMessage(err, 'Could not start the test'));
+      setError(apiErrorMessage(err, tr('Could not start the test')));
     } finally {
       setStarting(false);
     }
@@ -69,7 +70,7 @@ function TakeTest({ id }: { id: string }) {
     return (
       <div className="space-y-4">
         <BackLink />
-        <ErrorState title="Can’t open this test" description={error} />
+        <ErrorState title={tr('Can’t open this test')} description={error} />
       </div>
     );
   }
@@ -82,15 +83,15 @@ function TakeTest({ id }: { id: string }) {
       <BackLink />
       <div className="overflow-hidden rounded-[22px] border border-line bg-surface shadow-card">
         <div className="bg-brand px-6 py-6 text-brand-contrast sm:px-8">
-          <p className="text-meta font-semibold uppercase tracking-[0.14em] opacity-80">{intro.subjectId?.name} · Class test</p>
+          <p className="text-meta font-semibold uppercase tracking-[0.14em] opacity-80">{tr('{name} · Class test', { name: intro.subjectId?.name })}</p>
           <h1 className="mt-2 text-2xl font-bold sm:text-3xl">{intro.title}</h1>
-          {intro.teacher?.fullName && <p className="mt-1 text-dense opacity-85">Set by {intro.teacher.fullName}</p>}
+          {intro.teacher?.fullName && <p className="mt-1 text-dense opacity-85">{tr('Set by {fullName}', { fullName: intro.teacher.fullName })}</p>}
         </div>
         <div className="space-y-5 px-6 py-6 sm:px-8">
           <dl className="grid grid-cols-3 gap-3 text-center">
-            <Fact label="Time limit" value={`${intro.durationMinutes} min`} />
-            <Fact label="Questions" value={String(intro.questionCount)} />
-            <Fact label="Marks" value={String(intro.totalMarks)} />
+            <Fact label={tr('Time limit')} value={`${intro.durationMinutes} min`} />
+            <Fact label={tr('Questions')} value={String(intro.questionCount)} />
+            <Fact label={tr('Marks')} value={String(intro.totalMarks)} />
           </dl>
           {intro.instructions && (
             <p className={cn('whitespace-pre-wrap rounded-xl bg-surface-sunken px-4 py-3 text-body text-ink', hasBangla(intro.instructions) && 'font-bn')}>
@@ -98,19 +99,19 @@ function TakeTest({ id }: { id: string }) {
             </p>
           )}
           <ul className="space-y-1.5 text-dense text-ink-muted">
-            <li>• The timer starts when you press Start and keeps running if you leave the page.</li>
-            <li>• Your answers save automatically as you go.</li>
-            <li>• When time is up, your saved answers are handed in for you.</li>
+            <li>{tr('• The timer starts when you press Start and keeps running if you leave the page.')}</li>
+            <li>{tr('• Your answers save automatically as you go.')}</li>
+            <li>{tr('• When time is up, your saved answers are handed in for you.')}</li>
           </ul>
           {handedIn ? (
             <p className="flex items-center gap-2 rounded-xl bg-success-bg px-4 py-3 text-dense text-success">
               <CheckCircle2 className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-              You have handed this test in.
+              {tr('You have handed this test in.')}
             </p>
           ) : (
             <Button size="lg" className="w-full" onClick={start} loading={starting}>
               <PlayCircle className="h-5 w-5" strokeWidth={1.75} />
-              Start — {intro.durationMinutes} minutes
+              {tr('Start — {durationMinutes} minutes', { durationMinutes: intro.durationMinutes })}
             </Button>
           )}
         </div>
@@ -222,13 +223,13 @@ function Sitting({ id, paper }: { id: string; paper: any }) {
         <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success-bg text-success">
           <CheckCircle2 className="h-8 w-8" strokeWidth={1.75} aria-hidden="true" />
         </span>
-        <h1 className="text-2xl font-bold text-ink">{done.auto ? 'Time’s up — handed in' : 'Handed in'}</h1>
+        <h1 className="text-2xl font-bold text-ink">{done.auto ? tr('Time’s up — handed in') : tr('Handed in')}</h1>
         <p className="text-body text-ink-muted">
-          {done.auto ? 'Your saved answers were handed in when the timer reached zero. ' : ''}
-          You answered {answered} of {questions.length} questions. Your result appears once your teacher publishes it.
+          {done.auto ? tr('Your saved answers were handed in when the timer reached zero. ') : ''}
+          {tr('You answered {answered} of {length} questions. Your result appears once your teacher publishes it.', { answered, length: questions.length })}
         </p>
         <Button asChild>
-          <Link href="/student/tests">Back to class tests</Link>
+          <Link href="/student/tests">{tr('Back to class tests')}</Link>
         </Button>
       </div>
     );
@@ -247,7 +248,7 @@ function Sitting({ id, paper }: { id: string; paper: any }) {
             <p className="truncate text-dense font-semibold text-ink">{paper.test.title}</p>
             <p className="flex items-center gap-2 text-meta text-ink-muted">
               <span className="tabular">
-                {answered} / {questions.length} answered
+                {tr('{answered} / {length} answered', { answered, length: questions.length })}
               </span>
               <SaveIndicator state={saveState} />
             </p>
@@ -255,7 +256,7 @@ function Sitting({ id, paper }: { id: string; paper: any }) {
           <div
             role="timer"
             aria-live={urgent ? 'assertive' : 'off'}
-            aria-label={`Time left ${formatClock(remaining)}`}
+            aria-label={tr('Time left {formatClock}', { formatClock: formatClock(remaining) })}
             className={cn(
               'flex items-center gap-2 rounded-full px-4 py-2 text-lg font-bold tabular transition-colors',
               urgent ? 'animate-pulse bg-danger text-white' : warning ? 'bg-warning-bg text-warning' : 'bg-brand-wash text-brand'
@@ -266,7 +267,7 @@ function Sitting({ id, paper }: { id: string; paper: any }) {
           </div>
           <Button onClick={() => setConfirming(true)} className="hidden sm:inline-flex">
             <Send className="h-4 w-4" strokeWidth={1.75} />
-            Hand in
+            {tr('Hand in')}
           </Button>
         </div>
         <div className="mt-2 h-1 overflow-hidden rounded-full bg-line">
@@ -287,7 +288,7 @@ function Sitting({ id, paper }: { id: string; paper: any }) {
                 {q.text}
               </p>
               <span className="shrink-0 rounded-full bg-surface-sunken px-2 py-0.5 text-meta text-ink-muted">
-                {q.marks} {q.marks === 1 ? 'mark' : 'marks'}
+                {q.marks} {q.marks === 1 ? tr('mark') : tr('marks')}
               </span>
             </div>
             {q.kind === 'MCQ' ? (
@@ -326,8 +327,8 @@ function Sitting({ id, paper }: { id: string; paper: any }) {
                 rows={4}
                 value={a.text ?? ''}
                 onChange={(e) => answer(q._id, { text: e.target.value })}
-                placeholder="Write your answer…"
-                aria-label={`Answer to question ${i + 1}`}
+                placeholder={tr('Write your answer…')}
+                aria-label={tr('Answer to question {value}', { value: i + 1 })}
               />
             )}
           </section>
@@ -337,20 +338,20 @@ function Sitting({ id, paper }: { id: string; paper: any }) {
       <div className="flex justify-center">
         <Button size="lg" onClick={() => setConfirming(true)}>
           <Send className="h-4 w-4" strokeWidth={1.75} />
-          Hand in
+          {tr('Hand in')}
         </Button>
       </div>
 
       <ConfirmDialog
         open={confirming}
         onOpenChange={setConfirming}
-        title="Hand in your test?"
+        title={tr('Hand in your test?')}
         description={
           answered < questions.length
-            ? `You have answered ${answered} of ${questions.length} questions. You can’t change your answers after handing in.`
-            : 'You’ve answered every question. You can’t change your answers after handing in.'
+            ? tr('You have answered {answered} of {length} questions. You can’t change your answers after handing in.', { answered, length: questions.length })
+            : tr('You’ve answered every question. You can’t change your answers after handing in.')
         }
-        confirmLabel="Hand in"
+        confirmLabel={tr('Hand in')}
         loading={submitting}
         onConfirm={() => finish(false)}
       />
@@ -363,7 +364,7 @@ function SaveIndicator({ state }: { state: 'saved' | 'saving' | 'unsaved' | 'err
     return (
       <span className="inline-flex items-center gap-1 text-danger">
         <AlertTriangle className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
-        Not saved — check your connection
+        {tr('Not saved — check your connection')}
       </span>
     );
   }
@@ -371,11 +372,11 @@ function SaveIndicator({ state }: { state: 'saved' | 'saving' | 'unsaved' | 'err
     return (
       <span className="inline-flex items-center gap-1 text-success">
         <Check className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
-        Saved
+        {tr('Saved')}
       </span>
     );
   }
-  return <span className="text-ink-subtle">Saving…</span>;
+  return <span className="text-ink-subtle">{tr('Saving…')}</span>;
 }
 
 // ── The marked paper ───────────────────────────────────────────────────────
@@ -388,7 +389,7 @@ function ResultView({ id }: { id: string }) {
     studentAPI
       .getTestResult(id)
       .then((r) => setData(r.data.data))
-      .catch((err) => setError(apiErrorMessage(err, 'The result did not load.')));
+      .catch((err) => setError(apiErrorMessage(err, tr('The result did not load.'))));
   }, [id]);
 
   if (error) {
@@ -416,13 +417,13 @@ function ResultView({ id }: { id: string }) {
           )}
         >
           <span className="text-2xl font-bold tabular">{score}</span>
-          <span className="text-meta">of {data.test.totalMarks}</span>
+          <span className="text-meta">{tr('of {totalMarks}', { totalMarks: data.test.totalMarks })}</span>
         </div>
         <div className="min-w-0">
           <p className="text-meta font-semibold uppercase tracking-[0.14em] text-ink-subtle">{data.test.subjectId?.name}</p>
           <h1 className="text-2xl font-bold text-ink">{data.test.title}</h1>
           <p className="text-body text-ink-muted">
-            {data.attempt ? `${pct}%${data.attempt.autoSubmitted ? ' · handed in when time ran out' : ''}` : 'You didn’t sit this test.'}
+            {data.attempt ? `${pct}%${data.attempt.autoSubmitted ? ' · handed in when time ran out' : ''}` : tr('You didn’t sit this test.')}
           </p>
         </div>
       </div>
@@ -461,14 +462,14 @@ function ResultView({ id }: { id: string }) {
                     >
                       <span className="font-bold">{LETTERS[oi]}</span>
                       <span className="flex-1">{o}</span>
-                      {mine && <span className="text-meta font-semibold">your answer</span>}
+                      {mine && <span className="text-meta font-semibold">{tr('your answer')}</span>}
                     </li>
                   );
                 })}
               </ul>
             ) : (
               <p className="mt-3 whitespace-pre-wrap rounded-xl bg-surface-sunken px-3 py-2 text-dense text-ink">
-                {q.yourText?.trim() ? q.yourText : <span className="text-ink-subtle">No answer</span>}
+                {q.yourText?.trim() ? q.yourText : <span className="text-ink-subtle">{tr('No answer')}</span>}
               </p>
             )}
           </section>
@@ -492,7 +493,7 @@ function BackLink() {
     <Button variant="ghost" size="sm" asChild className="-ml-2">
       <Link href="/student/tests">
         <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-        Class tests
+        {tr('Class tests')}
       </Link>
     </Button>
   );

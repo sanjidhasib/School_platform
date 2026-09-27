@@ -22,6 +22,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { formatDate, gradeTone, termLabel } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /** The office view of assessments set and grades published across the school. */
 export default function AdminResultsPage() {
@@ -47,7 +48,7 @@ export default function AdminResultsPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load results');
+        toast.error(t('Could not load results'));
       })
       .finally(() => setLoading(false));
   }, [classFilter]);
@@ -56,7 +57,7 @@ export default function AdminResultsPage() {
 
   const classOptions = useMemo(
     () => [
-      { value: 'all', label: 'All classes' },
+      { value: 'all', label: t('All classes') },
       ...classes.map((c: any) => ({
         value: c._id,
         label: `${c.name} ${c.section ?? ''}`.trim(),
@@ -67,33 +68,33 @@ export default function AdminResultsPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Results" description="Assessments set and grades published." />
+      <PageHeader title={t('Results')} description={t('Assessments set and grades published.')} />
 
       <div className="flex flex-wrap items-end gap-3">
-        <Field label="Class" className="w-48">
+        <Field label={t('Class')} className="w-48">
           {(p) => (
             <Combobox
               {...p}
               options={classOptions}
               value={classFilter}
               onChange={setClassFilter}
-              placeholder="All classes"
-              searchPlaceholder="Find a class"
+              placeholder={t('All classes')}
+              searchPlaceholder={t('Find a class')}
             />
           )}
         </Field>
       </div>
 
       {failed ? (
-        <ErrorState description="Results did not load." onRetry={load} />
+        <ErrorState description={t('Results did not load.')} onRetry={load} />
       ) : (
         <Tabs defaultValue="grades">
           <TabsList>
             <TabsTrigger value="grades" indicatorId="results-tabs">
-              Published grades
+              {t('Published grades')}
             </TabsTrigger>
             <TabsTrigger value="assessments" indicatorId="results-tabs">
-              Assessments
+              {t('Assessments')}
             </TabsTrigger>
           </TabsList>
 
@@ -104,8 +105,8 @@ export default function AdminResultsPage() {
               <div className="rounded-card border border-line bg-surface shadow-card">
                 <EmptyState
                   icon={BarChart3}
-                  title="No grades published"
-                  description="Grades appear here once a teacher publishes them."
+                  title={t('No grades published')}
+                  description={t('Grades appear here once a teacher publishes them.')}
                 />
               </div>
             ) : (
@@ -113,14 +114,14 @@ export default function AdminResultsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Student</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead>Term</TableHead>
-                      <TableHead numeric>Percentage</TableHead>
-                      <TableHead>Grade</TableHead>
+                      <TableHead>{t('Student')}</TableHead>
+                      <TableHead>{t('Class')}</TableHead>
+                      <TableHead>{t('Subject')}</TableHead>
+                      <TableHead>{t('Term')}</TableHead>
+                      <TableHead numeric>{t('Percentage')}</TableHead>
+                      <TableHead>{t('Grade')}</TableHead>
                       <TableHead numeric className="hidden sm:table-cell">
-                        GPA
+                        {t('GPA')}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
@@ -165,8 +166,8 @@ export default function AdminResultsPage() {
               <div className="rounded-card border border-line bg-surface shadow-card">
                 <EmptyState
                   icon={BarChart3}
-                  title="No assessments set"
-                  description="Tests and exams appear here once a teacher creates them."
+                  title={t('No assessments set')}
+                  description={t('Tests and exams appear here once a teacher creates them.')}
                 />
               </div>
             ) : (
@@ -174,13 +175,13 @@ export default function AdminResultsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>Assessment</TableHead>
-                      <TableHead>Class</TableHead>
-                      <TableHead>Subject</TableHead>
-                      <TableHead className="hidden lg:table-cell">Teacher</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead numeric>Out of</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead>{t('Assessment')}</TableHead>
+                      <TableHead>{t('Class')}</TableHead>
+                      <TableHead>{t('Subject')}</TableHead>
+                      <TableHead className="hidden lg:table-cell">{t('Teacher')}</TableHead>
+                      <TableHead>{t('Date')}</TableHead>
+                      <TableHead numeric>{t('Out of')}</TableHead>
+                      <TableHead>{t('Status')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

@@ -5,6 +5,8 @@ import { SchoolCarousel, type CarouselSlide } from '@/components/shared/SchoolCa
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { LogoMark } from '@/components/layout/Logo';
 import { cn, formatDate } from '@/lib/utils';
+import { cookies } from 'next/headers';
+import { t, setLanguage, getLanguage, LANG_COOKIE } from '@/lib/i18n';
 
 /** Re-fetch notices, achievements and seats at most once a minute. */
 export const revalidate = 60;
@@ -70,7 +72,7 @@ const CATEGORY_TONE: Record<string, string> = {
   GENERAL: 'bg-surface-sunken text-ink-muted',
 };
 
-const categoryLabel = (c?: string) => (c ? c.charAt(0) + c.slice(1).toLowerCase() : 'Notice');
+const categoryLabel = (c?: string) => t(c ? c.charAt(0) + c.slice(1).toLowerCase() : 'Notice');
 
 async function getPublicData() {
   // Each list fails on its own: one slow endpoint shouldn't blank the page.
@@ -99,6 +101,10 @@ async function getPublicData() {
 
 export default async function HomePage() {
   const { achievements, upcoming, news, admission, school } = await getPublicData();
+  // A server page: take the visitor's language from the cookie before any text renders.
+  setLanguage(cookies().get(LANG_COOKIE)?.value === 'bn' ? 'bn' : 'en');
+  const bangla = getLanguage() === 'bn';
+  const slides = SLIDES.map((s) => ({ ...s, title: t(s.title), description: t(s.description), alt: t(s.alt), cta: t('Explore SchoolOS') }));
 
   const schoolName = school?.name || school?.schoolName || 'Barishal Zilla School';
   const address = school?.address;
@@ -107,28 +113,35 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-dvh bg-paper">
-      <PublicNavbar schoolName={schoolName} />
+      <PublicNavbar schoolName={t(schoolName)} />
 
       <main>
         {/* ── Hero ── */}
         <section className="mx-auto max-w-[1600px] px-4 pb-8 pt-10 sm:px-6 sm:pt-14 lg:px-10 lg:pb-10 lg:pt-16">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
-              <p lang="bn" className="font-bn text-base font-medium text-brand sm:text-lg">
-                বরিশাল জিলা স্কুল
+              {/* The other language's name sits small above the big one. */}
+              <p
+                lang={bangla ? undefined : 'bn'}
+                className={cn('text-base font-medium text-brand sm:text-lg', !bangla && 'font-bn')}
+              >
+                {bangla ? schoolName : 'বরিশাল জিলা স্কুল'}
               </p>
-              <h1 className="mt-2 text-[2.6rem] font-extrabold leading-[1.02] tracking-tight text-ink sm:text-6xl lg:text-7xl xl:text-8xl">
-                {schoolName}
+              <h1
+                lang={bangla ? 'bn' : undefined}
+                className="mt-2 text-[2.6rem] font-extrabold leading-[1.1] tracking-tight text-ink sm:text-6xl lg:text-7xl xl:text-8xl"
+              >
+                {t(schoolName)}
               </h1>
               <p className="mt-4 text-xl font-medium text-ink-muted sm:text-2xl lg:text-3xl">
-                Where legends are born.
+                {t('Where legends are born.')}
               </p>
             </div>
             {address && (
               <p className="flex max-w-sm items-start gap-2.5 rounded-card border border-line bg-surface px-4 py-3 text-dense text-ink-muted shadow-card lg:mb-2">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
                 <span>
-                  <span className="sr-only">Location: </span>
+                  <span className="sr-only">{t('Location:')}{' '}</span>
                   {address}
                 </span>
               </p>
@@ -137,18 +150,18 @@ export default async function HomePage() {
         </section>
 
         <section className="mx-auto max-w-[1600px] px-4 pb-16 sm:px-6 lg:px-10 lg:pb-24">
-          <SchoolCarousel slides={SLIDES} autoPlay intervalMs={6000} />
+          <SchoolCarousel slides={slides} autoPlay intervalMs={6000} />
         </section>
 
         {/* ── Achievements ── */}
         <Section
           id="achievements"
           icon={Trophy}
-          eyebrow="Achievements"
-          title="What our students have won"
+          eyebrow={t('Achievements')}
+          title={t('What our students have won')}
         >
           {!achievements.length ? (
-            <Quiet>Achievements will appear here once the school publishes them.</Quiet>
+            <Quiet>{t('Achievements will appear here once the school publishes them.')}</Quiet>
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {achievements.map((a: any, i: number) => (
@@ -205,12 +218,12 @@ export default async function HomePage() {
         <Section
           id="upcoming"
           icon={CalendarDays}
-          eyebrow="Notice board"
-          title="Upcoming at school"
+          eyebrow={t('Notice board')}
+          title={t('Upcoming at school')}
           className="bg-surface"
         >
           {!upcoming.length ? (
-            <Quiet>No upcoming events or notices right now.</Quiet>
+            <Quiet>{t('No upcoming events or notices right now.')}</Quiet>
           ) : (
             <ul className="grid gap-4 md:grid-cols-2">
               {upcoming.slice(0, 6).map((n: any) => {
@@ -250,11 +263,11 @@ export default async function HomePage() {
         {/* ── News: a strip that scrolls by itself ── */}
         <section id="news" className="scroll-mt-20 py-16 lg:py-24">
           <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
-            <SectionHeading icon={Newspaper} eyebrow="News" title="Latest from the school" />
+            <SectionHeading icon={Newspaper} eyebrow={t('News')} title={t('Latest from the school')} />
           </div>
           {!news.length ? (
             <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
-              <Quiet>News will appear here as the school publishes it.</Quiet>
+              <Quiet>{t('News will appear here as the school publishes it.')}</Quiet>
             </div>
           ) : (
             <NewsStrip items={news} />
@@ -265,15 +278,14 @@ export default async function HomePage() {
         <Section
           id="admission"
           icon={GraduationCap}
-          eyebrow="Admission"
-          title="Admission information"
+          eyebrow={t('Admission')}
+          title={t('Admission information')}
           className="bg-surface"
         >
           <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:gap-12">
             <div>
               <p className="max-w-2xl text-body text-ink-muted">
-                {schoolName} teaches Classes 3 to 10, with at most 40 students in each class. Seats open
-                for admission right now:
+                {t('{schoolName} teaches Classes 3 to 10, with at most 40 students in each class. Seats open for admission right now:', { schoolName: t(schoolName) })}
               </p>
               {admission.length ? (
                 <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -286,41 +298,40 @@ export default async function HomePage() {
                           {c.section ? <span className="font-normal text-ink-subtle"> · {c.section}</span> : null}
                         </p>
                         <p className={cn('mt-2 text-2xl font-bold tabular', full ? 'text-danger' : 'text-ink')}>
-                          {full ? 'Full' : c.seatsLeft}
+                          {full ? t('Full') : c.seatsLeft}
                         </p>
                         <p className="text-meta text-ink-subtle">
-                          {full ? 'no seats left' : `of ${c.capacity} seats left`}
+                          {full ? t('no seats left') : t('of {capacity} seats left', { capacity: c.capacity })}
                         </p>
                       </li>
                     );
                   })}
                 </ul>
               ) : (
-                <Quiet>Seat availability will appear here.</Quiet>
+                <Quiet>{t('Seat availability will appear here.')}</Quiet>
               )}
             </div>
 
             <div className="rounded-[20px] bg-[#12162B] p-6 text-white ring-1 ring-white/5 sm:p-8">
-              <h3 className="text-xl font-semibold">How to apply</h3>
+              <h3 className="text-xl font-semibold">{t('How to apply')}</h3>
               <p className="mt-2 text-body text-white/75">
-                Admission is handled by the school office. Contact the office for forms, dates and the
-                documents you need.
+                {t('Admission is handled by the school office. Contact the office for forms, dates and the documents you need.')}
               </p>
               <ul className="mt-6 space-y-4 text-dense">
                 {address && (
-                  <ContactLine icon={MapPin} label="Visit">
+                  <ContactLine icon={MapPin} label={t('Visit')}>
                     {address}
                   </ContactLine>
                 )}
                 {phone && (
-                  <ContactLine icon={Phone} label="Call">
+                  <ContactLine icon={Phone} label={t('Call')}>
                     <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="tabular hover:underline">
                       {phone}
                     </a>
                   </ContactLine>
                 )}
                 {email && (
-                  <ContactLine icon={Mail} label="Email">
+                  <ContactLine icon={Mail} label={t('Email')}>
                     <a href={`mailto:${email}`} className="break-all hover:underline">
                       {email}
                     </a>
@@ -340,45 +351,45 @@ export default async function HomePage() {
               <span className="flex h-9 w-9 items-center justify-center rounded-btn bg-white/10">
                 <LogoMark />
               </span>
-              <span className="text-lg font-bold">{schoolName}</span>
+              <span className="text-lg font-bold">{t(schoolName)}</span>
             </div>
-            <p className="mt-3 text-body text-white/70">Where legends are born.</p>
+            <p className="mt-3 text-body text-white/70">{t('Where legends are born.')}</p>
             {address && <p className="mt-4 max-w-xs text-dense text-white/60">{address}</p>}
           </div>
 
-          <FooterColumn title="Explore">
-            <FooterLink href="#achievements">Achievements</FooterLink>
-            <FooterLink href="#news">News</FooterLink>
-            <FooterLink href="#upcoming">Upcoming</FooterLink>
-            <FooterLink href="#admission">Admission</FooterLink>
+          <FooterColumn title={t('Explore')}>
+            <FooterLink href="#achievements">{t('Achievements')}</FooterLink>
+            <FooterLink href="#news">{t('News')}</FooterLink>
+            <FooterLink href="#upcoming">{t('Upcoming')}</FooterLink>
+            <FooterLink href="#admission">{t('Admission')}</FooterLink>
           </FooterColumn>
 
-          <FooterColumn title="Contact">
+          <FooterColumn title={t('Contact')}>
             {phone && (
               <FooterLink href={`tel:${phone.replace(/[^\d+]/g, '')}`}>
                 <span className="tabular">{phone}</span>
               </FooterLink>
             )}
             {email && <FooterLink href={`mailto:${email}`}>{email}</FooterLink>}
-            {!phone && !email && <li className="text-dense text-white/60">Contact the school office.</li>}
+            {!phone && !email && <li className="text-dense text-white/60">{t('Contact the school office.')}</li>}
           </FooterColumn>
 
-          <FooterColumn title="SchoolOS">
+          <FooterColumn title={t('SchoolOS')}>
             <li>
               <Link
                 href="/login"
                 className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-dense font-semibold text-[#1B2240] transition-colors hover:bg-white/90"
               >
                 <LogIn className="h-4 w-4" strokeWidth={2} />
-                Login
+                {t('Login')}
               </Link>
             </li>
-            <li className="text-meta text-white/60">For students, teachers, guardians and the office.</li>
+            <li className="text-meta text-white/60">{t('For students, teachers, guardians and the office.')}</li>
           </FooterColumn>
         </div>
         <div className="border-t border-white/10">
           <p className="mx-auto max-w-[1600px] px-4 py-6 text-meta text-white/50 sm:px-6 lg:px-10">
-            © {new Date().getFullYear()} {schoolName}. Powered by SchoolOS.
+            {t('© {getFullYear} {schoolName}. Powered by SchoolOS.', { getFullYear: new Date().getFullYear(), schoolName: t(schoolName) })}
           </p>
         </div>
       </footer>
@@ -475,7 +486,7 @@ function NewsStrip({ items }: { items: any[] }) {
       <ul
         className="flex w-max gap-4 px-4 py-2 animate-marquee group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] motion-reduce:animate-none"
         style={{ ['--marquee-duration' as string]: `${seconds}s` }}
-        aria-label="Latest news"
+        aria-label={t('Latest news')}
       >
         {base.map((n, i) => card(n, i, false))}
         {base.map((n, i) => card(n, i, true))}

@@ -29,6 +29,8 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage, formatDate } from '@/lib/utils';
+import { t } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
 
 const emptyForm = { title: '', description: '', achievementDate: '', imageUrl: '' };
 
@@ -51,7 +53,7 @@ export default function AchievementsPage() {
       .then((r) => setAchievements(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load achievements');
+        toast.error(t('Could not load achievements'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -81,15 +83,15 @@ export default function AchievementsPage() {
     try {
       if (editing) {
         await adminAPI.updateAchievement(editing._id, form);
-        toast.success('Achievement saved');
+        toast.success(t('Achievement saved'));
       } else {
         await adminAPI.createAchievement(form);
-        toast.success('Achievement added');
+        toast.success(t('Achievement added'));
       }
       setOpen(false);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the achievement'));
+      toast.error(apiErrorMessage(err, t('Could not save the achievement')));
     } finally {
       setSaving(false);
     }
@@ -99,11 +101,11 @@ export default function AchievementsPage() {
     setRemoving(true);
     try {
       await adminAPI.deleteAchievement(deleting._id);
-      toast.success('Achievement deleted');
+      toast.success(t('Achievement deleted'));
       setDeleting(null);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not delete the achievement'));
+      toast.error(apiErrorMessage(err, t('Could not delete the achievement')));
     } finally {
       setRemoving(false);
     }
@@ -112,12 +114,12 @@ export default function AchievementsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Achievements"
-        description="These appear on the school home page."
+        title={t('Achievements')}
+        description={t('These appear on the school home page.')}
         actions={
           <Button onClick={openAdd}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Add an achievement
+            {t('Add an achievement')}
           </Button>
         }
       />
@@ -129,17 +131,17 @@ export default function AchievementsPage() {
           ))}
         </div>
       ) : failed ? (
-        <ErrorState description="The achievement list did not load." onRetry={load} />
+        <ErrorState description={t('The achievement list did not load.')} onRetry={load} />
       ) : !achievements.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Trophy}
-            title="No achievements recorded"
-            description="Record what the school has won so it shows on the home page."
+            title={t('No achievements recorded')}
+            description={t('Record what the school has won so it shows on the home page.')}
             action={
               <Button onClick={openAdd}>
                 <Plus className="h-4 w-4" strokeWidth={1.75} />
-                Add an achievement
+                {t('Add an achievement')}
               </Button>
             }
           />
@@ -154,18 +156,18 @@ export default function AchievementsPage() {
                   <p className="text-meta text-ink-subtle tabular">{formatDate(a.achievementDate)}</p>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${a.title}`}>
+                      <Button variant="ghost" size="icon-sm" aria-label={t('Actions for {title}', { title: a.title })}>
                         <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onSelect={() => openEdit(a)}>
                         <Pencil className="h-4 w-4" strokeWidth={1.75} />
-                        Edit
+                        {t('Edit')}
                       </DropdownMenuItem>
                       <DropdownMenuItem destructive onSelect={() => setDeleting(a)}>
                         <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                        Delete
+                        {t('Delete')}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -184,13 +186,13 @@ export default function AchievementsPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit achievement' : 'Add an achievement'}</SheetTitle>
-            <SheetDescription>Shown on the school home page, newest first.</SheetDescription>
+            <SheetTitle>{editing ? t('Edit achievement') : t('Add an achievement')}</SheetTitle>
+            <SheetDescription>{t('Shown on the school home page, newest first.')}</SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
-              <Field label="Title" required>
+              <Field label={t('Title')} required>
                 {(p) => (
                   <Input
                     {...p}
@@ -201,7 +203,7 @@ export default function AchievementsPage() {
                 )}
               </Field>
 
-              <Field label="Description" required>
+              <Field label={t('Description')} required>
                 {(p) => (
                   <Textarea
                     {...p}
@@ -213,7 +215,7 @@ export default function AchievementsPage() {
                 )}
               </Field>
 
-              <Field label="Date" required>
+              <Field label={t('Date')} required>
                 {(p) => (
                   <Input
                     {...p}
@@ -225,7 +227,7 @@ export default function AchievementsPage() {
                 )}
               </Field>
 
-              <Field label="Photo URL" description="Optional. Shown on the home page.">
+              <Field label={t('Photo URL')} description={t('Optional. Shown on the home page.')}>
                 {(p) => (
                   <Input
                     {...p}
@@ -239,10 +241,10 @@ export default function AchievementsPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" loading={saving}>
-                {editing ? 'Save changes' : 'Add achievement'}
+                {editing ? t('Save changes') : t('Add achievement')}
               </Button>
             </SheetFooter>
           </form>
@@ -252,14 +254,11 @@ export default function AchievementsPage() {
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(null)}
-        title="Delete this achievement?"
+        title={t('Delete this achievement?')}
         description={
-          <>
-            <strong className="text-ink">{deleting?.title}</strong> will be removed from the school
-            home page.
-          </>
+          tNode('{name} will be removed from the school home page.', { name: <strong className="text-ink">{deleting?.title}</strong> })
         }
-        confirmLabel="Delete"
+        confirmLabel={t('Delete')}
         destructive
         loading={removing}
         onConfirm={confirmDelete}

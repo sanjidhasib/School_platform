@@ -12,6 +12,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { apiErrorMessage, cn, gradeTone, termLabel } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 const TERMS = [
   { value: 'TERM_1', label: 'Term 1 (half-yearly)' },
@@ -48,7 +49,7 @@ function TeacherGradesPage() {
         setRequests(r.data.data ?? []);
         setAssignmentId((cur) => cur || list[0]?._id || '');
       })
-      .catch(() => toast.error('Could not load your classes'));
+      .catch(() => toast.error(t('Could not load your classes')));
   }, []);
 
   const load = useCallback(() => {
@@ -68,7 +69,7 @@ function TeacherGradesPage() {
       })
       .catch((err) => {
         setFailed(true);
-        toast.error(apiErrorMessage(err, 'Could not load the grade sheet'));
+        toast.error(apiErrorMessage(err, t('Could not load the grade sheet')));
       })
       .finally(() => setLoading(false));
   }, [assignmentId, term]);
@@ -100,14 +101,14 @@ function TeacherGradesPage() {
       const d = r.data.data;
       toast.success(
         d.status === 'FINAL'
-          ? `Submitted ${d.saved} grades${d.requestsClosed ? ' — the office’s request is marked done' : ''}`
-          : `Draft saved (${d.saved} grades)`
+          ? t('Submitted {saved} grades{value}', { saved: d.saved, value: d.requestsClosed ? ' — the office’s request is marked done' : '' })
+          : t('Draft saved ({saved} grades)', { saved: d.saved })
       );
       setConfirm(false);
       load();
       teacherAPI.getRequests().then((x) => setRequests(x.data.data ?? [])).catch(() => {});
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the grades'));
+      toast.error(apiErrorMessage(err, t('Could not save the grades')));
     } finally {
       setSaving(null);
     }
@@ -128,17 +129,17 @@ function TeacherGradesPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Final grades"
-        description="Each student's subject grade for the term. Only submitted grades reach students, guardians and report cards."
+        title={t('Final grades')}
+        description={t('Each student\'s subject grade for the term. Only submitted grades reach students, guardians and report cards.')}
       />
 
       <div className="flex flex-col gap-3 rounded-[18px] border border-line bg-surface p-4 shadow-card sm:flex-row sm:items-end">
         <div className="w-full sm:w-72">
-          <p className="mb-1.5 text-meta font-medium text-ink-muted">Class and subject</p>
-          <Combobox options={options} value={assignmentId} onChange={setAssignmentId} placeholder="Choose a class" searchPlaceholder="Find a class" />
+          <p className="mb-1.5 text-meta font-medium text-ink-muted">{t('Class and subject')}</p>
+          <Combobox options={options} value={assignmentId} onChange={setAssignmentId} placeholder={t('Choose a class')} searchPlaceholder={t('Find a class')} />
         </div>
         <div className="w-full sm:w-56">
-          <p className="mb-1.5 text-meta font-medium text-ink-muted">Term</p>
+          <p className="mb-1.5 text-meta font-medium text-ink-muted">{t('Term')}</p>
           <Combobox options={TERMS} value={term} onChange={setTerm} />
         </div>
         {sheet && (
@@ -148,7 +149,7 @@ function TeacherGradesPage() {
               sheet.submitted ? 'bg-success-bg text-success' : 'bg-surface-sunken text-ink-muted'
             )}
           >
-            {sheet.submitted ? 'Submitted' : 'Not submitted yet'}
+            {sheet.submitted ? t('Submitted') : t('Not submitted yet')}
           </span>
         )}
       </div>
@@ -157,44 +158,44 @@ function TeacherGradesPage() {
         <p className="flex items-start gap-2 rounded-[18px] border border-warning/30 bg-warning-bg px-4 py-3 text-dense text-ink">
           <BellRing className="mt-0.5 h-4 w-4 shrink-0 text-warning" strokeWidth={1.75} aria-hidden="true" />
           <span>
-            The office asked for {termLabel(term)} grades
-            {openRequest.dueDate ? ` by ${new Date(openRequest.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })}` : ''}.
-            {openRequest.message ? ` “${openRequest.message}”` : ''} Submitting marks it done.
+            {t('The office asked for {termLabel} grades', { termLabel: termLabel(term) })}
+            {openRequest.dueDate ? t(' by {toLocaleDateString}', { toLocaleDateString: new Date(openRequest.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long' }) }) : ''}.
+            {openRequest.message ? ` “${openRequest.message}”` : ''}{' '}{t('Submitting marks it done.')}
           </span>
         </p>
       )}
 
       {!assignments.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
-          <EmptyState icon={Award} title="No classes assigned" />
+          <EmptyState icon={Award} title={t('No classes assigned')} />
         </div>
       ) : loading || !sheet ? (
-        failed ? <ErrorState description="The grade sheet did not load." onRetry={load} /> : <Skeleton className="h-96 w-full rounded-[18px]" />
+        failed ? <ErrorState description={t('The grade sheet did not load.')} onRetry={load} /> : <Skeleton className="h-96 w-full rounded-[18px]" />
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2">
             <p className="flex items-center gap-2 text-dense text-ink-muted">
               <Info className="h-4 w-4 text-brand" strokeWidth={1.75} aria-hidden="true" />
               {sheet.assessments.length
-                ? `Suggested % = weighted average of ${sheet.assessments.length} ${termLabel(term)} ${sheet.assessments.length === 1 ? 'assessment' : 'assessments'}. Adjust any you need to.`
-                : `No ${termLabel(term)} marks yet — enter each percentage yourself.`}
+                ? t('Suggested % = weighted average of {length} {termLabel} {value}. Adjust any you need to.', { length: sheet.assessments.length, termLabel: termLabel(term), value: sheet.assessments.length === 1 ? 'assessment' : 'assessments' })
+                : t('No {termLabel} marks yet — enter each percentage yourself.', { termLabel: termLabel(term) })}
             </p>
             <div className="ml-auto flex flex-wrap gap-2">
               {sheet.assessments.length > 0 && (
                 <Button variant="ghost" onClick={useSuggested}>
                   <Wand2 className="h-4 w-4" strokeWidth={1.75} />
-                  Use suggested
+                  {t('Use suggested')}
                 </Button>
               )}
               {!sheet.submitted && (
                 <Button variant="secondary" onClick={() => save(false)} loading={saving === 'draft'} disabled={!filled || invalid}>
                   <Save className="h-4 w-4" strokeWidth={1.75} />
-                  Save draft
+                  {t('Save draft')}
                 </Button>
               )}
               <Button onClick={() => setConfirm(true)} disabled={!filled || invalid}>
                 <Send className="h-4 w-4" strokeWidth={1.75} />
-                {sheet.submitted ? 'Update submitted grades' : 'Submit final grades'}
+                {sheet.submitted ? t('Update submitted grades') : t('Submit final grades')}
               </Button>
             </div>
           </div>
@@ -204,18 +205,18 @@ function TeacherGradesPage() {
               <table className="w-full min-w-max border-separate border-spacing-0 text-dense">
                 <thead>
                   <tr className="text-meta text-ink-muted">
-                    <th className="sticky left-0 top-0 z-20 w-12 border-b border-line bg-surface-sunken px-3 py-2.5 text-left font-semibold">Roll</th>
-                    <th className="sticky left-12 top-0 z-20 border-b border-r border-line bg-surface-sunken px-3 py-2.5 text-left font-semibold">Student</th>
+                    <th className="sticky left-0 top-0 z-20 w-12 border-b border-line bg-surface-sunken px-3 py-2.5 text-left font-semibold">{t('Roll')}</th>
+                    <th className="sticky left-12 top-0 z-20 border-b border-r border-line bg-surface-sunken px-3 py-2.5 text-left font-semibold">{t('Student')}</th>
                     {sheet.assessments.map((a: any) => (
-                      <th key={a._id} className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-right font-semibold" title={`${a.title} — weight ${a.weight}`}>
+                      <th key={a._id} className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-right font-semibold" title={t('{title} — weight {weight}', { title: a.title, weight: a.weight })}>
                         <span className="block max-w-[7rem] truncate">{a.title}</span>
                         <span className="font-normal text-ink-subtle">/ {a.maxMarks}</span>
                       </th>
                     ))}
-                    <th className="sticky top-0 z-10 border-b border-l border-line bg-surface-sunken px-3 py-2.5 text-right font-semibold">Suggested</th>
-                    <th className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-center font-semibold">Final %</th>
-                    <th className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-center font-semibold">Grade</th>
-                    <th className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-right font-semibold">GPA</th>
+                    <th className="sticky top-0 z-10 border-b border-l border-line bg-surface-sunken px-3 py-2.5 text-right font-semibold">{t('Suggested')}</th>
+                    <th className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-center font-semibold">{t('Final %')}</th>
+                    <th className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-center font-semibold">{t('Grade')}</th>
+                    <th className="sticky top-0 z-10 border-b border-line bg-surface-sunken px-3 py-2.5 text-right font-semibold">{t('GPA')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -231,7 +232,7 @@ function TeacherGradesPage() {
                         </td>
                         {row.marks.map((m: any, j: number) => (
                           <td key={j} className="border-b border-line px-3 py-2 text-right text-ink-muted tabular">
-                            {m === null ? '—' : m === 'ABS' ? <span className="text-danger">Abs</span> : m}
+                            {m === null ? '—' : m === 'ABS' ? <span className="text-danger">{t('Abs')}</span> : m}
                           </td>
                         ))}
                         <td className="border-b border-l border-line px-3 py-2 text-right text-ink-subtle tabular">{row.suggested ?? '—'}</td>
@@ -240,7 +241,7 @@ function TeacherGradesPage() {
                             inputMode="decimal"
                             value={v}
                             onChange={(e) => setValues((x) => ({ ...x, [row.student._id]: e.target.value.replace(/[^\d.]/g, '') }))}
-                            aria-label={`Final percentage for ${row.student.fullName}`}
+                            aria-label={t('Final percentage for {fullName}', { fullName: row.student.fullName })}
                             aria-invalid={bad || undefined}
                             className={cn(
                               'h-8 w-20 rounded-chip border bg-surface px-2 text-center text-ink tabular focus:outline-none focus:ring-2',
@@ -260,7 +261,7 @@ function TeacherGradesPage() {
             </div>
           </div>
           <p className="text-meta text-ink-muted tabular">
-            {filled} of {total} students have a percentage.
+            {t('{filled} of {total} students have a percentage.', { filled, total })}
           </p>
         </>
       )}
@@ -268,9 +269,9 @@ function TeacherGradesPage() {
       <ConfirmDialog
         open={confirm}
         onOpenChange={setConfirm}
-        title={sheet?.submitted ? 'Update the submitted grades?' : 'Submit final grades?'}
-        description={`${filled} of ${total} students${filled < total ? ' — students without a percentage are left out' : ''}. Students and guardians will see these grades, and they go on the report card.`}
-        confirmLabel={sheet?.submitted ? 'Update' : 'Submit'}
+        title={sheet?.submitted ? t('Update the submitted grades?') : t('Submit final grades?')}
+        description={t('{filled} of {total} students{value}. Students and guardians will see these grades, and they go on the report card.', { filled, total, value: filled < total ? ' — students without a percentage are left out' : '' })}
+        confirmLabel={sheet?.submitted ? t('Update') : t('Submit')}
         loading={saving === 'submit'}
         onConfirm={() => save(true)}
       />

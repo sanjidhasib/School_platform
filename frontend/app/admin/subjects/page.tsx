@@ -16,6 +16,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBo
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage, cn } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
+import { t } from '@/lib/i18n';
+import { tNode } from '@/lib/i18n/node';
+import { num } from '@/lib/i18n';
 
 const emptyForm = { name: '', nameBn: '', code: '', description: '' };
 
@@ -57,7 +60,7 @@ export default function SubjectsPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load subjects');
+        toast.error(t('Could not load subjects'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -88,7 +91,7 @@ export default function SubjectsPage() {
       setCurriculum(r.data.data);
       setPicked(new Set(r.data.data.items.filter((i: any) => i.status !== 'IN_CLASS' && i.group === 'Compulsory').map((i: any) => i.code)));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not load the NCTB list'));
+      toast.error(apiErrorMessage(err, t('Could not load the NCTB list')));
       setNctbOpen(false);
     }
   };
@@ -99,11 +102,11 @@ export default function SubjectsPage() {
     try {
       const r = await adminAPI.applyCurriculum(grade, Array.from(picked));
       const { created, added } = r.data.data;
-      toast.success(`Class ${grade}: ${created + added} ${created + added === 1 ? 'subject' : 'subjects'} added`);
+      toast.success(t('Class {grade}: {value} {value2} added', { grade, value: created + added, value2: created + added === 1 ? 'subject' : 'subjects' }));
       setNctbOpen(false);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not add the subjects'));
+      toast.error(apiErrorMessage(err, t('Could not add the subjects')));
     } finally {
       setApplying(false);
     }
@@ -126,17 +129,17 @@ export default function SubjectsPage() {
     try {
       if (editing) {
         await adminAPI.updateSubject(editing._id, form);
-        toast.success('Subject saved');
+        toast.success(t('Subject saved'));
       } else {
         // A new subject is added to the class being viewed.
         const ids = classes.filter((c) => c.gradeNumber === grade).map((c) => c._id);
         await adminAPI.createSubject({ ...form, classIds: ids });
-        toast.success(`${form.name} added to Class ${grade}`);
+        toast.success(t('{name} added to Class {grade}', { name: form.name, grade }));
       }
       setOpen(false);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the subject'));
+      toast.error(apiErrorMessage(err, t('Could not save the subject')));
     } finally {
       setSaving(false);
     }
@@ -147,11 +150,11 @@ export default function SubjectsPage() {
     setBusy(true);
     try {
       await adminAPI.removeSubjectFromGrade(removing._id, grade);
-      toast.success(`${removing.name} removed from Class ${grade}`);
+      toast.success(t('{name} removed from Class {grade}', { name: removing.name, grade }));
       setRemoving(null);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not remove the subject'));
+      toast.error(apiErrorMessage(err, t('Could not remove the subject')));
     } finally {
       setBusy(false);
     }
@@ -166,24 +169,24 @@ export default function SubjectsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Subjects"
-        description="What each class studies, following NCTB, and who teaches it."
+        title={t('Subjects')}
+        description={t('What each class studies, following NCTB, and who teaches it.')}
         actions={
           <>
             <Button variant="secondary" onClick={openNctb} disabled={grade === null}>
               <Sparkles className="h-4 w-4" strokeWidth={1.75} />
-              NCTB subjects
+              {t('NCTB subjects')}
             </Button>
             <Button onClick={openAdd} disabled={grade === null}>
               <Plus className="h-4 w-4" strokeWidth={1.75} />
-              Add a subject
+              {t('Add a subject')}
             </Button>
           </>
         }
       />
 
       {/* One tab per class */}
-      <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Class">
+      <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label={t('Class')}>
         {grades.map((g) => {
           const ids = new Set(classes.filter((c) => c.gradeNumber === g).map((c) => String(c._id)));
           const n = subjects.filter((s) => (s.classIds ?? []).some((id: any) => ids.has(String(id?._id ?? id)))).length;
@@ -199,8 +202,8 @@ export default function SubjectsPage() {
                 grade === g ? 'border-brand bg-brand text-brand-contrast shadow-card' : 'border-line bg-surface hover:border-line-strong'
               )}
             >
-              <span className={cn('text-dense font-semibold', grade !== g && 'text-ink')}>Class {g}</span>
-              <span className={cn('text-meta', grade === g ? 'opacity-80' : 'text-ink-subtle')}>{n} subjects</span>
+              <span className={cn('text-dense font-semibold', grade !== g && 'text-ink')}>{t('Class {g}', { g })}</span>
+              <span className={cn('text-meta', grade === g ? 'opacity-80' : 'text-ink-subtle')}>{t('{n} subjects', { n })}</span>
             </button>
           );
         })}
@@ -213,17 +216,17 @@ export default function SubjectsPage() {
           ))}
         </div>
       ) : failed ? (
-        <ErrorState description="The subject list did not load." onRetry={load} />
+        <ErrorState description={t('The subject list did not load.')} onRetry={load} />
       ) : !inGrade.length ? (
         <div className="rounded-[18px] border border-line bg-surface shadow-card">
           <EmptyState
             icon={BookOpen}
-            title={`No subjects for Class ${grade} yet`}
-            description="Add the NCTB subjects for this class in one go."
+            title={t('No subjects for Class {grade} yet', { grade })}
+            description={t('Add the NCTB subjects for this class in one go.')}
             action={
               <Button onClick={openNctb}>
                 <Sparkles className="h-4 w-4" strokeWidth={1.75} />
-                NCTB subjects
+                {t('NCTB subjects')}
               </Button>
             }
           />
@@ -250,18 +253,18 @@ export default function SubjectsPage() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${s.name}`}>
+                        <Button variant="ghost" size="icon-sm" aria-label={t('Actions for {name}', { name: s.name })}>
                           <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onSelect={() => openEdit(s)}>
                           <Pencil className="h-4 w-4" strokeWidth={1.75} />
-                          Edit
+                          {t('Edit')}
                         </DropdownMenuItem>
                         <DropdownMenuItem destructive onSelect={() => setRemoving(s)}>
                           <MinusCircle className="h-4 w-4" strokeWidth={1.75} />
-                          Remove from Class {grade}
+                          {t('Remove from Class {grade}', { grade })}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -278,7 +281,7 @@ export default function SubjectsPage() {
                         ))}
                       </ul>
                     ) : (
-                      <p className="text-meta text-warning">No teacher yet — assign one on the class page.</p>
+                      <p className="text-meta text-warning">{t('No teacher yet — assign one on the class page.')}</p>
                     )}
                   </div>
                 </div>
@@ -292,8 +295,8 @@ export default function SubjectsPage() {
       <Sheet open={nctbOpen} onOpenChange={(o) => !applying && setNctbOpen(o)}>
         <SheetContent className="sm:max-w-lg">
           <SheetHeader>
-            <SheetTitle>NCTB subjects — Class {grade}</SheetTitle>
-            <SheetDescription>{curriculum?.source ?? 'Loading…'}</SheetDescription>
+            <SheetTitle>{t('NCTB subjects — Class {grade}', { grade })}</SheetTitle>
+            <SheetDescription>{curriculum?.source ?? t('Loading…')}</SheetDescription>
           </SheetHeader>
           <SheetBody className="space-y-5">
             {!curriculum ? (
@@ -337,10 +340,10 @@ export default function SubjectsPage() {
                             {already ? (
                               <span className="inline-flex items-center gap-1 text-meta text-success">
                                 <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
-                                In class
+                                {t('In class')}
                               </span>
                             ) : i.status === 'NEW' ? (
-                              <span className="text-meta text-ink-subtle">New subject</span>
+                              <span className="text-meta text-ink-subtle">{t('New subject')}</span>
                             ) : null}
                           </label>
                         </li>
@@ -353,17 +356,16 @@ export default function SubjectsPage() {
             {curriculum && (
               <p className="flex items-start gap-2 rounded-xl bg-surface-sunken px-3 py-2 text-meta text-ink-muted">
                 <Library className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-                Subjects the school already has keep their names; new ones are created with the NCTB name. Group subjects
-                (9–10) apply to the whole class — untick those your school doesn’t offer.
+                {t('Subjects the school already has keep their names; new ones are created with the NCTB name. Group subjects (9–10) apply to the whole class — untick those your school doesn’t offer.')}
               </p>
             )}
           </SheetBody>
           <SheetFooter>
             <Button variant="secondary" onClick={() => setNctbOpen(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button onClick={applyNctb} loading={applying} disabled={!picked.size}>
-              Add {picked.size || ''} to Class {grade}
+              {t('Add')}{' '}{picked.size || ''}{' '}{t('to Class {grade}', { grade })}
             </Button>
           </SheetFooter>
         </SheetContent>
@@ -373,36 +375,36 @@ export default function SubjectsPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit subject' : `Add a subject to Class ${grade}`}</SheetTitle>
+            <SheetTitle>{editing ? t('Edit subject') : t('Add a subject to Class {grade}', { grade })}</SheetTitle>
             <SheetDescription>
-              {editing ? 'Changes apply in every class that studies it.' : 'For a subject that isn’t on the NCTB list.'}
+              {editing ? t('Changes apply in every class that studies it.') : t('For a subject that isn’t on the NCTB list.')}
             </SheetDescription>
           </SheetHeader>
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
-              <Field label="English name" required>
-                {(p) => <Input {...p} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Mathematics" required />}
+              <Field label={t('English name')} required>
+                {(p) => <Input {...p} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder={t('Mathematics')} required />}
               </Field>
-              <Field label="Bangla name" description="Shown under the English name across the app.">
+              <Field label={t('Bangla name')} description={t('Shown under the English name across the app.')}>
                 {(p) => (
                   <Input {...p} lang="bn" className="font-bn" value={form.nameBn} onChange={(e) => setForm((f) => ({ ...f, nameBn: e.target.value }))} placeholder="গণিত" />
                 )}
               </Field>
-              <Field label="Code" description="A short unique code, e.g. MAT." required>
+              <Field label={t('Code')} description={t('A short unique code, e.g. MAT.')} required>
                 {(p) => (
-                  <Input {...p} value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="MAT" maxLength={8} required />
+                  <Input {...p} value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder={t('MAT')} maxLength={8} required />
                 )}
               </Field>
-              <Field label="Description">
+              <Field label={t('Description')}>
                 {(p) => <Input {...p} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />}
               </Field>
             </SheetBody>
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" loading={saving}>
-                {editing ? 'Save changes' : 'Add subject'}
+                {editing ? t('Save changes') : t('Add subject')}
               </Button>
             </SheetFooter>
           </form>
@@ -412,13 +414,11 @@ export default function SubjectsPage() {
       <ConfirmDialog
         open={!!removing}
         onOpenChange={(o) => !o && setRemoving(null)}
-        title={`Remove from Class ${grade}?`}
+        title={t('Remove from Class {grade}?', { grade })}
         description={
-          <>
-            <strong className="text-ink">{removing?.name}</strong> will no longer be studied in Class {grade}. Other classes keep it.
-          </>
+          tNode('{name} will no longer be studied in Class {grade}. Other classes keep it.', { name: <strong className="text-ink">{removing?.name}</strong>, grade: num(grade) })
         }
-        confirmLabel="Remove"
+        confirmLabel={t('Remove')}
         destructive
         loading={busy}
         onConfirm={confirmRemove}

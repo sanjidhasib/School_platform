@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/sheet';
 import { apiErrorMessage, cn, formatDate } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
+import { t as tr } from '@/lib/i18n';
 
 const ASSESSMENT_TYPES = ['CLASS_TEST', 'ASSIGNMENT', 'MIDTERM', 'FINAL', 'PRACTICAL', 'OTHER'];
 const TERMS = ['TERM_1', 'TERM_2', 'FINAL'];
@@ -74,7 +75,7 @@ export default function TeacherResultsPage() {
       .then((r) => setAssessments(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load assessments');
+        toast.error(tr('Could not load assessments'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -98,7 +99,7 @@ export default function TeacherResultsPage() {
     e.preventDefault();
     const assignment = assignments.find((a: any) => a._id === form.teacherAssignmentId);
     if (!assignment) {
-      setFormError('Choose the class and subject this assessment belongs to.');
+      setFormError(tr('Choose the class and subject this assessment belongs to.'));
       return;
     }
     setFormError(null);
@@ -110,12 +111,12 @@ export default function TeacherResultsPage() {
         subjectId: assignment.subjectId?._id,
         academicSessionId: assignment.academicSessionId,
       });
-      toast.success('Assessment created');
+      toast.success(tr('Assessment created'));
       setOpen(false);
       setForm(emptyForm);
       load();
     } catch (err) {
-      setFormError(apiErrorMessage(err, 'Could not create the assessment'));
+      setFormError(apiErrorMessage(err, tr('Could not create the assessment')));
     } finally {
       setSaving(false);
     }
@@ -140,7 +141,7 @@ export default function TeacherResultsPage() {
       setRows(built);
       setInitialRows(built);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not load the marks sheet'));
+      toast.error(apiErrorMessage(err, tr('Could not load the marks sheet')));
       setSelected(null);
     } finally {
       setLoadingMarks(false);
@@ -173,7 +174,7 @@ export default function TeacherResultsPage() {
 
   const saveMarks = async () => {
     if (invalidRows.length) {
-      toast.error(`Marks must be between 0 and ${max}`);
+      toast.error(tr('Marks must be between 0 and {max}', { max }));
       return;
     }
     setSavingMarks(true);
@@ -187,9 +188,9 @@ export default function TeacherResultsPage() {
         }));
       await teacherAPI.saveMarks(selected._id, payload);
       setInitialRows(rows);
-      toast.success('Marks saved');
+      toast.success(tr('Marks saved'));
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not save the marks'));
+      toast.error(apiErrorMessage(err, tr('Could not save the marks')));
     } finally {
       setSavingMarks(false);
     }
@@ -204,35 +205,35 @@ export default function TeacherResultsPage() {
           size="sm"
           className="-ml-2"
           onClick={() => {
-            if (dirty && !window.confirm('You have unsaved marks. Leave without saving?')) return;
+            if (dirty && !window.confirm(tr('You have unsaved marks. Leave without saving?'))) return;
             setSelected(null);
           }}
         >
           <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-          All assessments
+          {tr('All assessments')}
         </Button>
 
         <div className="space-y-3">
           <h1 className="text-page text-ink">{selected.title}</h1>
           <dl className="flex flex-wrap gap-x-8 gap-y-3 border-b border-line pb-4">
             <div>
-              <dt className="text-meta text-ink-subtle">Class</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Class')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink">
                 {selected.classId?.name} {selected.classId?.section}
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Subject</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Subject')}</dt>
               <dd className="mt-0.5">
                 <SubjectLabel subject={selected.subjectId} className="text-dense font-medium text-ink" inline />
               </dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Out of</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Out of')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink tabular">{max}</dd>
             </div>
             <div>
-              <dt className="text-meta text-ink-subtle">Date</dt>
+              <dt className="text-meta text-ink-subtle">{tr('Date')}</dt>
               <dd className="mt-0.5 text-dense font-medium text-ink tabular">
                 {formatDate(selected.assessmentDate)}
               </dd>
@@ -246,14 +247,14 @@ export default function TeacherResultsPage() {
           <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={BarChart3}
-              title="No students in this class"
-              description="Marks can be entered once students are enrolled."
+              title={tr('No students in this class')}
+              description={tr('Marks can be entered once students are enrolled.')}
             />
           </div>
         ) : (
           <>
             <p className="text-meta text-ink-subtle">
-              Press Enter or the down arrow to move to the next student.
+              {tr('Press Enter or the down arrow to move to the next student.')}
             </p>
 
             <div className="scrollbar-thin overflow-x-auto rounded-card border border-line bg-surface shadow-card">
@@ -264,16 +265,16 @@ export default function TeacherResultsPage() {
                       #
                     </th>
                     <th scope="col" className="px-3 py-2 text-left text-meta font-medium text-ink-subtle">
-                      Student
+                      {tr('Student')}
                     </th>
                     <th scope="col" className="hidden px-3 py-2 text-left text-meta font-medium text-ink-subtle sm:table-cell">
-                      ID
+                      {tr('ID')}
                     </th>
                     <th scope="col" className="w-28 px-3 py-2 text-right text-meta font-medium text-ink-subtle">
-                      Marks
+                      {tr('Marks')}
                     </th>
                     <th scope="col" className="w-24 px-3 py-2 text-center text-meta font-medium text-ink-subtle">
-                      Absent
+                      {tr('Absent')}
                     </th>
                   </tr>
                 </thead>
@@ -302,7 +303,7 @@ export default function TeacherResultsPage() {
                             inputMode="decimal"
                             disabled={row.absent}
                             value={row.value}
-                            aria-label={`Marks for ${row.fullName}, out of ${max}`}
+                            aria-label={tr('Marks for {fullName}, out of {max}', { fullName: row.fullName, max })}
                             aria-invalid={invalid || undefined}
                             onChange={(e) => updateRow(i, { value: e.target.value })}
                             onKeyDown={(e) => onCellKeyDown(e, i)}
@@ -319,7 +320,7 @@ export default function TeacherResultsPage() {
                           <input
                             type="checkbox"
                             checked={row.absent}
-                            aria-label={`Mark ${row.fullName} absent`}
+                            aria-label={tr('Mark {fullName} absent', { fullName: row.fullName })}
                             onChange={(e) =>
                               updateRow(i, { absent: e.target.checked, value: e.target.checked ? '' : row.value })
                             }
@@ -336,22 +337,22 @@ export default function TeacherResultsPage() {
             <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:left-60">
               <div className="mx-auto flex max-w-[1440px] flex-wrap items-center gap-3">
                 <p className="text-meta text-ink-muted tabular">
-                  {entered} of {rows.length} entered
+                  {tr('{entered} of {length} entered', { entered, length: rows.length })}
                 </p>
 
                 {invalidRows.length > 0 && (
                   <span className="flex items-center gap-1.5 text-meta font-medium text-danger">
                     <AlertCircle className="h-4 w-4" strokeWidth={1.75} />
-                    {invalidRows.length} out of range
+                    {tr('{length} out of range', { length: invalidRows.length })}
                   </span>
                 )}
 
                 {dirty ? (
-                  <Badge tone="warning">Unsaved changes</Badge>
+                  <Badge tone="warning">{tr('Unsaved changes')}</Badge>
                 ) : entered > 0 ? (
                   <span className="flex items-center gap-1.5 text-meta font-medium text-success">
                     <Check className="h-4 w-4" strokeWidth={1.75} />
-                    All saved
+                    {tr('All saved')}
                   </span>
                 ) : null}
 
@@ -361,7 +362,7 @@ export default function TeacherResultsPage() {
                   loading={savingMarks}
                   disabled={!dirty || invalidRows.length > 0}
                 >
-                  Save marks
+                  {tr('Save marks')}
                 </Button>
               </div>
             </div>
@@ -375,12 +376,12 @@ export default function TeacherResultsPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Results"
-        description="Create an assessment, then enter marks for the class."
+        title={tr('Results')}
+        description={tr('Create an assessment, then enter marks for the class.')}
         actions={
           <Button onClick={() => setOpen(true)}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            New assessment
+            {tr('New assessment')}
           </Button>
         }
       />
@@ -388,17 +389,17 @@ export default function TeacherResultsPage() {
       {loading ? (
         <ListSkeleton rows={4} />
       ) : failed ? (
-        <ErrorState description="Your assessments did not load." onRetry={load} />
+        <ErrorState description={tr('Your assessments did not load.')} onRetry={load} />
       ) : !assessments.length ? (
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={BarChart3}
-            title="No assessments yet"
-            description="Create a class test or exam, then enter marks against it."
+            title={tr('No assessments yet')}
+            description={tr('Create a class test or exam, then enter marks against it.')}
             action={
               <Button onClick={() => setOpen(true)}>
                 <Plus className="h-4 w-4" strokeWidth={1.75} />
-                New assessment
+                {tr('New assessment')}
               </Button>
             }
           />
@@ -427,7 +428,7 @@ export default function TeacherResultsPage() {
                 </div>
 
                 <div className="shrink-0 text-right">
-                  <p className="text-meta text-ink-subtle">Out of</p>
+                  <p className="text-meta text-ink-subtle">{tr('Out of')}</p>
                   <p className="text-dense text-ink tabular">{a.maxMarks}</p>
                 </div>
               </button>
@@ -439,8 +440,8 @@ export default function TeacherResultsPage() {
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>New assessment</SheetTitle>
-            <SheetDescription>A class test, exam or practical you will enter marks for.</SheetDescription>
+            <SheetTitle>{tr('New assessment')}</SheetTitle>
+            <SheetDescription>{tr('A class test, exam or practical you will enter marks for.')}</SheetDescription>
           </SheetHeader>
 
           <form onSubmit={handleCreate} className="flex min-h-0 flex-1 flex-col">
@@ -455,33 +456,33 @@ export default function TeacherResultsPage() {
                 </div>
               )}
 
-              <Field label="Class and subject" required>
+              <Field label={tr('Class and subject')} required>
                 {(p) => (
                   <Combobox
                     {...p}
                     options={assignmentOptions}
                     value={form.teacherAssignmentId}
                     onChange={(v) => setForm((f) => ({ ...f, teacherAssignmentId: v }))}
-                    placeholder="Choose a class"
-                    searchPlaceholder="Find a class"
+                    placeholder={tr('Choose a class')}
+                    searchPlaceholder={tr('Find a class')}
                   />
                 )}
               </Field>
 
-              <Field label="Title" required>
+              <Field label={tr('Title')} required>
                 {(p) => (
                   <Input
                     {...p}
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="First class test"
+                    placeholder={tr('First class test')}
                     required
                   />
                 )}
               </Field>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Type" required>
+                <Field label={tr('Type')} required>
                   {(p) => (
                     <Combobox
                       {...p}
@@ -494,7 +495,7 @@ export default function TeacherResultsPage() {
                     />
                   )}
                 </Field>
-                <Field label="Term" required>
+                <Field label={tr('Term')} required>
                   {(p) => (
                     <Combobox
                       {...p}
@@ -507,7 +508,7 @@ export default function TeacherResultsPage() {
               </div>
 
               <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Date" required>
+                <Field label={tr('Date')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -518,7 +519,7 @@ export default function TeacherResultsPage() {
                     />
                   )}
                 </Field>
-                <Field label="Out of" required>
+                <Field label={tr('Out of')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -532,7 +533,7 @@ export default function TeacherResultsPage() {
                     />
                   )}
                 </Field>
-                <Field label="Weight" description="Towards the term grade." required>
+                <Field label={tr('Weight')} description={tr('Towards the term grade.')} required>
                   {(p) => (
                     <Input
                       {...p}
@@ -552,10 +553,10 @@ export default function TeacherResultsPage() {
 
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {tr('Cancel')}
               </Button>
               <Button type="submit" loading={saving} disabled={!form.teacherAssignmentId}>
-                Create
+                {tr('Create')}
               </Button>
             </SheetFooter>
           </form>

@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { apiErrorMessage, cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 // pdf.js touches browser-only APIs, so the reader never renders on the server.
 const PdfReader = dynamic(() => import('@/components/shared/PdfReader'), {
@@ -40,7 +41,7 @@ function StudentBookPage() {
     studentAPI
       .getTextbook(id)
       .then((r) => setBook(r.data.data))
-      .catch((err) => setError(apiErrorMessage(err, 'This book did not load.')));
+      .catch((err) => setError(apiErrorMessage(err, t('This book did not load.'))));
   }, [id]);
 
   useEffect(load, [load]);
@@ -78,7 +79,7 @@ function StudentBookPage() {
                 lang={bangla ? 'bn' : undefined}
                 className={cn('hidden shrink-0 sm:inline-flex', bangla && 'font-bn')}
               >
-                {bangla ? 'বাংলা ভার্সন' : 'English version'}
+                {bangla ? 'বাংলা ভার্সন' : t('English version')}
               </Badge>
             )}
           </div>
@@ -89,10 +90,10 @@ function StudentBookPage() {
           <Button variant="secondary" size="sm" asChild className="shrink-0">
             <Link
               href={`/student/ai-learning?subject=${book.subjectId?._id ?? ''}`}
-              aria-label="Ask the AI about this book"
+              aria-label={t('Ask the AI about this book')}
             >
               <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
-              <span className="hidden sm:inline">Ask the AI about this book</span>
+              <span className="hidden sm:inline">{t('Ask the AI about this book')}</span>
             </Link>
           </Button>
         )}
@@ -115,7 +116,7 @@ function BackLink() {
     <Button variant="ghost" size="sm" asChild>
       <Link href="/student/library">
         <ArrowLeft className="h-4 w-4" strokeWidth={1.75} />
-        Library
+        {t('Library')}
       </Link>
     </Button>
   );

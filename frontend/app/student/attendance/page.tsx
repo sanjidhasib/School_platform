@@ -13,6 +13,7 @@ import { StatusPill } from '@/components/ui/status-pill';
 import { Progress } from '@/components/ui/progress';
 import { statusMeta } from '@/lib/design/status';
 import { cn, formatDate, formatPercentage, formatTime } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 const SHORT_DAY_INITIALS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
@@ -33,7 +34,7 @@ export default function StudentAttendancePage() {
       .then((r) => setData(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your attendance');
+        toast.error(t('Could not load your attendance'));
       })
       .finally(() => setLoading(false));
   };
@@ -93,23 +94,23 @@ export default function StudentAttendancePage() {
     );
   }
 
-  if (failed) return <ErrorState description="Your attendance did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={t('Your attendance did not load.')} onRetry={load} />;
 
   const summary = data?.summary ?? {};
   const hasRecords = records.length > 0;
 
   return (
     <div className="space-y-7">
-      <PageHeader title="Attendance" />
+      <PageHeader title={t('Attendance')} />
 
       {hasRecords ? (
         <>
           <SummaryStrip
             figures={[
-              { label: 'Classes attended', value: summary.present ?? 0, detail: `of ${summary.total ?? 0}` },
-              { label: 'Absent', value: summary.absent ?? 0 },
-              { label: 'On leave', value: summary.leave ?? 0 },
-              { label: 'Attendance', value: formatPercentage(summary.percentage ?? 0) },
+              { label: t('Classes attended'), value: summary.present ?? 0, detail: `of ${summary.total ?? 0}` },
+              { label: t('Absent'), value: summary.absent ?? 0 },
+              { label: t('On leave'), value: summary.leave ?? 0 },
+              { label: t('Attendance'), value: formatPercentage(summary.percentage ?? 0) },
             ]}
           />
 
@@ -123,7 +124,7 @@ export default function StudentAttendancePage() {
                   : 'danger'
             }
             className="max-w-md"
-            label="Overall attendance"
+            label={t('Overall attendance')}
           />
 
           <Section
@@ -132,7 +133,7 @@ export default function StudentAttendancePage() {
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  aria-label="Previous month"
+                  aria-label={t('Previous month')}
                   onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
                   className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
@@ -140,7 +141,7 @@ export default function StudentAttendancePage() {
                 </button>
                 <button
                   type="button"
-                  aria-label="Next month"
+                  aria-label={t('Next month')}
                   onClick={() => setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
                   className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                 >
@@ -189,7 +190,7 @@ export default function StudentAttendancePage() {
                     >
                       <span className="font-medium tabular">{date.getDate()}</span>
                       {Icon && <Icon className="h-3 w-3" strokeWidth={2.25} aria-hidden="true" />}
-                      {day && <span className="sr-only">{meta?.label}</span>}
+                      {day && <span className="sr-only">{t(meta?.label)}</span>}
                     </div>
                   );
                 })}
@@ -203,7 +204,7 @@ export default function StudentAttendancePage() {
             </div>
           </Section>
 
-          <Section title="Every class">
+          <Section title={t('Every class')}>
             <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
               {records.map(({ session, record }: any) => (
                 <li key={session._id} className="flex items-center gap-4 px-4 py-3">
@@ -224,8 +225,8 @@ export default function StudentAttendancePage() {
         <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CheckSquare}
-            title="No attendance recorded yet"
-            description="Your record appears here once your teachers start taking attendance."
+            title={t('No attendance recorded yet')}
+            description={t('Your record appears here once your teachers start taking attendance.')}
           />
         </div>
       )}

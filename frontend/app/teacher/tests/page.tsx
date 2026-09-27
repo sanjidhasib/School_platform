@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBo
 import { apiErrorMessage, cn } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
 import { PHASE_META, testPhase, fmtWhen, toLocalInput } from '@/lib/design/classTests';
+import { t as tr } from '@/lib/i18n';
 
 export default function TeacherTestsPage() {
   const router = useRouter();
@@ -38,7 +39,7 @@ export default function TeacherTestsPage() {
       })
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your tests');
+        toast.error(tr('Could not load your tests'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -69,10 +70,10 @@ export default function TeacherTestsPage() {
         opensAt: new Date(form.opensAt).toISOString(),
         closesAt: new Date(form.closesAt).toISOString(),
       });
-      toast.success('Test created — now add the questions');
+      toast.success(tr('Test created — now add the questions'));
       router.push(`/teacher/tests/${res.data.data._id}`);
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not create the test'));
+      toast.error(apiErrorMessage(err, tr('Could not create the test')));
       setSaving(false);
     }
   };
@@ -80,12 +81,12 @@ export default function TeacherTestsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Class tests"
-        description="Timed tests your students sit online. Multiple-choice answers mark themselves."
+        title={tr('Class tests')}
+        description={tr('Timed tests your students sit online. Multiple-choice answers mark themselves.')}
         actions={
           <Button onClick={openNew} disabled={!assignments.length}>
             <Plus className="h-4 w-4" strokeWidth={1.75} />
-            New test
+            {tr('New test')}
           </Button>
         }
       />
@@ -97,17 +98,17 @@ export default function TeacherTestsPage() {
           ))}
         </div>
       ) : failed ? (
-        <ErrorState description="Your tests did not load." onRetry={load} />
+        <ErrorState description={tr('Your tests did not load.')} onRetry={load} />
       ) : !tests.length ? (
         <div className="rounded-[18px] border border-line bg-surface shadow-card">
           <EmptyState
             icon={Timer}
-            title="No class tests yet"
-            description="Set questions, choose a time limit, and your class sits it online."
+            title={tr('No class tests yet')}
+            description={tr('Set questions, choose a time limit, and your class sits it online.')}
             action={
               <Button onClick={openNew} disabled={!assignments.length}>
                 <Plus className="h-4 w-4" strokeWidth={1.75} />
-                New test
+                {tr('New test')}
               </Button>
             }
           />
@@ -126,11 +127,11 @@ export default function TeacherTestsPage() {
                   <span className={cn('h-1.5', subjectTint(t.subjectId))} aria-hidden="true" />
                   <div className="flex flex-1 flex-col gap-3 p-5">
                     <div className="flex items-center justify-between gap-2">
-                      <span className={cn('rounded-full px-2.5 py-0.5 text-meta font-semibold', meta.tone)}>{meta.label}</span>
+                      <span className={cn('rounded-full px-2.5 py-0.5 text-meta font-semibold', meta.tone)}>{tr(meta.label)}</span>
                       {t.toMark > 0 && (
                         <span className="inline-flex items-center gap-1 rounded-full bg-highlighter-wash px-2 py-0.5 text-meta font-medium text-warning">
                           <PenLine className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
-                          {t.toMark} to mark
+                          {tr('{toMark} to mark', { toMark: t.toMark })}
                         </span>
                       )}
                     </div>
@@ -141,9 +142,9 @@ export default function TeacherTestsPage() {
                       </p>
                     </div>
                     <div className="mt-auto grid grid-cols-3 gap-2 border-t border-line pt-3 text-meta">
-                      <Stat icon={Timer} label="Time" value={`${t.durationMinutes} min`} />
-                      <Stat icon={ListChecks} label="Questions" value={`${t.questionCount} · ${t.totalMarks} marks`} />
-                      <Stat icon={Users} label="Sat it" value={String(t.attempts)} />
+                      <Stat icon={Timer} label={tr('Time')} value={`${t.durationMinutes} min`} />
+                      <Stat icon={ListChecks} label={tr('Questions')} value={`${t.questionCount} · ${t.totalMarks} marks`} />
+                      <Stat icon={Users} label={tr('Sat it')} value={String(t.attempts)} />
                     </div>
                     <p className="flex items-center justify-between text-meta text-ink-subtle">
                       <span>
@@ -162,12 +163,12 @@ export default function TeacherTestsPage() {
       <Sheet open={open} onOpenChange={(o) => !saving && setOpen(o)}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>New class test</SheetTitle>
-            <SheetDescription>Set it up first; you add the questions on the next screen.</SheetDescription>
+            <SheetTitle>{tr('New class test')}</SheetTitle>
+            <SheetDescription>{tr('Set it up first; you add the questions on the next screen.')}</SheetDescription>
           </SheetHeader>
           <form onSubmit={create} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
-              <Field label="Class and subject" required>
+              <Field label={tr('Class and subject')} required>
                 {(p) => (
                   <Combobox
                     {...p}
@@ -177,16 +178,16 @@ export default function TeacherTestsPage() {
                     }))}
                     value={form.teacherAssignmentId}
                     onChange={(v) => setForm((f) => ({ ...f, teacherAssignmentId: v }))}
-                    placeholder="Choose a class"
+                    placeholder={tr('Choose a class')}
                   />
                 )}
               </Field>
-              <Field label="Title" required>
+              <Field label={tr('Title')} required>
                 {(p) => (
-                  <Input {...p} value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="Class test 3 — Fractions" required />
+                  <Input {...p} value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder={tr('Class test 3 — Fractions')} required />
                 )}
               </Field>
-              <Field label="Time limit" required description="Minutes each student gets once they press Start.">
+              <Field label={tr('Time limit')} required description={tr('Minutes each student gets once they press Start.')}>
                 {(p) => (
                   <Input
                     {...p}
@@ -200,23 +201,23 @@ export default function TeacherTestsPage() {
                 )}
               </Field>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Opens" required>
+                <Field label={tr('Opens')} required>
                   {(p) => <Input {...p} type="datetime-local" value={form.opensAt} onChange={(e) => setForm((f) => ({ ...f, opensAt: e.target.value }))} required />}
                 </Field>
-                <Field label="Closes" required>
+                <Field label={tr('Closes')} required>
                   {(p) => <Input {...p} type="datetime-local" value={form.closesAt} onChange={(e) => setForm((f) => ({ ...f, closesAt: e.target.value }))} required />}
                 </Field>
               </div>
               <p className="text-meta text-ink-subtle">
-                Students can start any time between these. Nobody gets time beyond the closing time.
+                {tr('Students can start any time between these. Nobody gets time beyond the closing time.')}
               </p>
             </SheetBody>
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
-                Cancel
+                {tr('Cancel')}
               </Button>
               <Button type="submit" loading={saving} disabled={!form.teacherAssignmentId || !form.title.trim()}>
-                Create and add questions
+                {tr('Create and add questions')}
               </Button>
             </SheetFooter>
           </form>

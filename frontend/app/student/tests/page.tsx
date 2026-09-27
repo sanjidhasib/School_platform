@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
 import { fmtWhen } from '@/lib/design/classTests';
+import { t as tr } from '@/lib/i18n';
 
 type State = 'UPCOMING' | 'OPEN' | 'IN_PROGRESS' | 'HANDED_IN' | 'RESULT' | 'MISSED';
 
@@ -50,7 +51,7 @@ export default function StudentTestsPage() {
       .then((r) => setTests(r.data.data ?? []))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load your tests');
+        toast.error(tr('Could not load your tests'));
       })
       .finally(() => setLoading(false));
   }, []);
@@ -66,7 +67,7 @@ export default function StudentTestsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Class tests" description="Timed tests from your teachers. Once you start, the clock keeps running." />
+      <PageHeader title={tr('Class tests')} description={tr('Timed tests from your teachers. Once you start, the clock keeps running.')} />
 
       {loading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -75,10 +76,10 @@ export default function StudentTestsPage() {
           ))}
         </div>
       ) : failed ? (
-        <ErrorState description="Your tests did not load." onRetry={load} />
+        <ErrorState description={tr('Your tests did not load.')} onRetry={load} />
       ) : !tests.length ? (
         <div className="rounded-[18px] border border-line bg-surface shadow-card">
-          <EmptyState icon={Timer} title="No class tests yet" description="When a teacher sets a test for your class, it appears here." />
+          <EmptyState icon={Timer} title={tr('No class tests yet')} description={tr('When a teacher sets a test for your class, it appears here.')} />
         </div>
       ) : (
         <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -90,7 +91,7 @@ export default function StudentTestsPage() {
                 <span className={cn('h-1.5', subjectTint(t.subjectId))} aria-hidden="true" />
                 <div className="flex flex-1 flex-col gap-3 p-5">
                   <div className="flex items-center justify-between">
-                    <span className={cn('rounded-full px-2.5 py-0.5 text-meta font-semibold', meta.tone)}>{meta.label}</span>
+                    <span className={cn('rounded-full px-2.5 py-0.5 text-meta font-semibold', meta.tone)}>{tr(meta.label)}</span>
                     <span className="text-meta text-ink-subtle">{t.subjectId?.name}</span>
                   </div>
                   <div>
@@ -100,16 +101,16 @@ export default function StudentTestsPage() {
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-meta text-ink-muted">
                     <span className="inline-flex items-center gap-1">
                       <Timer className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                      {t.durationMinutes} min
+                      {tr('{durationMinutes} min', { durationMinutes: t.durationMinutes })}
                     </span>
                     <span className="inline-flex items-center gap-1">
                       <ListChecks className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                      {t.questionCount} questions · {t.totalMarks} marks
+                      {tr('{questionCount} questions · {totalMarks} marks', { questionCount: t.questionCount, totalMarks: t.totalMarks })}
                     </span>
                   </div>
                   <p className="inline-flex items-center gap-1 text-meta text-ink-subtle">
                     <Clock className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
-                    {st === 'UPCOMING' ? `Opens ${fmtWhen(t.opensAt)}` : `Closes ${fmtWhen(t.closesAt)}`}
+                    {st === 'UPCOMING' ? tr('Opens {fmtWhen}', { fmtWhen: fmtWhen(t.opensAt) }) : tr('Closes {fmtWhen}', { fmtWhen: fmtWhen(t.closesAt) })}
                   </p>
 
                   <div className="mt-auto pt-2">
@@ -117,7 +118,7 @@ export default function StudentTestsPage() {
                       <Button asChild className="w-full">
                         <Link href={`/student/tests/${t._id}`}>
                           <PlayCircle className="h-4 w-4" strokeWidth={1.75} />
-                          Start test
+                          {tr('Start test')}
                         </Link>
                       </Button>
                     )}
@@ -125,26 +126,26 @@ export default function StudentTestsPage() {
                       <Button asChild className="w-full">
                         <Link href={`/student/tests/${t._id}`}>
                           <Hourglass className="h-4 w-4" strokeWidth={1.75} />
-                          Continue — the clock is running
+                          {tr('Continue — the clock is running')}
                         </Link>
                       </Button>
                     )}
                     {st === 'HANDED_IN' && (
                       <p className="flex items-center gap-2 rounded-xl bg-surface-sunken px-3 py-2 text-dense text-ink-muted">
                         <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.75} aria-hidden="true" />
-                        Handed in — results come when your teacher publishes them.
+                        {tr('Handed in — results come when your teacher publishes them.')}
                       </p>
                     )}
                     {st === 'RESULT' && (
                       <Button asChild variant="secondary" className="w-full">
                         <Link href={`/student/tests/${t._id}?view=result`}>
                           <Award className="h-4 w-4" strokeWidth={1.75} />
-                          {t.attempt?.score ?? 0} / {t.totalMarks} — see your paper
+                          {t.attempt?.score ?? 0}{' '}{tr('/ {totalMarks} — see your paper', { totalMarks: t.totalMarks })}
                         </Link>
                       </Button>
                     )}
-                    {st === 'MISSED' && <p className="text-dense text-ink-subtle">This test closed before you started it.</p>}
-                    {st === 'UPCOMING' && <p className="text-dense text-ink-subtle">You can start it once it opens.</p>}
+                    {st === 'MISSED' && <p className="text-dense text-ink-subtle">{tr('This test closed before you started it.')}</p>}
+                    {st === 'UPCOMING' && <p className="text-dense text-ink-subtle">{tr('You can start it once it opens.')}</p>}
                   </div>
                 </div>
               </li>

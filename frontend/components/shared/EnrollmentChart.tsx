@@ -13,6 +13,7 @@ import {
   LabelList,
 } from 'recharts';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export interface ClassEnrollment {
   id: string;
@@ -45,9 +46,9 @@ function CustomTooltip({ active, payload }: any) {
   const row = payload[0].payload as ClassEnrollment;
   return (
     <div className="rounded-card border border-line bg-surface px-3 py-2 shadow-popover">
-      <p className="text-dense font-medium text-ink">{row.label}</p>
+      <p className="text-dense font-medium text-ink">{t(row.label)}</p>
       <p className="mt-0.5 text-meta text-ink-muted tabular">
-        {row.enrolled} of {row.capacity} places filled
+        {t('{enrolled} of {capacity} places filled', { enrolled: row.enrolled, capacity: row.capacity })}
       </p>
     </div>
   );
@@ -114,10 +115,10 @@ export function EnrollmentChart({
       </ResponsiveContainer>
 
       <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-line px-3 pt-2.5 text-meta text-ink-subtle">
-        <LegendDot color={colors.room} label="Room to admit" />
-        <LegendDot color={colors.filling} label="Nearly full" />
-        <LegendDot color={colors.full} label="Full" />
-        <span className="ml-auto tabular">Cap {capacity} per class</span>
+        <LegendDot color={colors.room} label={t('Room to admit')} />
+        <LegendDot color={colors.filling} label={t('Nearly full')} />
+        <LegendDot color={colors.full} label={t('Full')} />
+        <span className="ml-auto tabular">{t('Cap {capacity} per class', { capacity })}</span>
       </div>
     </div>
   );

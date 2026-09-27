@@ -4,7 +4,9 @@ import * as React from 'react';
 import Link from 'next/link';
 import { LogIn, Menu, X } from 'lucide-react';
 import { LogoMark } from '@/components/layout/Logo';
+import { LanguageToggle } from '@/components/i18n/LanguageToggle';
 import { cn } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 const LINKS = [
   { href: '#achievements', label: 'Achievements' },
@@ -52,24 +54,26 @@ export function PublicNavbar({ schoolName }: { schoolName: string }) {
           </span>
         </Link>
 
-        <nav aria-label="Sections" className="ml-auto hidden items-center gap-1 md:flex">
+        <nav aria-label={t('Sections')} className="ml-auto hidden items-center gap-1 md:flex">
           {LINKS.map((l) => (
             <a
               key={l.href}
               href={l.href}
               className="rounded-full px-3.5 py-2 text-dense font-medium text-ink-muted transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              {l.label}
+              {t(l.label)}
             </a>
           ))}
         </nav>
 
+        <LanguageToggle compact className="ml-auto md:ml-3" />
+
         <Link
           href="/login"
-          className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-full bg-brand px-3.5 py-2 sm:px-4 text-dense font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 md:ml-3"
+          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand px-3.5 py-2 sm:px-4 text-dense font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 md:ml-3"
         >
           <LogIn className="hidden h-4 w-4 sm:block" strokeWidth={2} aria-hidden="true" />
-          Login
+          {t('Login')}
         </Link>
 
         <button
@@ -77,7 +81,7 @@ export function PublicNavbar({ schoolName }: { schoolName: string }) {
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-controls="public-menu"
-          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-label={open ? t('Close menu') : t('Open menu')}
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink transition-colors hover:bg-wash focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand md:hidden"
         >
           {open ? <X className="h-5 w-5" strokeWidth={1.75} /> : <Menu className="h-5 w-5" strokeWidth={1.75} />}
@@ -87,7 +91,7 @@ export function PublicNavbar({ schoolName }: { schoolName: string }) {
       {open && (
         <nav
           id="public-menu"
-          aria-label="Sections"
+          aria-label={t('Sections')}
           className="animate-fade-in border-t border-line bg-surface px-4 pb-4 pt-2 shadow-popover md:hidden"
         >
           {LINKS.map((l) => (
@@ -97,7 +101,7 @@ export function PublicNavbar({ schoolName }: { schoolName: string }) {
               onClick={() => setOpen(false)}
               className="block rounded-btn px-3 py-3 text-body font-medium text-ink transition-colors hover:bg-wash"
             >
-              {l.label}
+              {t(l.label)}
             </a>
           ))}
         </nav>

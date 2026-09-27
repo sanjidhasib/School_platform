@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { LogoMark } from './Logo';
+import { t } from '@/lib/i18n';
+import { LanguageToggle } from '@/components/i18n/LanguageToggle';
 
 /**
  * A calm split: the school on the left, the form on the right. The left panel
@@ -37,20 +39,20 @@ export function AuthSplit({
             <span className="flex h-8 w-8 items-center justify-center rounded-btn bg-paper/15">
               <LogoMark />
             </span>
-            <span className="text-dense font-semibold">SchoolOS</span>
+            <span className="text-dense font-semibold">{t('SchoolOS')}</span>
           </Link>
 
           <div className="max-w-md">
             <p className="text-3xl font-semibold leading-tight text-paper">{schoolName}</p>
             <p className="mt-3 text-body text-paper/75">
-              Attendance, homework, results and the class routine, in one place for teachers,
-              students, guardians and the office.
+              {t('Attendance, homework, results and the class routine, in one place for teachers, students, guardians and the office.')}
             </p>
           </div>
         </div>
       </aside>
 
-      <main className="flex items-center justify-center px-4 py-10 sm:px-8">
+      <main className="relative flex items-center justify-center px-4 py-10 sm:px-8">
+        <LanguageToggle compact className="absolute right-4 top-4" />
         <div className="w-full max-w-sm">{children}</div>
       </main>
     </div>

@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Panel } from '@/components/ui/card';
 import { subjectTint } from '@/lib/design/subjects';
 import { cn, formatDateLong, formatTime, formatDate, minutesFromMidnight } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<any>(null);
@@ -30,7 +31,7 @@ export default function AdminDashboardPage() {
       .then((r) => setData(r.data.data))
       .catch(() => {
         setFailed(true);
-        toast.error('Could not load the dashboard');
+        toast.error(t('Could not load the dashboard'));
       })
       .finally(() => setLoading(false));
 
@@ -57,35 +58,35 @@ export default function AdminDashboardPage() {
   useEffect(load, []);
 
   if (loading) return <DashboardSkeleton />;
-  if (failed) return <ErrorState description="The school overview did not load." onRetry={load} />;
+  if (failed) return <ErrorState description={t('The school overview did not load.')} onRetry={load} />;
 
   const timetable: any[] = data?.todayTimetable ?? [];
   const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
 
   const figures = [
-    { label: 'Students', value: data?.totalStudents ?? 0 },
-    { label: 'Teachers', value: data?.totalTeachers ?? 0 },
-    { label: 'Classes', value: data?.activeClasses ?? 0 },
-    { label: 'Classes today', value: data?.todaySessionsCount ?? 0 },
+    { label: t('Students'), value: data?.totalStudents ?? 0 },
+    { label: t('Teachers'), value: data?.totalTeachers ?? 0 },
+    { label: t('Classes'), value: data?.activeClasses ?? 0 },
+    { label: t('Classes today'), value: data?.todaySessionsCount ?? 0 },
   ];
 
   return (
     <div className="space-y-7">
       <PageHeader
-        title="Dashboard"
+        title={t('Dashboard')}
         description={formatDateLong(new Date())}
         actions={
           <>
             <Button variant="secondary" asChild>
               <Link href="/admin/students">
                 <UserPlus className="h-4 w-4" strokeWidth={1.75} />
-                Admit a student
+                {t('Admit a student')}
               </Link>
             </Button>
             <Button asChild>
               <Link href="/admin/timetable">
                 <CalendarDays className="h-4 w-4" strokeWidth={1.75} />
-                Edit routine
+                {t('Edit routine')}
               </Link>
             </Button>
           </>
@@ -96,11 +97,11 @@ export default function AdminDashboardPage() {
 
       {/* Today's routine is the main block, not a row of stat cards. */}
       <Section
-        title="Today's routine"
-        description={timetable.length ? `${timetable.length} classes scheduled` : undefined}
+        title={t('Today\'s routine')}
+        description={timetable.length ? t('{length} classes scheduled', { length: timetable.length }) : undefined}
         actions={
           <Button variant="ghost" size="sm" asChild>
-            <Link href="/admin/timetable">Open routine</Link>
+            <Link href="/admin/timetable">{t('Open routine')}</Link>
           </Button>
         }
       >
@@ -108,13 +109,13 @@ export default function AdminDashboardPage() {
           <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={CalendarClock}
-              title="No classes scheduled today"
-              description="Add entries to the routine and they will appear here."
+              title={t('No classes scheduled today')}
+              description={t('Add entries to the routine and they will appear here.')}
               action={
                 <Button asChild>
                   <Link href="/admin/timetable">
                     <Plus className="h-4 w-4" strokeWidth={1.75} />
-                    Add to the routine
+                    {t('Add to the routine')}
                   </Link>
                 </Button>
               }
@@ -126,7 +127,7 @@ export default function AdminDashboardPage() {
       </Section>
 
       {classes && classes.length > 0 && (
-        <Section title="Class enrolment" description="Against the school's 40-seat cap.">
+        <Section title={t('Class enrolment')} description={t('Against the school\'s 40-seat cap.')}>
           <Panel>
             <EnrollmentChart data={classes} />
           </Panel>
@@ -134,16 +135,16 @@ export default function AdminDashboardPage() {
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Notices">
+        <Panel title={t('Notices')}>
           {!data?.recentNotices?.length ? (
             <EmptyState
               icon={Bell}
-              title="No notices yet"
-              description="Publish one so it reaches the school."
+              title={t('No notices yet')}
+              description={t('Publish one so it reaches the school.')}
               compact
               action={
                 <Button size="sm" asChild>
-                  <Link href="/admin/notices">Write a notice</Link>
+                  <Link href="/admin/notices">{t('Write a notice')}</Link>
                 </Button>
               }
             />
@@ -164,14 +165,14 @@ export default function AdminDashboardPage() {
           )}
         </Panel>
 
-        <Panel title="Quick actions">
+        <Panel title={t('Quick actions')}>
           <div className="grid gap-2 p-4 sm:grid-cols-2">
-            <QuickLink href="/admin/students" label="Admit a student" />
-            <QuickLink href="/admin/teachers" label="Add a teacher" />
-            <QuickLink href="/admin/classes" label="Assign a teacher" />
-            <QuickLink href="/admin/notices" label="Publish a notice" />
-            <QuickLink href="/admin/attendance" label="Review attendance" />
-            <QuickLink href="/admin/results" label="Review results" />
+            <QuickLink href="/admin/students" label={t('Admit a student')} />
+            <QuickLink href="/admin/teachers" label={t('Add a teacher')} />
+            <QuickLink href="/admin/classes" label={t('Assign a teacher')} />
+            <QuickLink href="/admin/notices" label={t('Publish a notice')} />
+            <QuickLink href="/admin/attendance" label={t('Review attendance')} />
+            <QuickLink href="/admin/results" label={t('Review results')} />
           </div>
         </Panel>
       </div>
@@ -244,7 +245,7 @@ function RoutineBoard({ entries, nowMinutes }: { entries: any[]; nowMinutes: num
                 {cls?.name} {cls?.section}
               </Link>
               <p className="text-meta text-ink-subtle">
-                {items.length} {items.length === 1 ? 'period' : 'periods'}
+                {items.length} {items.length === 1 ? t('period') : t('periods')}
                 {cls?.room ? ` · ${cls.room}` : ''}
               </p>
             </div>
@@ -267,9 +268,9 @@ function RoutineBoard({ entries, nowMinutes }: { entries: any[]; nowMinutes: num
                     <span className={cn('absolute inset-y-0 left-0 w-1', subjectTint(subject))} aria-hidden="true" />
                     <p className="flex items-center justify-between gap-2 text-meta text-ink-subtle tabular">
                       {formatTime(e.startTime)}
-                      {live && <span className="rounded-full bg-highlighter px-1.5 text-[10px] font-bold text-[#1B2240]">NOW</span>}
+                      {live && <span className="rounded-full bg-highlighter px-1.5 text-[10px] font-bold text-[#1B2240]">{t('NOW')}</span>}
                     </p>
-                    <p className="truncate text-dense font-semibold text-ink">{subject?.name ?? 'Class'}</p>
+                    <p className="truncate text-dense font-semibold text-ink">{subject?.name ?? t('Class')}</p>
                     <p className="truncate text-meta text-ink-muted">{e.teacherAssignmentId?.teacherId?.fullName ?? '—'}</p>
                   </li>
                 );
