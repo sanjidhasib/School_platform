@@ -16,6 +16,7 @@ import {
   CheckSquare,
   MessageSquare,
   FileText,
+  Library,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -60,6 +61,7 @@ const adminNav: NavGroup[] = [
       { label: 'Subjects', href: '/admin/subjects', icon: BookOpen },
       { label: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
       { label: 'Timetable', href: '/admin/timetable', icon: CalendarDays, primary: true },
+      { label: 'Textbooks', href: '/admin/textbooks', icon: Library },
     ],
   },
   {
@@ -112,6 +114,7 @@ const studentNav: NavGroup[] = [
     title: 'More',
     items: [
       { label: 'AI Learning', href: '/student/ai-learning', icon: MessageSquare, primary: true },
+      { label: 'Library', href: '/student/library', icon: Library },
       { label: 'Notifications', href: '/student/notifications', icon: Bell },
     ],
   },

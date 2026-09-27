@@ -11,7 +11,12 @@ const app = express();
 
 // Security & parsing
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
-app.use(cors({ origin: env.FRONTEND_URL || 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+  // The textbook reader loads big PDFs in ranges and needs to see these.
+  exposedHeaders: ['Accept-Ranges', 'Content-Range', 'Content-Length', 'Content-Disposition']
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -59,6 +64,7 @@ app.use('/api/student/results', require('./routes/student/results.routes'));
 app.use('/api/student/notifications', require('./routes/student/notifications.routes'));
 app.use('/api/student/report', require('./routes/student/report.routes'));
 app.use('/api/student/subjects', require('./routes/student/subjects.routes'));
+app.use('/api/student/textbooks', require('./routes/student/textbooks.routes'));
 
 // Guardian
 app.use('/api/guardian/dashboard', require('./routes/guardian/dashboard.routes'));

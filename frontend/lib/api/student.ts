@@ -10,4 +10,8 @@ export const studentAPI = {
   markNotificationRead: (id: string) => api.patch(`/student/notifications/${id}/read`, {}),
   markAllRead: () => api.patch('/student/notifications/read-all', {}),
   downloadReport: () => api.get('/student/report', { responseType: 'blob' }),
+  // Class library
+  getTextbooks: () => api.get('/student/textbooks'),
+  getTextbook: (id: string) => api.get(`/student/textbooks/${id}`),
+  textbookFileUrl: (id: string) => `${api.defaults.baseURL}/student/textbooks/${id}/file`,
 };

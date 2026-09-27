@@ -52,4 +52,15 @@ export const adminAPI = {
   getHomeworkOverview: (params?: any) => api.get('/admin/homework', { params }),
   getResultsOverview: (params?: any) => api.get('/admin/results', { params }),
   getNotifications: (params?: any) => api.get('/admin/notifications', { params }),
+  // Textbooks (NCTB PDFs for the library and AI)
+  getTextbooks: (params?: any) => api.get('/admin/textbooks', { params }),
+  uploadTextbook: (form: FormData, onProgress?: (percent: number) => void) =>
+    api.post('/admin/textbooks', form, {
+      // Large books take a while; the default timeout (none) is kept on purpose.
+      onUploadProgress: (e) => onProgress?.(e.total ? Math.round((e.loaded / e.total) * 100) : 0),
+    }),
+  updateTextbook: (id: string, data: { title?: string; edition?: string }) => api.patch(`/admin/textbooks/${id}`, data),
+  reprocessTextbook: (id: string) => api.post(`/admin/textbooks/${id}/reprocess`),
+  deleteTextbook: (id: string) => api.delete(`/admin/textbooks/${id}`),
+  textbookFileUrl: (id: string) => `${api.defaults.baseURL}/admin/textbooks/${id}/file`,
 };

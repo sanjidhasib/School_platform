@@ -7,6 +7,12 @@ const nextConfig = {
       { protocol: 'http', hostname: '**' },
     ],
   },
+  webpack: (config) => {
+    // pdf.js (used by the textbook reader) optionally requires the native
+    // `canvas` package for Node rendering; the browser never needs it.
+    config.resolve.alias.canvas = false;
+    return config;
+  },
 };
 
 export default nextConfig;

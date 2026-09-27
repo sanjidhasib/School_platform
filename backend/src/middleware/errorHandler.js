@@ -23,6 +23,11 @@ const errorHandler = (err, req, res, next) => {
     message = "Validation failed";
   }
 
+  if (err.name === "MulterError") {
+    statusCode = err.code === "LIMIT_FILE_SIZE" ? 413 : 400;
+    message = err.code === "LIMIT_FILE_SIZE" ? "That file is too large" : err.message;
+  }
+
   if (err.name === "CastError") {
     statusCode = 400;
     message = `Invalid ${err.path}`;

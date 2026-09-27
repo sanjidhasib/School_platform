@@ -29,3 +29,6 @@ Thumbs.db
 
 # Build info
 *.tsbuildinfo
+
+# Textbook PDFs
+backend/storage/

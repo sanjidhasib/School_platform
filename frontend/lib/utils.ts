@@ -1,6 +1,18 @@
 import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { extendTailwindMerge } from 'tailwind-merge';
 import { format, formatDistanceToNow, isToday, isYesterday, parseISO } from 'date-fns';
+
+// tailwind-merge only knows Tailwind's built-in sizes. Without this, it reads
+// our custom `text-meta`/`text-dense`/… as text colours, and a later colour
+// class (`text-ink-muted`) silently deletes the size — every badge and pill
+// rendered at body size instead of its intended smaller one.
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      'font-size': [{ text: ['meta', 'label', 'dense', 'body', 'section', 'page'] }],
+    },
+  },
+});
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

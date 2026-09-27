@@ -1,0 +1,10 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/student/textbooksController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const student = [protect, requireRole('STUDENT')];
+router.get('/', ...student, c.list);
+router.get('/:id', ...student, c.get);
+router.get('/:id/file', ...student, c.file);
+module.exports = router;
