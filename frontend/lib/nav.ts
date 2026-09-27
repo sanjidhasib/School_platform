@@ -4,7 +4,6 @@ import {
   Users,
   Grid3X3,
   BookOpen,
-  ClipboardList,
   CalendarDays,
   UserCheck,
   ClipboardCheck,
@@ -19,6 +18,7 @@ import {
   Library,
   Sheet,
   Timer,
+  Award,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -61,7 +61,6 @@ const adminNav: NavGroup[] = [
     items: [
       { label: 'Classes', href: '/admin/classes', icon: Grid3X3 },
       { label: 'Subjects', href: '/admin/subjects', icon: BookOpen },
-      { label: 'Assignments', href: '/admin/assignments', icon: ClipboardList },
       { label: 'Timetable', href: '/admin/timetable', icon: CalendarDays, primary: true },
       { label: 'Textbooks', href: '/admin/textbooks', icon: Library },
     ],
@@ -97,6 +96,7 @@ const teacherNav: NavGroup[] = [
       { label: 'Homework', href: '/teacher/homework', icon: ClipboardCheck, primary: true },
       { label: 'Class tests', href: '/teacher/tests', icon: Timer },
       { label: 'Results', href: '/teacher/results', icon: BarChart3 },
+      { label: 'Final grades', href: '/teacher/grades', icon: Award },
       { label: 'Schedule', href: '/teacher/schedule', icon: CalendarDays, primary: true },
     ],
   },

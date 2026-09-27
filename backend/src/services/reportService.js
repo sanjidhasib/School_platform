@@ -77,7 +77,7 @@ const generatePdfReport = async (student, academicSession, marks, grades, attend
               <tr><th>Subject</th><th>Term</th><th>Grade</th><th>Percentage</th><th>Remarks</th></tr>
               ${grades.map(g => `<tr>
                 <td>${escapeHtml(g.subjectId?.name || g.subjectId?.code || '-')}</td>
-                <td>${escapeHtml(g.term)}</td>
+                <td>${escapeHtml({ TERM_1: 'Term 1', TERM_2: 'Term 2', FINAL: 'Final' }[g.term] || g.term)}</td>
                 <td><strong>${escapeHtml(g.grade)}</strong></td>
                 <td>${g.percentage}%</td>
                 <td>${escapeHtml(g.remarks || '-')}</td>

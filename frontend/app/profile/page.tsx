@@ -8,6 +8,7 @@ import { authAPI } from '@/lib/api/auth';
 import api from '@/lib/api/client';
 import { DashboardShell } from '@/components/layout/DashboardShell';
 import { PageHeader } from '@/components/shared/PageHeader';
+import { TeacherRequests } from '@/components/teacher/TeacherRequests';
 import { PersonAvatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -93,6 +94,8 @@ export default function ProfilePage() {
             <p className="text-dense capitalize text-ink-muted">{user?.role?.toLowerCase()}</p>
           </div>
         </div>
+
+        {user?.role === 'TEACHER' && <TeacherRequests />}
 
         <form onSubmit={saveProfile}>
           <section className="space-y-3">

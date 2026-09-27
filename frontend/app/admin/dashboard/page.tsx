@@ -121,50 +121,7 @@ export default function AdminDashboardPage() {
             />
           </div>
         ) : (
-          <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
-            {timetable.map((entry: any) => {
-              const start = minutesFromMidnight(entry.startTime);
-              const end = minutesFromMidnight(entry.endTime);
-              const live = start !== null && end !== null && nowMinutes >= start && nowMinutes < end;
-              const subject = entry.teacherAssignmentId?.subjectId;
-
-              return (
-                <li
-                  key={entry._id}
-                  className={cn('flex items-center gap-4 px-4 py-3', live && 'bg-highlighter-wash')}
-                >
-                  <div className="w-20 shrink-0">
-                    <p className="text-dense font-medium text-ink tabular">
-                      {formatTime(entry.startTime)}
-                    </p>
-                    {live && <p className="text-meta font-medium text-warning">Now</p>}
-                  </div>
-
-                  <span
-                    className={cn('h-8 w-1 shrink-0 rounded-full', subjectTint(subject))}
-                    aria-hidden="true"
-                  />
-
-                  <div className="min-w-0 flex-1">
-                    <SubjectLabel subject={subject} className="text-dense font-medium text-ink" />
-                  </div>
-
-                  <div className="hidden w-40 shrink-0 sm:block">
-                    <p className="truncate text-dense text-ink-muted">
-                      {entry.teacherAssignmentId?.teacherId?.fullName ?? '—'}
-                    </p>
-                  </div>
-
-                  <div className="w-28 shrink-0 text-right">
-                    <p className="truncate text-dense text-ink">
-                      {entry.classId?.name} {entry.classId?.section}
-                    </p>
-                    {entry.room && <p className="truncate text-meta text-ink-subtle">{entry.room}</p>}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <RoutineBoard entries={timetable} nowMinutes={nowMinutes} />
         )}
       </Section>
 
@@ -211,7 +168,7 @@ export default function AdminDashboardPage() {
           <div className="grid gap-2 p-4 sm:grid-cols-2">
             <QuickLink href="/admin/students" label="Admit a student" />
             <QuickLink href="/admin/teachers" label="Add a teacher" />
-            <QuickLink href="/admin/assignments" label="Assign a teacher" />
+            <QuickLink href="/admin/classes" label="Assign a teacher" />
             <QuickLink href="/admin/notices" label="Publish a notice" />
             <QuickLink href="/admin/attendance" label="Review attendance" />
             <QuickLink href="/admin/results" label="Review results" />
@@ -256,6 +213,70 @@ function DashboardSkeleton() {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Today's routine as a board: one column per class, periods top to bottom,
+ * so the office sees at a glance what every class is doing right now.
+ */
+function RoutineBoard({ entries, nowMinutes }: { entries: any[]; nowMinutes: number }) {
+  const columns = new Map<string, { cls: any; items: any[] }>();
+  for (const e of entries) {
+    const key = e.classId?._id ?? 'none';
+    if (!columns.has(key)) columns.set(key, { cls: e.classId, items: [] });
+    columns.get(key)!.items.push(e);
+  }
+  const cols = Array.from(columns.values()).sort(
+    (a, b) => (a.cls?.gradeNumber ?? 0) - (b.cls?.gradeNumber ?? 0) || String(a.cls?.section).localeCompare(String(b.cls?.section))
+  );
+  cols.forEach((c) => c.items.sort((x, y) => String(x.startTime).localeCompare(String(y.startTime))));
+
+  return (
+    <div className="scrollbar-thin -mx-1 overflow-x-auto px-1 pb-2">
+      <div className="grid auto-cols-[minmax(11.5rem,1fr)] grid-flow-col gap-3">
+        {cols.map(({ cls, items }) => (
+          <div key={cls?._id ?? 'none'} className="flex flex-col overflow-hidden rounded-[18px] border border-line bg-surface shadow-card">
+            <div className="border-b border-line bg-surface-sunken px-3 py-2.5">
+              <Link href={cls?._id ? `/admin/classes/${cls._id}` : '#'} className="text-dense font-semibold text-ink hover:text-brand">
+                {cls?.name} {cls?.section}
+              </Link>
+              <p className="text-meta text-ink-subtle">
+                {items.length} {items.length === 1 ? 'period' : 'periods'}
+                {cls?.room ? ` · ${cls.room}` : ''}
+              </p>
+            </div>
+            <ol className="flex-1 space-y-2 p-2">
+              {items.map((e) => {
+                const start = minutesFromMidnight(e.startTime);
+                const end = minutesFromMidnight(e.endTime);
+                const live = start !== null && end !== null && nowMinutes >= start && nowMinutes < end;
+                const done = end !== null && nowMinutes >= end;
+                const subject = e.teacherAssignmentId?.subjectId;
+                return (
+                  <li
+                    key={e._id}
+                    className={cn(
+                      'relative overflow-hidden rounded-xl border py-2 pl-3.5 pr-2.5',
+                      live ? 'border-highlighter bg-highlighter-wash' : 'border-line bg-paper',
+                      done && !live && 'opacity-55'
+                    )}
+                  >
+                    <span className={cn('absolute inset-y-0 left-0 w-1', subjectTint(subject))} aria-hidden="true" />
+                    <p className="flex items-center justify-between gap-2 text-meta text-ink-subtle tabular">
+                      {formatTime(e.startTime)}
+                      {live && <span className="rounded-full bg-highlighter px-1.5 text-[10px] font-bold text-[#1B2240]">NOW</span>}
+                    </p>
+                    <p className="truncate text-dense font-semibold text-ink">{subject?.name ?? 'Class'}</p>
+                    <p className="truncate text-meta text-ink-muted">{e.teacherAssignmentId?.teacherId?.fullName ?? '—'}</p>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        ))}
       </div>
     </div>
   );

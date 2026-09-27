@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, Search, Pencil, Trash2, Users, MoreHorizontal, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAPI } from '@/lib/api/admin';
@@ -39,6 +39,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { apiErrorMessage, cn, formatDate } from '@/lib/utils';
+import { subjectTint } from '@/lib/design/subjects';
 
 /**
  * Optional fields left blank must be omitted, not sent as "". The User model
@@ -72,6 +73,8 @@ export default function TeachersPage() {
   const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState('');
   const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [subjectFilter, setSubjectFilter] = useState('all');
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
@@ -110,6 +113,46 @@ export default function TeachersPage() {
       })
       .finally(() => setLoading(false));
   }, [search]);
+
+  useEffect(() => {
+    adminAPI
+      .getAssignments()
+      .then((r) => setAssignments((r.data.data ?? []).filter((a: any) => a.isActive !== false)))
+      .catch(() => {});
+  }, []);
+
+  /**
+   * Teachers by the subject they actually teach (from their class
+   * assignments) — a maths teacher appears under Mathematics, with the
+   * classes they take. Someone teaching two subjects appears under both.
+   */
+  const bySubject = useMemo(() => {
+    const sections = new Map<string, { subject: any; teachers: { t: any; classes: string[] }[] }>();
+    const unassigned: any[] = [];
+    for (const t of teachers) {
+      const mine = assignments.filter((a) => (a.teacherId?._id ?? a.teacherId) === t._id);
+      if (!mine.length) {
+        unassigned.push(t);
+        continue;
+      }
+      const subjectIds = Array.from(new Set(mine.map((a) => a.subjectId?._id)));
+      for (const sid of subjectIds) {
+        const rows = mine.filter((a) => a.subjectId?._id === sid);
+        if (!sections.has(sid)) sections.set(sid, { subject: rows[0].subjectId, teachers: [] });
+        const classes = rows
+          .map((a) => a.classId)
+          .filter(Boolean)
+          .sort((x: any, y: any) => (x.gradeNumber ?? 0) - (y.gradeNumber ?? 0))
+          .map((c: any) => `${c.name?.replace('Class ', '')}${c.section ? c.section : ''}`);
+        sections.get(sid)!.teachers.push({ t, classes });
+      }
+    }
+    const list = Array.from(sections.values()).sort((a, b) => (a.subject?.name ?? '').localeCompare(b.subject?.name ?? ''));
+    return { list, unassigned };
+  }, [teachers, assignments]);
+
+  const subjectsTaught = (id: string) =>
+    Array.from(new Set(assignments.filter((a) => (a.teacherId?._id ?? a.teacherId) === id).map((a) => a.subjectId?.name))).filter(Boolean);
 
   useEffect(() => {
     const t = setTimeout(load, search ? 250 : 0);
@@ -225,6 +268,31 @@ export default function TeachersPage() {
         </div>
       </div>
 
+      {!loading && bySubject.list.length > 0 && (
+        <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="group" aria-label="Filter by subject">
+          {[
+            { id: 'all', label: 'All subjects', n: teachers.length },
+            ...bySubject.list.map((sec) => ({ id: sec.subject?._id, label: sec.subject?.name, n: sec.teachers.length })),
+            ...(bySubject.unassigned.length ? [{ id: 'none', label: 'Not assigned', n: bySubject.unassigned.length }] : []),
+          ].map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              aria-pressed={subjectFilter === c.id}
+              onClick={() => setSubjectFilter(c.id)}
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-dense font-medium transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                subjectFilter === c.id ? 'border-brand bg-brand text-brand-contrast' : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
+              )}
+            >
+              {c.label}
+              <span className={cn('text-meta tabular', subjectFilter === c.id ? 'opacity-80' : 'text-ink-subtle')}>{c.n}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         view === 'grid' ? (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -258,47 +326,52 @@ export default function TeachersPage() {
           />
         </div>
       ) : view === 'grid' ? (
-        /* Cards earn their place here: each one is a real person. */
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {teachers.map((t: any) => (
-            <li key={t._id}>
-              <Card className="flex h-full flex-col p-4">
-                <div className="flex items-start gap-3">
-                  <PersonAvatar name={t.fullName} src={t.photoUrl} className="h-11 w-11" />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-dense font-semibold text-ink">{t.fullName}</p>
-                    <p className="truncate text-meta text-ink-subtle tabular">{t.teacherId}</p>
-                  </div>
-                  <TeacherMenu onEdit={() => openEdit(t)} onDelete={() => setDeleting(t)} name={t.fullName} />
-                </div>
-
-                <dl className="mt-3 flex-1 space-y-1.5">
-                  {t.degree && (
-                    <div className="flex gap-2">
-                      <dt className="sr-only">Degree</dt>
-                      <dd className="truncate text-meta text-ink-muted">{t.degree}</dd>
-                    </div>
-                  )}
-                  {t.specialization && (
-                    <div>
-                      <dt className="sr-only">Specialisation</dt>
-                      <dd>
-                        <span className="inline-flex rounded-chip bg-wash px-2 py-0.5 text-meta font-medium text-brand">
-                          {t.specialization}
+        <div className="space-y-8">
+          {bySubject.list
+            .filter((sec) => subjectFilter === 'all' || sec.subject?._id === subjectFilter)
+            .map((sec) => (
+              <section key={sec.subject?._id} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <span className={cn('flex h-9 w-9 items-center justify-center rounded-xl text-meta font-bold text-ink', subjectTint(sec.subject))}>
+                    {sec.subject?.code}
+                  </span>
+                  <div>
+                    <h2 className="text-section text-ink">{sec.subject?.name}</h2>
+                    <p className="text-meta text-ink-muted">
+                      {sec.subject?.nameBn && (
+                        <span lang="bn" className="font-bn">
+                          {sec.subject.nameBn} ·{' '}
                         </span>
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-
-                <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
-                  <StatusPill status={t.status} />
-                  {t.phone && <span className="truncate text-meta text-ink-subtle tabular">{t.phone}</span>}
+                      )}
+                      {sec.teachers.length} {sec.teachers.length === 1 ? 'teacher' : 'teachers'}
+                    </p>
+                  </div>
                 </div>
-              </Card>
-            </li>
-          ))}
-        </ul>
+                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {sec.teachers.map(({ t, classes }) => (
+                    <li key={t._id}>
+                      <TeacherCard t={t} classes={classes} onEdit={() => openEdit(t)} onDelete={() => setDeleting(t)} />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          {bySubject.unassigned.length > 0 && (subjectFilter === 'all' || subjectFilter === 'none') && (
+            <section className="space-y-3">
+              <div>
+                <h2 className="text-section text-ink">Not teaching a class yet</h2>
+                <p className="text-meta text-ink-muted">Assign them a subject on a class page.</p>
+              </div>
+              <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {bySubject.unassigned.map((t) => (
+                  <li key={t._id}>
+                    <TeacherCard t={t} classes={[]} onEdit={() => openEdit(t)} onDelete={() => setDeleting(t)} />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       ) : (
         <TableWrap>
           <Table>
@@ -314,7 +387,9 @@ export default function TeachersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {teachers.map((t: any) => (
+              {teachers
+                .filter((t: any) => subjectFilter === 'all' || (subjectFilter === 'none' ? !subjectsTaught(t._id).length : assignments.some((a) => (a.teacherId?._id ?? a.teacherId) === t._id && a.subjectId?._id === subjectFilter)))
+                .map((t: any) => (
                 <TableRow key={t._id}>
                   <TableCell>
                     <div className="flex items-center gap-2.5">
@@ -325,7 +400,7 @@ export default function TeachersPage() {
                   <TableCell className="tabular text-ink-muted">{t.teacherId}</TableCell>
                   <TableCell className="hidden md:table-cell text-ink-muted">{t.degree || '—'}</TableCell>
                   <TableCell className="hidden lg:table-cell text-ink-muted">
-                    {t.specialization || '—'}
+                    {subjectsTaught(t._id).join(', ') || t.specialization || '—'}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell tabular text-ink-muted">
                     {t.phone || '—'}
@@ -556,5 +631,38 @@ function TeacherMenu({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function TeacherCard({ t, classes, onEdit, onDelete }: { t: any; classes: string[]; onEdit: () => void; onDelete: () => void }) {
+  return (
+    <Card className="flex h-full flex-col p-4">
+      <div className="flex items-start gap-3">
+        <PersonAvatar name={t.fullName} src={t.photoUrl} className="h-11 w-11" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-dense font-semibold text-ink">{t.fullName}</p>
+          <p className="truncate text-meta text-ink-subtle tabular">{t.teacherId}</p>
+        </div>
+        <TeacherMenu onEdit={onEdit} onDelete={onDelete} name={t.fullName} />
+      </div>
+      <div className="mt-3 flex-1 space-y-2">
+        {t.degree && <p className="truncate text-meta text-ink-muted">{t.degree}</p>}
+        {classes.length > 0 ? (
+          <div className="flex flex-wrap gap-1">
+            {classes.map((c) => (
+              <span key={c} className="rounded-chip bg-wash px-1.5 py-0.5 text-meta font-medium text-brand tabular">
+                Class {c}
+              </span>
+            ))}
+          </div>
+        ) : (
+          t.specialization && <span className="inline-flex rounded-chip bg-surface-sunken px-2 py-0.5 text-meta text-ink-muted">{t.specialization}</span>
+        )}
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
+        <StatusPill status={t.status} />
+        {t.phone && <span className="truncate text-meta text-ink-subtle tabular">{t.phone}</span>}
+      </div>
+    </Card>
   );
 }

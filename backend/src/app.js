@@ -56,6 +56,7 @@ app.use('/api/teacher/attendance', require('./routes/teacher/attendance.routes')
 app.use('/api/teacher/homework', require('./routes/teacher/homework.routes'));
 app.use('/api/teacher/results', require('./routes/teacher/results.routes'));
 app.use('/api/teacher/tests', require('./routes/teacher/tests.routes'));
+app.use('/api/teacher', require('./routes/teacher/grades.routes'));
 
 // Student
 app.use('/api/student/dashboard', require('./routes/student/dashboard.routes'));

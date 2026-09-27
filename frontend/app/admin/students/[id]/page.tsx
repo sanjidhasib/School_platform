@@ -15,7 +15,7 @@ import { PersonAvatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Panel } from '@/components/ui/card';
-import { formatDate, gradeTone } from '@/lib/utils';
+import { formatDate, gradeTone, termLabel } from '@/lib/utils';
 
 /**
  * A student's record, gathered from the endpoints that serve the admin office.
@@ -176,7 +176,7 @@ export default function StudentProfilePage() {
                       <SubjectLabel subject={g.subjectId} className="text-dense text-ink" />
                     </div>
                     <span className="w-20 text-right text-dense text-ink-muted tabular">
-                      {g.term}
+                      {termLabel(g.term)}
                     </span>
                     <span className="w-16 text-right text-dense text-ink-muted tabular">
                       {g.percentage?.toFixed(1)}%

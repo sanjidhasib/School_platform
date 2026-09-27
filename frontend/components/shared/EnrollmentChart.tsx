@@ -54,7 +54,7 @@ function CustomTooltip({ active, payload }: any) {
 }
 
 /**
- * Real enrollment against the school's 40-seat cap, one bar per class — not
+ * Real enrollment against the school's 40-seat cap, one column per class — not
  * decoration. Colour marks how full a class is (the same threshold the
  * CapacityBar uses elsewhere), and every bar carries its own "23/40" label,
  * so the colour is never the only way to read a value.
@@ -78,33 +78,36 @@ export function EnrollmentChart({
 
   return (
     <div className={cn('px-1 pb-2 pt-3', className)}>
-      <ResponsiveContainer width="100%" height={data.length * 34 + 20}>
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ top: 0, right: 44, bottom: 0, left: 0 }}
-          barCategoryGap={10}
-        >
-          <XAxis type="number" domain={[0, capacity]} hide />
-          <YAxis
-            type="category"
+      {/* One column per class, left to right from Class 3 up. */}
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data} margin={{ top: 22, right: 8, bottom: 0, left: -18 }} barCategoryGap="22%">
+          <XAxis
             dataKey="label"
-            width={84}
             axisLine={false}
             tickLine={false}
             interval={0}
-            tick={{ fill: axisColor, fontSize: 12.5 }}
+            tick={{ fill: axisColor, fontSize: 12 }}
+            tickFormatter={(v: string) => v.replace('Class ', '')}
+          />
+          <YAxis
+            type="number"
+            domain={[0, capacity]}
+            ticks={[0, 10, 20, 30, capacity]}
+            axisLine={false}
+            tickLine={false}
+            width={40}
+            tick={{ fill: axisColor, fontSize: 12 }}
           />
           <Tooltip cursor={{ fill: 'rgb(var(--wash))' }} content={<CustomTooltip />} />
-          <Bar dataKey="enrolled" radius={[4, 4, 4, 4]} maxBarSize={16} isAnimationActive={false}>
+          <Bar dataKey="enrolled" radius={[4, 4, 0, 0]} maxBarSize={44} isAnimationActive={false}>
             {data.map((row) => (
               <Cell key={row.id} fill={colors[toneFor(row.enrolled, row.capacity)]} />
             ))}
             <LabelList
               dataKey="enrolled"
-              position="right"
+              position="top"
               formatter={(value: number) => `${value}`}
-              style={{ fill: 'rgb(var(--ink-muted))', fontSize: 12.5 }}
+              style={{ fill: 'rgb(var(--ink-muted))', fontSize: 12, fontWeight: 600 }}
             />
           </Bar>
         </BarChart>

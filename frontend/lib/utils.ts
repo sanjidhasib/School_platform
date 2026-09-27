@@ -127,3 +127,9 @@ export function apiErrorMessage(err: unknown, fallback = 'Something went wrong')
   if (data?.errors?.length) return data.errors[0];
   return data?.error || data?.message || fallback;
 }
+
+const TERM_LABELS: Record<string, string> = { TERM_1: 'Term 1', TERM_2: 'Term 2', FINAL: 'Final' };
+/** "TERM_1" → "Term 1". Unknown values pass through unchanged. */
+export function termLabel(term?: string | null) {
+  return term ? TERM_LABELS[term] ?? term : '';
+}

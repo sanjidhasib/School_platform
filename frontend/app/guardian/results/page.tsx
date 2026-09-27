@@ -21,7 +21,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { apiErrorMessage, formatDate, gradeTone } from '@/lib/utils';
+import { apiErrorMessage, formatDate, gradeTone, termLabel } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
 
 export default function GuardianResultsPage() {
@@ -182,7 +182,7 @@ export default function GuardianResultsPage() {
                           <SubjectLabel subject={g.subjectId} className="font-medium text-ink" />
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-ink-muted">
-                          {g.term?.replace(/_/g, ' ')}
+                          {termLabel(g.term)}
                         </TableCell>
                         <TableCell numeric className="text-ink-muted">
                           {g.percentage?.toFixed(1)}%

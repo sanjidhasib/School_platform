@@ -26,6 +26,14 @@ export const adminAPI = {
   createSubject: (data: any) => api.post('/admin/subjects', data),
   updateSubject: (id: string, data: any) => api.patch(`/admin/subjects/${id}`, data),
   deleteSubject: (id: string) => api.delete(`/admin/subjects/${id}`),
+  getCurriculum: (grade: number) => api.get('/admin/subjects/curriculum', { params: { grade } }),
+  applyCurriculum: (grade: number, codes: string[]) => api.post('/admin/subjects/curriculum', { grade, codes }),
+  removeSubjectFromGrade: (id: string, grade: number) => api.delete(`/admin/subjects/${id}/grades/${grade}`),
+  // Class page: subjects, teachers and requests
+  getClassOverview: (id: string) => api.get(`/admin/classes/${id}/overview`),
+  assignClassTeacher: (id: string, data: { subjectId: string; teacherId: string | null }) => api.put(`/admin/classes/${id}/assign`, data),
+  requestFromTeachers: (id: string, data: any) => api.post(`/admin/classes/${id}/requests`, data),
+  cancelTeacherRequest: (requestId: string) => api.patch(`/admin/classes/requests/${requestId}/cancel`),
   // Assignments
   getAssignments: (params?: any) => api.get('/admin/assignments', { params }),
   createAssignment: (data: any) => api.post('/admin/assignments', data),

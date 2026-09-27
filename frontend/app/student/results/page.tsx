@@ -22,7 +22,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { apiErrorMessage, cn, formatDate, gradeTone } from '@/lib/utils';
+import { apiErrorMessage, cn, formatDate, gradeTone, termLabel } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
 import { homeworkType } from '@/lib/design/homework';
 
@@ -125,7 +125,7 @@ export default function StudentResultsPage() {
                   {...p}
                   options={[
                     { value: 'all', label: 'All terms' },
-                    ...terms.map((t) => ({ value: t, label: t.replace(/_/g, ' ') })),
+                    ...terms.map((t) => ({ value: t, label: termLabel(t) })),
                   ]}
                   value={term}
                   onChange={setTerm}
@@ -181,7 +181,7 @@ export default function StudentResultsPage() {
                           <SubjectLabel subject={g.subjectId} className="font-medium text-ink" />
                         </TableCell>
                         <TableCell className="hidden sm:table-cell text-ink-muted">
-                          {g.term?.replace(/_/g, ' ')}
+                          {termLabel(g.term)}
                         </TableCell>
                         <TableCell numeric className="text-ink-muted">
                           {g.percentage?.toFixed(1)}%

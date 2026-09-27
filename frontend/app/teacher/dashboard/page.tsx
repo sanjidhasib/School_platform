@@ -6,6 +6,7 @@ import { CalendarClock, ClipboardCheck, UserCheck, ArrowRight } from 'lucide-rea
 import { toast } from 'sonner';
 import { teacherAPI } from '@/lib/api/teacher';
 import { PageHeader, Section } from '@/components/shared/PageHeader';
+import { TeacherRequests } from '@/components/teacher/TeacherRequests';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -90,6 +91,8 @@ export default function TeacherDashboardPage() {
           ) : undefined
         }
       />
+
+      <TeacherRequests compact />
 
       {/* The one bold element on this page: the class in front of them. */}
       {focus ? (

@@ -21,7 +21,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { formatDate, gradeTone } from '@/lib/utils';
+import { formatDate, gradeTone, termLabel } from '@/lib/utils';
 
 /** The office view of assessments set and grades published across the school. */
 export default function AdminResultsPage() {
@@ -136,7 +136,7 @@ export default function AdminResultsPage() {
                         <TableCell>
                           <SubjectLabel subject={g.subjectId} className="text-ink" />
                         </TableCell>
-                        <TableCell className="text-ink-muted">{g.term}</TableCell>
+                        <TableCell className="text-ink-muted">{termLabel(g.term)}</TableCell>
                         <TableCell numeric className="text-ink-muted">
                           {g.percentage?.toFixed(1)}%
                         </TableCell>

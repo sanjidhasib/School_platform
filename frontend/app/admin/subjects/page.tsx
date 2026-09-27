@@ -1,63 +1,60 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
-import { Plus, BookOpen, Pencil, Trash2, MoreHorizontal } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Plus, BookOpen, Pencil, MoreHorizontal, Sparkles, Check, MinusCircle, Library } from 'lucide-react';
 import { toast } from 'sonner';
 import { adminAPI } from '@/lib/api/admin';
 import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
-import { TableSkeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Field } from '@/components/ui/field';
-import {
-  TableWrap,
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetBody,
-  SheetFooter,
-} from '@/components/ui/sheet';
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
-import { apiErrorMessage } from '@/lib/utils';
+import { PersonAvatar } from '@/components/ui/avatar';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetBody, SheetFooter } from '@/components/ui/sheet';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { apiErrorMessage, cn } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
-import { cn } from '@/lib/utils';
 
 const emptyForm = { name: '', nameBn: '', code: '', description: '' };
 
+/**
+ * Subjects, class by class — the way NCTB lays them out. Each class shows
+ * what it studies and who teaches it; the NCTB list for that class can be
+ * previewed and added in one go.
+ */
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [grade, setGrade] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
+
+  const [curriculum, setCurriculum] = useState<any>(null);
+  const [nctbOpen, setNctbOpen] = useState(false);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [applying, setApplying] = useState(false);
+
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<any>(null);
-  const [removing, setRemoving] = useState(false);
+  const [removing, setRemoving] = useState<any>(null);
+  const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
     setFailed(false);
-    adminAPI
-      .getSubjects()
-      .then((r) => setSubjects(r.data.data))
+    Promise.all([adminAPI.getSubjects(), adminAPI.getClasses(), adminAPI.getAssignments()])
+      .then(([s, c, a]) => {
+        setSubjects(s.data.data ?? []);
+        const cls = (c.data.data ?? []).sort((x: any, y: any) => x.gradeNumber - y.gradeNumber);
+        setClasses(cls);
+        setAssignments((a.data.data ?? []).filter((x: any) => x.isActive !== false));
+        setGrade((g) => g ?? cls[0]?.gradeNumber ?? null);
+      })
       .catch(() => {
         setFailed(true);
         toast.error('Could not load subjects');
@@ -67,20 +64,59 @@ export default function SubjectsPage() {
 
   useEffect(load, [load]);
 
+  const grades = useMemo(() => Array.from(new Set(classes.map((c) => c.gradeNumber))).sort((a, b) => a - b), [classes]);
+  const classIdsOfGrade = useMemo(
+    () => new Set(classes.filter((c) => c.gradeNumber === grade).map((c) => String(c._id))),
+    [classes, grade]
+  );
+  const inGrade = useMemo(
+    () =>
+      subjects
+        .filter((s) => (s.classIds ?? []).some((id: any) => classIdsOfGrade.has(String(id?._id ?? id))))
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    [subjects, classIdsOfGrade]
+  );
+  const teachersOf = (subjectId: string) =>
+    assignments.filter((a) => a.subjectId?._id === subjectId && classIdsOfGrade.has(String(a.classId?._id)));
+
+  const openNctb = async () => {
+    if (grade === null) return;
+    setNctbOpen(true);
+    setCurriculum(null);
+    try {
+      const r = await adminAPI.getCurriculum(grade);
+      setCurriculum(r.data.data);
+      setPicked(new Set(r.data.data.items.filter((i: any) => i.status !== 'IN_CLASS' && i.group === 'Compulsory').map((i: any) => i.code)));
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not load the NCTB list'));
+      setNctbOpen(false);
+    }
+  };
+
+  const applyNctb = async () => {
+    if (grade === null) return;
+    setApplying(true);
+    try {
+      const r = await adminAPI.applyCurriculum(grade, Array.from(picked));
+      const { created, added } = r.data.data;
+      toast.success(`Class ${grade}: ${created + added} ${created + added === 1 ? 'subject' : 'subjects'} added`);
+      setNctbOpen(false);
+      load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not add the subjects'));
+    } finally {
+      setApplying(false);
+    }
+  };
+
   const openAdd = () => {
     setEditing(null);
     setForm(emptyForm);
     setOpen(true);
   };
-
   const openEdit = (s: any) => {
     setEditing(s);
-    setForm({
-      name: s.name ?? '',
-      nameBn: s.nameBn ?? '',
-      code: s.code ?? '',
-      description: s.description ?? '',
-    });
+    setForm({ name: s.name ?? '', nameBn: s.nameBn ?? '', code: s.code ?? '', description: s.description ?? '' });
     setOpen(true);
   };
 
@@ -92,8 +128,10 @@ export default function SubjectsPage() {
         await adminAPI.updateSubject(editing._id, form);
         toast.success('Subject saved');
       } else {
-        await adminAPI.createSubject(form);
-        toast.success(`${form.name} created`);
+        // A new subject is added to the class being viewed.
+        const ids = classes.filter((c) => c.gradeNumber === grade).map((c) => c._id);
+        await adminAPI.createSubject({ ...form, classIds: ids });
+        toast.success(`${form.name} added to Class ${grade}`);
       }
       setOpen(false);
       load();
@@ -104,179 +142,261 @@ export default function SubjectsPage() {
     }
   };
 
-  const confirmDelete = async () => {
-    setRemoving(true);
+  const confirmRemove = async () => {
+    if (grade === null) return;
+    setBusy(true);
     try {
-      await adminAPI.deleteSubject(deleting._id);
-      toast.success(`${deleting.name} deleted`);
-      setDeleting(null);
+      await adminAPI.removeSubjectFromGrade(removing._id, grade);
+      toast.success(`${removing.name} removed from Class ${grade}`);
+      setRemoving(null);
       load();
     } catch (err) {
-      toast.error(apiErrorMessage(err, 'Could not delete the subject'));
+      toast.error(apiErrorMessage(err, 'Could not remove the subject'));
     } finally {
-      setRemoving(false);
+      setBusy(false);
     }
   };
 
+  const groups = useMemo(() => {
+    const items: any[] = curriculum?.items ?? [];
+    const order = Array.from(new Set(items.map((i) => i.group)));
+    return order.map((g) => ({ group: g, items: items.filter((i) => i.group === g) }));
+  }, [curriculum]);
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <PageHeader
         title="Subjects"
-        description="The Bangla name appears beside the English one throughout the app."
+        description="What each class studies, following NCTB, and who teaches it."
         actions={
-          <Button onClick={openAdd}>
-            <Plus className="h-4 w-4" strokeWidth={1.75} />
-            Add a subject
-          </Button>
+          <>
+            <Button variant="secondary" onClick={openNctb} disabled={grade === null}>
+              <Sparkles className="h-4 w-4" strokeWidth={1.75} />
+              NCTB subjects
+            </Button>
+            <Button onClick={openAdd} disabled={grade === null}>
+              <Plus className="h-4 w-4" strokeWidth={1.75} />
+              Add a subject
+            </Button>
+          </>
         }
       />
 
+      {/* One tab per class */}
+      <div className="scrollbar-thin -mx-1 flex gap-2 overflow-x-auto px-1 pb-1" role="tablist" aria-label="Class">
+        {grades.map((g) => {
+          const ids = new Set(classes.filter((c) => c.gradeNumber === g).map((c) => String(c._id)));
+          const n = subjects.filter((s) => (s.classIds ?? []).some((id: any) => ids.has(String(id?._id ?? id)))).length;
+          return (
+            <button
+              key={g}
+              role="tab"
+              aria-selected={grade === g}
+              onClick={() => setGrade(g)}
+              className={cn(
+                'flex shrink-0 flex-col items-start rounded-2xl border px-4 py-2.5 text-left transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                grade === g ? 'border-brand bg-brand text-brand-contrast shadow-card' : 'border-line bg-surface hover:border-line-strong'
+              )}
+            >
+              <span className={cn('text-dense font-semibold', grade !== g && 'text-ink')}>Class {g}</span>
+              <span className={cn('text-meta', grade === g ? 'opacity-80' : 'text-ink-subtle')}>{n} subjects</span>
+            </button>
+          );
+        })}
+      </div>
+
       {loading ? (
-        <TableSkeleton cols={4} />
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-[18px]" />
+          ))}
+        </div>
       ) : failed ? (
         <ErrorState description="The subject list did not load." onRetry={load} />
-      ) : !subjects.length ? (
-        <div className="rounded-card border border-line bg-surface shadow-card">
+      ) : !inGrade.length ? (
+        <div className="rounded-[18px] border border-line bg-surface shadow-card">
           <EmptyState
             icon={BookOpen}
-            title="No subjects yet"
-            description="Add the subjects this school teaches."
+            title={`No subjects for Class ${grade} yet`}
+            description="Add the NCTB subjects for this class in one go."
             action={
-              <Button onClick={openAdd}>
-                <Plus className="h-4 w-4" strokeWidth={1.75} />
-                Add a subject
+              <Button onClick={openNctb}>
+                <Sparkles className="h-4 w-4" strokeWidth={1.75} />
+                NCTB subjects
               </Button>
             }
           />
         </div>
       ) : (
-        <TableWrap>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead className="w-20">Code</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead className="hidden md:table-cell">Description</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {subjects.map((s: any) => (
-                <TableRow key={s._id}>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        'inline-flex rounded-chip px-2 py-0.5 text-meta font-semibold text-ink',
-                        subjectTint(s)
-                      )}
-                    >
+        <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {inGrade.map((s) => {
+            const teachers = teachersOf(s._id);
+            return (
+              <li key={s._id} className="group flex overflow-hidden rounded-[18px] border border-line bg-surface shadow-card">
+                <span className={cn('w-2 shrink-0', subjectTint(s))} aria-hidden="true" />
+                <div className="flex min-w-0 flex-1 flex-col gap-3 p-4">
+                  <div className="flex items-start gap-3">
+                    <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-meta font-bold text-ink', subjectTint(s))}>
                       {s.code}
                     </span>
-                  </TableCell>
-                  <TableCell>
-                    <span className="block font-medium text-ink">{s.name}</span>
-                    {s.nameBn && (
-                      <span lang="bn" className="block font-bn text-meta text-ink-muted">
-                        {s.nameBn}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell text-ink-muted">
-                    {s.description || '—'}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex justify-end">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            aria-label={`Actions for ${s.name}`}
-                            className="opacity-0 focus-visible:opacity-100 group-hover:opacity-100"
-                          >
-                            <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => openEdit(s)}>
-                            <Pencil className="h-4 w-4" strokeWidth={1.75} />
-                            Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem destructive onSelect={() => setDeleting(s)}>
-                            <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                            Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-body font-semibold text-ink">{s.name}</p>
+                      {s.nameBn && (
+                        <p lang="bn" className="truncate font-bn text-dense text-ink-muted">
+                          {s.nameBn}
+                        </p>
+                      )}
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableWrap>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon-sm" aria-label={`Actions for ${s.name}`}>
+                          <MoreHorizontal className="h-4 w-4" strokeWidth={1.75} />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => openEdit(s)}>
+                          <Pencil className="h-4 w-4" strokeWidth={1.75} />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem destructive onSelect={() => setRemoving(s)}>
+                          <MinusCircle className="h-4 w-4" strokeWidth={1.75} />
+                          Remove from Class {grade}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                  <div className="mt-auto border-t border-line pt-3">
+                    {teachers.length ? (
+                      <ul className="space-y-1.5">
+                        {teachers.map((a) => (
+                          <li key={a._id} className="flex items-center gap-2 text-dense">
+                            <PersonAvatar name={a.teacherId?.fullName} className="h-6 w-6 text-[10px]" />
+                            <span className="min-w-0 flex-1 truncate text-ink">{a.teacherId?.fullName}</span>
+                            {classIdsOfGrade.size > 1 && <span className="text-meta text-ink-subtle">{a.classId?.section}</span>}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-meta text-warning">No teacher yet — assign one on the class page.</p>
+                    )}
+                  </div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
+      {/* NCTB list for the class */}
+      <Sheet open={nctbOpen} onOpenChange={(o) => !applying && setNctbOpen(o)}>
+        <SheetContent className="sm:max-w-lg">
+          <SheetHeader>
+            <SheetTitle>NCTB subjects — Class {grade}</SheetTitle>
+            <SheetDescription>{curriculum?.source ?? 'Loading…'}</SheetDescription>
+          </SheetHeader>
+          <SheetBody className="space-y-5">
+            {!curriculum ? (
+              <Skeleton className="h-64 w-full rounded-card" />
+            ) : (
+              groups.map(({ group, items }) => (
+                <div key={group}>
+                  <p className="mb-2 text-meta font-semibold uppercase tracking-[0.12em] text-ink-subtle">{group}</p>
+                  <ul className="space-y-1.5">
+                    {items.map((i: any) => {
+                      const already = i.status === 'IN_CLASS';
+                      const on = already || picked.has(i.code);
+                      return (
+                        <li key={i.code}>
+                          <label
+                            className={cn(
+                              'flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-colors',
+                              already ? 'border-line bg-surface-sunken' : on ? 'cursor-pointer border-brand/40 bg-brand-wash' : 'cursor-pointer border-line hover:border-line-strong'
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-line-strong text-brand focus:ring-brand"
+                              checked={on}
+                              disabled={already}
+                              onChange={(e) =>
+                                setPicked((p) => {
+                                  const n = new Set(p);
+                                  if (e.target.checked) n.add(i.code);
+                                  else n.delete(i.code);
+                                  return n;
+                                })
+                              }
+                            />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-dense font-medium text-ink">{i.name}</span>
+                              <span lang="bn" className="block font-bn text-meta text-ink-muted">
+                                {i.nameBn}
+                              </span>
+                            </span>
+                            {already ? (
+                              <span className="inline-flex items-center gap-1 text-meta text-success">
+                                <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+                                In class
+                              </span>
+                            ) : i.status === 'NEW' ? (
+                              <span className="text-meta text-ink-subtle">New subject</span>
+                            ) : null}
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))
+            )}
+            {curriculum && (
+              <p className="flex items-start gap-2 rounded-xl bg-surface-sunken px-3 py-2 text-meta text-ink-muted">
+                <Library className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                Subjects the school already has keep their names; new ones are created with the NCTB name. Group subjects
+                (9–10) apply to the whole class — untick those your school doesn’t offer.
+              </p>
+            )}
+          </SheetBody>
+          <SheetFooter>
+            <Button variant="secondary" onClick={() => setNctbOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={applyNctb} loading={applying} disabled={!picked.size}>
+              Add {picked.size || ''} to Class {grade}
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      {/* Add / edit */}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
           <SheetHeader>
-            <SheetTitle>{editing ? 'Edit subject' : 'Add a subject'}</SheetTitle>
+            <SheetTitle>{editing ? 'Edit subject' : `Add a subject to Class ${grade}`}</SheetTitle>
             <SheetDescription>
-              {editing ? editing.name : 'Give both names so the app can show Bangla alongside English.'}
+              {editing ? 'Changes apply in every class that studies it.' : 'For a subject that isn’t on the NCTB list.'}
             </SheetDescription>
           </SheetHeader>
-
           <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
             <SheetBody className="space-y-4">
               <Field label="English name" required>
-                {(p) => (
-                  <Input
-                    {...p}
-                    value={form.name}
-                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    placeholder="Mathematics"
-                    required
-                  />
-                )}
+                {(p) => <Input {...p} value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Mathematics" required />}
               </Field>
-
               <Field label="Bangla name" description="Shown under the English name across the app.">
                 {(p) => (
-                  <Input
-                    {...p}
-                    lang="bn"
-                    className="font-bn"
-                    value={form.nameBn}
-                    onChange={(e) => setForm((f) => ({ ...f, nameBn: e.target.value }))}
-                    placeholder="গণিত"
-                  />
+                  <Input {...p} lang="bn" className="font-bn" value={form.nameBn} onChange={(e) => setForm((f) => ({ ...f, nameBn: e.target.value }))} placeholder="গণিত" />
                 )}
               </Field>
-
-              <Field label="Code" description="Three letters. Also picks the subject's colour." required>
+              <Field label="Code" description="A short unique code, e.g. MAT." required>
                 {(p) => (
-                  <Input
-                    {...p}
-                    value={form.code}
-                    onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
-                    placeholder="MAT"
-                    maxLength={8}
-                    required
-                  />
+                  <Input {...p} value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))} placeholder="MAT" maxLength={8} required />
                 )}
               </Field>
-
               <Field label="Description">
-                {(p) => (
-                  <Input
-                    {...p}
-                    value={form.description}
-                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  />
-                )}
+                {(p) => <Input {...p} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />}
               </Field>
             </SheetBody>
-
             <SheetFooter>
               <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
                 Cancel
@@ -290,19 +410,18 @@ export default function SubjectsPage() {
       </Sheet>
 
       <ConfirmDialog
-        open={!!deleting}
-        onOpenChange={(o) => !o && setDeleting(null)}
-        title="Delete this subject?"
+        open={!!removing}
+        onOpenChange={(o) => !o && setRemoving(null)}
+        title={`Remove from Class ${grade}?`}
         description={
           <>
-            <strong className="text-ink">{deleting?.name}</strong> ({deleting?.code}) will be removed.
-            Assessments, assignments and routine entries that reference it may be affected.
+            <strong className="text-ink">{removing?.name}</strong> will no longer be studied in Class {grade}. Other classes keep it.
           </>
         }
-        confirmLabel="Delete"
+        confirmLabel="Remove"
         destructive
-        loading={removing}
-        onConfirm={confirmDelete}
+        loading={busy}
+        onConfirm={confirmRemove}
       />
     </div>
   );

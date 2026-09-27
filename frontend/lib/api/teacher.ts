@@ -16,7 +16,11 @@ export const teacherAPI = {
   getClassStudents: (classId: string) => api.get(`/teacher/classes/${classId}/students`),
   getMarks: (assessmentId: string) => api.get(`/teacher/results/assessments/${assessmentId}/marks`),
   saveMarks: (assessmentId: string, marks: any[]) => api.put(`/teacher/results/assessments/${assessmentId}/marks`, { marks }),
-  saveGrades: (grades: any[]) => api.put('/teacher/results/grades', { grades }),
+  // Final grades and office requests
+  getGradeSheet: (params: { assignmentId: string; term: string }) => api.get('/teacher/grades', { params }),
+  saveGrades: (data: { assignmentId: string; term: string; grades: any[]; submit?: boolean }) => api.put('/teacher/grades', data),
+  getRequests: () => api.get('/teacher/requests'),
+  completeRequest: (id: string) => api.patch(`/teacher/requests/${id}/done`),
   // Attendance register
   getRegister: (params: { assignmentId: string; from?: string; to?: string }) => api.get('/teacher/attendance/register', { params }),
   saveRegister: (data: { assignmentId: string; changes: { date: string; studentId: string; status: string | null }[] }) =>
