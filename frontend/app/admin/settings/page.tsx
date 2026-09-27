@@ -267,7 +267,7 @@ function SettingsSection({
         <h2 className="text-section text-ink">{title}</h2>
         {description && <p className="text-dense text-ink-muted">{description}</p>}
       </div>
-      <div className="overflow-hidden rounded-card border border-line bg-surface">{children}</div>
+      <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">{children}</div>
     </section>
   );
 }

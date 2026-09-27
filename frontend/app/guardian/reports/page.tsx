@@ -66,7 +66,7 @@ export default function GuardianReportsPage() {
     return (
       <div className="space-y-5">
         <PageHeader title="Reports" />
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
             title="No children linked to your account"
@@ -93,7 +93,7 @@ export default function GuardianReportsPage() {
       />
 
       {/* A preview shaped like the printed report, not a generic download box. */}
-      <div className="max-w-lg overflow-hidden rounded-card border border-line bg-surface">
+      <div className="max-w-lg overflow-hidden rounded-card border border-line bg-surface shadow-card">
         <div className="border-b border-line px-6 py-5 text-center">
           <p className="text-section text-ink">{school.name}</p>
           {school.address && <p className="mt-0.5 text-meta text-ink-subtle">{school.address}</p>}

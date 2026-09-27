@@ -154,7 +154,7 @@ export default function StudentDashboardPage() {
           }
         >
           {!pending.length ? (
-            <div className="rounded-card border border-line bg-surface">
+            <div className="rounded-card border border-line bg-surface shadow-card">
               <EmptyState
                 icon={BookMarked}
                 title="Nothing due"
@@ -163,7 +163,7 @@ export default function StudentDashboardPage() {
               />
             </div>
           ) : (
-            <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
               {pending.slice(0, 4).map((hw: any) => {
                 const overdue = hw.dueAt && new Date(hw.dueAt) < new Date();
                 return (
@@ -206,7 +206,7 @@ export default function StudentDashboardPage() {
         </Section>
 
         <Section title="Your attendance">
-          <div className="rounded-card border border-line bg-surface p-5">
+          <div className="rounded-card border border-line bg-surface shadow-card p-5">
             {attendancePct === undefined || attendancePct === null ? (
               <EmptyState
                 icon={CheckSquare}
@@ -236,11 +236,11 @@ export default function StudentDashboardPage() {
 
       <Section title="Today's classes">
         {!schedule.length ? (
-          <div className="rounded-card border border-line bg-surface">
+          <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState icon={CalendarClock} title="No classes today" compact />
           </div>
         ) : (
-          <ol className="divide-y divide-line rounded-card border border-line bg-surface">
+          <ol className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
             {schedule.map((slot: any) => {
               const s = minutesFromMidnight(slot.startTime);
               const e = minutesFromMidnight(slot.endTime);
@@ -293,7 +293,7 @@ export default function StudentDashboardPage() {
           title="Ask about your textbook"
           description="Stuck on something? Ask a question about what you are studying."
         >
-          <div className="rounded-card border border-line bg-surface p-5">
+          <div className="rounded-card border border-line bg-surface shadow-card p-5">
             <Button asChild>
               <Link href="/student/ai-learning">
                 <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
@@ -312,11 +312,11 @@ export default function StudentDashboardPage() {
           }
         >
           {!data?.recentNotices?.length ? (
-            <div className="rounded-card border border-line bg-surface">
+            <div className="rounded-card border border-line bg-surface shadow-card">
               <EmptyState icon={Bell} title="Nothing new" compact />
             </div>
           ) : (
-            <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
               {data.recentNotices.slice(0, 4).map((n: any) => (
                 <li key={n._id} className="px-4 py-3">
                   <p className="text-dense font-medium text-ink">{n.title}</p>

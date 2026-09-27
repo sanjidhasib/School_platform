@@ -80,7 +80,7 @@ export function NotificationList({
 
   if (!notifications.length) {
     return (
-      <div className="rounded-card border border-line bg-surface">
+      <div className="rounded-card border border-line bg-surface shadow-card">
         <EmptyState icon={Bell} title={emptyTitle} description={emptyDescription} />
       </div>
     );
@@ -97,7 +97,7 @@ export function NotificationList({
       {groups.map((group) => (
         <section key={group.label} className="space-y-2">
           <h2 className="text-meta font-medium text-ink-subtle">{group.label}</h2>
-          <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
             {group.items.map((n) => {
               const Icon = TYPE_ICONS[n.type ?? ''] ?? Bell;
               const actionable = role ? Boolean(TARGETS[role]?.[n.type ?? '']) : false;

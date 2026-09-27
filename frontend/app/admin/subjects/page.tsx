@@ -136,7 +136,7 @@ export default function SubjectsPage() {
       ) : failed ? (
         <ErrorState description="The subject list did not load." onRetry={load} />
       ) : !subjects.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={BookOpen}
             title="No subjects yet"

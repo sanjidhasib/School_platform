@@ -238,7 +238,7 @@ export default function TeacherHomeworkPage() {
         {loadingSubs ? (
           <ListSkeleton rows={5} />
         ) : !submissions.length ? (
-          <div className="rounded-card border border-line bg-surface">
+          <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={ClipboardCheck}
               title="No students in this class yet"
@@ -246,7 +246,7 @@ export default function TeacherHomeworkPage() {
             />
           </div>
         ) : (
-          <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
             {submissions.map((row: any) => {
               const student = row.student ?? {};
               const submission = row.submission ?? {};
@@ -405,7 +405,7 @@ export default function TeacherHomeworkPage() {
       ) : failed ? (
         <ErrorState description="Your homework list did not load." onRetry={load} />
       ) : !homeworks.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={ClipboardCheck}
             title="No homework set"
@@ -420,7 +420,7 @@ export default function TeacherHomeworkPage() {
         </div>
       ) : (
         /* A stream of assignments, Classroom-style: title, then when it is due. */
-        <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
           {homeworks.map((h: any) => {
             const overdue = h.dueAt && new Date(h.dueAt) < new Date();
             const dueSoon =

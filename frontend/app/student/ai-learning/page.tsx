@@ -165,7 +165,7 @@ export default function AILearningPage() {
     <div className="flex h-[calc(100dvh-10rem)] gap-5 lg:h-[calc(100dvh-7rem)]">
       {/* Chat history rail */}
       <aside className="hidden w-60 shrink-0 flex-col gap-3 lg:flex">
-        <div className="space-y-2 rounded-card border border-line bg-surface p-3">
+        <div className="space-y-2 rounded-card border border-line bg-surface shadow-card p-3">
           <Combobox
             options={subjectOptions}
             value={subjectId}
@@ -191,7 +191,7 @@ export default function AILearningPage() {
       </aside>
 
       {/* Conversation */}
-      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
         {/* Context bar: which subject this chat is grounded in. */}
         <div className="flex shrink-0 items-center gap-2 border-b border-line px-4 py-2.5">
           <Button
@@ -313,7 +313,7 @@ export default function AILearningPage() {
                 {sending && (
                   <div className="space-y-1.5">
                     <p className="text-meta font-medium text-ink-subtle">SchoolOS</p>
-                    <div className="inline-flex items-center gap-1.5 rounded-card border border-line bg-surface px-4 py-3">
+                    <div className="inline-flex items-center gap-1.5 rounded-card border border-line bg-surface shadow-card px-4 py-3">
                       {[0, 1, 2].map((i) => (
                         <span
                           key={i}

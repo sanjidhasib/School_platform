@@ -92,7 +92,7 @@ export function TimetableGrid({
   };
 
   return (
-    <div className={cn('scrollbar-thin overflow-x-auto rounded-card border border-line bg-surface', className)}>
+    <div className={cn('scrollbar-thin overflow-x-auto rounded-card border border-line bg-surface shadow-card', className)}>
       <table className="w-full min-w-[720px] border-collapse">
         <caption className="sr-only">
           Class routine, {DAYS[days[0]]} to {DAYS[days[days.length - 1]]}
@@ -258,7 +258,7 @@ export function TimetableDayList({
   const rows = periods.map(normalisePeriod);
 
   return (
-    <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+    <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
       {rows.map((p) => {
         const entry = entries.find((e) => e.dayOfWeek === day && e.startTime === p.start);
         const subject = entry?.teacherAssignmentId?.subjectId;

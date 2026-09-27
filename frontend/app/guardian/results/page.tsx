@@ -8,7 +8,9 @@ import { PageHeader, Section } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { ChildSwitcher } from '@/components/shared/ChildSwitcher';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
+import { GradeChart } from '@/components/shared/GradeChart';
 import { Skeleton, TableSkeleton } from '@/components/ui/skeleton';
+import { Panel } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   TableWrap,
@@ -20,6 +22,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { apiErrorMessage, formatDate, gradeTone } from '@/lib/utils';
+import { subjectBn } from '@/lib/design/subjects';
 
 export default function GuardianResultsPage() {
   const [children, setChildren] = useState<any[]>([]);
@@ -96,7 +99,7 @@ export default function GuardianResultsPage() {
     return (
       <div className="space-y-5">
         <PageHeader title="Results" />
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
             title="No children linked to your account"
@@ -134,7 +137,7 @@ export default function GuardianResultsPage() {
       ) : failed ? (
         <ErrorState description="Results did not load." onRetry={load} />
       ) : !hasAnything ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={BarChart3}
             title="No results published yet"
@@ -143,6 +146,22 @@ export default function GuardianResultsPage() {
         </div>
       ) : (
         <>
+          {grades.length >= 3 && (
+            <Section title="Progress at a glance">
+              <Panel>
+                <GradeChart
+                  data={grades.map((g: any) => ({
+                    id: g._id,
+                    subject: g.subjectId?.name ?? 'Subject',
+                    subjectBn: subjectBn(g.subjectId),
+                    percentage: g.percentage ?? 0,
+                    grade: g.grade,
+                  }))}
+                />
+              </Panel>
+            </Section>
+          )}
+
           {grades.length > 0 && (
             <Section title="Subject grades">
               <TableWrap>

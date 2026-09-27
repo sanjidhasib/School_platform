@@ -4,7 +4,10 @@ import { cn } from '@/lib/utils';
 /**
  * A card is for a thing that is genuinely a separate object — a teacher, an
  * achievement, a homework. Sections of a page are plain blocks with a heading
- * and a rule, not cards. There is no resting shadow; a border does the work.
+ * and a rule, not cards. The resting shadow is barely-there (see `shadow-card`
+ * in tailwind.config.ts) — it exists only so the surface reads as a distinct
+ * object against the page, since `line` and `paper` are too close in
+ * lightness for the border alone to do that job.
  */
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -13,9 +16,9 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      'rounded-card border border-line bg-surface',
+      'rounded-card border border-line bg-surface shadow-card',
       interactive &&
-        'transition-colors hover:border-line-strong focus-within:border-brand cursor-pointer',
+        'cursor-pointer transition-[box-shadow,border-color] hover:border-line-strong hover:shadow-card-hover focus-within:border-brand',
       className
     )}
     {...props}
@@ -57,7 +60,11 @@ const Panel = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { title?: string; action?: React.ReactNode }
 >(({ className, title, action, children, ...props }, ref) => (
-  <div ref={ref} className={cn('overflow-hidden rounded-card border border-line bg-surface', className)} {...props}>
+  <div
+    ref={ref}
+    className={cn('overflow-hidden rounded-card border border-line bg-surface shadow-card', className)}
+    {...props}
+  >
     {(title || action) && (
       <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-3">
         {title && <h2 className="text-dense font-semibold text-ink">{title}</h2>}

@@ -143,7 +143,7 @@ export default function StudentHomeworkPage() {
           ) : failed ? (
             <ErrorState description="Your homework did not load." onRetry={load} />
           ) : !visible.length ? (
-            <div className="rounded-card border border-line bg-surface">
+            <div className="rounded-card border border-line bg-surface shadow-card">
               <EmptyState
                 icon={BookMarked}
                 title={
@@ -165,7 +165,7 @@ export default function StudentHomeworkPage() {
               />
             </div>
           ) : (
-            <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
               {visible.map((hw: any) => {
                 const status = submissionStatus(hw);
                 const overdue = isOverdue(hw);

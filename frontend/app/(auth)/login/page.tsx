@@ -171,7 +171,7 @@ function LoginScreen() {
           </Button>
         </form>
 
-        <div className="rounded-card border border-line bg-surface p-3">
+        <div className="rounded-card border border-line bg-surface shadow-card p-3">
           <p className="mb-1.5 text-meta font-medium text-ink">Demo accounts</p>
           <dl className="space-y-0.5 text-meta text-ink-muted">
             {[

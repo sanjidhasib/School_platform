@@ -263,7 +263,7 @@ export default function StudentsPage() {
       ) : failed ? (
         <ErrorState description="The student list did not load." onRetry={load} />
       ) : !students.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={GraduationCap}
             title={search || classFilter !== 'all' ? 'No students match those filters' : 'No students yet'}

@@ -91,8 +91,15 @@ const config: Config = {
         page: ['1.6875rem', { lineHeight: '1.2', fontWeight: '600' }],
       },
 
-      // Shadows only for things that genuinely float.
+      // `card` is deliberately barely-there: it exists so a surface reads as
+      // a distinct object against `paper` even where `line` and `paper` are
+      // too close in lightness for the border alone to register — not a
+      // decorative drop shadow. `card-hover` is one step up, used only as a
+      // response to a pointer over something interactive. `popover`/`dialog`
+      // stay reserved for things that genuinely float.
       boxShadow: {
+        card: '0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 1px 0 rgb(15 23 42 / 0.03)',
+        'card-hover': '0 4px 10px -2px rgb(15 23 42 / 0.07), 0 2px 4px -2px rgb(15 23 42 / 0.05)',
         popover: '0 4px 16px -2px rgb(9 12 28 / 0.12), 0 2px 6px -2px rgb(9 12 28 / 0.08)',
         dialog: '0 24px 48px -12px rgb(9 12 28 / 0.28), 0 8px 20px -8px rgb(9 12 28 / 0.16)',
       },

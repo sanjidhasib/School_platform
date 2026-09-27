@@ -29,7 +29,7 @@ export function TableSkeleton({ rows = 6, cols = 4 }: { rows?: number; cols?: nu
 
 export function ListSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <div className="divide-y divide-line rounded-card border border-line bg-surface">
+    <div className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="space-y-2 p-4">
           <Skeleton className="h-4 w-1/3" />

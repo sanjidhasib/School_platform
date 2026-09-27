@@ -101,7 +101,7 @@ export default function AdminResultsPage() {
             {loading ? (
               <TableSkeleton cols={5} />
             ) : !grades.length ? (
-              <div className="rounded-card border border-line bg-surface">
+              <div className="rounded-card border border-line bg-surface shadow-card">
                 <EmptyState
                   icon={BarChart3}
                   title="No grades published"
@@ -162,7 +162,7 @@ export default function AdminResultsPage() {
             {loading ? (
               <TableSkeleton cols={5} />
             ) : !assessments.length ? (
-              <div className="rounded-card border border-line bg-surface">
+              <div className="rounded-card border border-line bg-surface shadow-card">
                 <EmptyState
                   icon={BarChart3}
                   title="No assessments set"

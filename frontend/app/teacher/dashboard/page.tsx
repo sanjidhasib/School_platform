@@ -154,7 +154,7 @@ export default function TeacherDashboardPage() {
           </div>
         </section>
       ) : (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CalendarClock}
             title={schedule.length ? 'All your classes are done for today' : 'No classes today'}
@@ -182,11 +182,11 @@ export default function TeacherDashboardPage() {
         }
       >
         {!schedule.length ? (
-          <div className="rounded-card border border-line bg-surface">
+          <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState icon={CalendarClock} title="Nothing scheduled" compact />
           </div>
         ) : (
-          <ol className="divide-y divide-line rounded-card border border-line bg-surface">
+          <ol className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
             {schedule.map((slot: any) => {
               const s = minutesFromMidnight(slot.startTime);
               const e = minutesFromMidnight(slot.endTime);
@@ -245,7 +245,7 @@ export default function TeacherDashboardPage() {
         <Section title="Waiting on you">
           <Link
             href="/teacher/homework"
-            className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface px-4 py-3.5 transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="flex items-center justify-between gap-3 rounded-card border border-line bg-surface shadow-card px-4 py-3.5 transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <span className="flex items-center gap-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-warning-bg text-warning">
@@ -276,7 +276,7 @@ function DashboardSkeleton() {
       <Skeleton className="h-48 w-full rounded-card" />
       <div className="space-y-3">
         <Skeleton className="h-5 w-40" />
-        <div className="divide-y divide-line rounded-card border border-line bg-surface">
+        <div className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
           {[0, 1, 2].map((i) => (
             <div key={i} className="flex items-center gap-4 px-4 py-3">
               <Skeleton className="h-4 w-16" />

@@ -2,14 +2,16 @@ import * as React from 'react';
 import { cn } from '@/lib/utils';
 
 /**
- * Tables carry their own structure through rules and alignment. There is no
- * card wrapper and no shadow — the header is a hairline, not a grey block.
- * Wide tables scroll inside their own container so the page never overflows.
+ * Tables carry their own structure through rules and alignment — the header
+ * is a hairline, not a grey block. The barely-there `shadow-card` gives the
+ * container definition against the page background without reading as a
+ * decorative drop shadow. Wide tables scroll inside their own container so
+ * the page never overflows.
  */
 const TableWrap = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      'scrollbar-thin w-full overflow-x-auto rounded-card border border-line bg-surface',
+      'scrollbar-thin w-full overflow-x-auto rounded-card border border-line bg-surface shadow-card',
       className
     )}
     {...props}

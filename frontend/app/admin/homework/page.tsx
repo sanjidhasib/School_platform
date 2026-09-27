@@ -84,7 +84,7 @@ export default function AdminHomeworkPage() {
       ) : failed ? (
         <ErrorState description="The homework list did not load." onRetry={load} />
       ) : !rows.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={ClipboardCheck}
             title="No homework set"

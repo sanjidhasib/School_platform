@@ -192,7 +192,7 @@ export default async function HomePage() {
               {achievements.map((a: any) => (
                 <li
                   key={a._id}
-                  className="flex flex-col rounded-card border border-line bg-surface p-4"
+                  className="flex flex-col rounded-card border border-line bg-surface shadow-card p-4"
                 >
                   <Trophy
                     className="h-4 w-4 text-highlighter"

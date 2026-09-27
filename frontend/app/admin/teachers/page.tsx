@@ -238,7 +238,7 @@ export default function TeachersPage() {
       ) : failed ? (
         <ErrorState description="The teacher directory did not load." onRetry={load} />
       ) : !teachers.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
             title={search ? 'No teachers match that search' : 'No teachers yet'}

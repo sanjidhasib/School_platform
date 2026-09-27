@@ -126,7 +126,7 @@ export default function ClassesPage() {
       ) : failed ? (
         <ErrorState description="The class list did not load." onRetry={load} />
       ) : !classes.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Grid3X3}
             title="No classes yet"

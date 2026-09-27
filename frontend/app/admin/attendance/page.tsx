@@ -110,7 +110,7 @@ export default function AdminAttendancePage() {
       ) : failed ? (
         <ErrorState description="Attendance did not load." onRetry={load} />
       ) : !rows.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={UserCheck}
             title="No attendance taken on this day"

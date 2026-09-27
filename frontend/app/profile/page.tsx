@@ -101,7 +101,7 @@ export default function ProfilePage() {
               <p className="text-dense text-ink-muted">How the school reaches you.</p>
             </div>
 
-            <div className="overflow-hidden rounded-card border border-line bg-surface">
+            <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
               <Row label="Email" htmlFor="profile-email">
                 <Input
                   id="profile-email"
@@ -138,7 +138,7 @@ export default function ProfilePage() {
               </p>
             </div>
 
-            <div className="overflow-hidden rounded-card border border-line bg-surface">
+            <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
               <Row label="Current password" htmlFor="current-password">
                 <Input
                   id="current-password"

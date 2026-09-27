@@ -187,7 +187,7 @@ export default function TeacherAttendancePage() {
           </div>
         </div>
 
-        <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
           {sessionData.students.map((student: any, idx: number) => {
             const status = attendance[student._id] ?? 'PRESENT';
             const needsNote = status === 'ABSENT' || status === 'LEAVE';
@@ -267,7 +267,7 @@ export default function TeacherAttendancePage() {
       ) : failed ? (
         <ErrorState description="Your schedule did not load." onRetry={load} />
       ) : !schedule.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CalendarClock}
             title="No classes scheduled today"

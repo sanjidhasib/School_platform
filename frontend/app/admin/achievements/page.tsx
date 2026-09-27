@@ -131,7 +131,7 @@ export default function AchievementsPage() {
       ) : failed ? (
         <ErrorState description="The achievement list did not load." onRetry={load} />
       ) : !achievements.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Trophy}
             title="No achievements recorded"

@@ -230,7 +230,7 @@ export default function TimetablePage() {
       </div>
 
       {!selectedClass ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CalendarDays}
             title="No class selected"

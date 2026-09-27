@@ -154,7 +154,7 @@ export default function NoticesPage() {
       ) : failed ? (
         <ErrorState description="The notice board did not load." onRetry={load} />
       ) : !notices.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Bell}
             title="Nothing on the notice board"
@@ -168,7 +168,7 @@ export default function NoticesPage() {
           />
         </div>
       ) : (
-        <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
           {notices.map((n: any) => {
             const upcoming = n.eventDate && new Date(n.eventDate) >= new Date();
             return (

@@ -149,7 +149,7 @@ export default function StudentAttendancePage() {
               </div>
             }
           >
-            <div className="rounded-card border border-line bg-surface p-3">
+            <div className="rounded-card border border-line bg-surface shadow-card p-3">
               <div className="grid grid-cols-7 gap-1">
                 {SHORT_DAY_INITIALS.map((d, i) => (
                   <div key={i} className="pb-1 text-center text-meta text-ink-subtle">
@@ -204,7 +204,7 @@ export default function StudentAttendancePage() {
           </Section>
 
           <Section title="Every class">
-            <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
               {records.map(({ session, record }: any) => (
                 <li key={session._id} className="flex items-center gap-4 px-4 py-3">
                   <div className="w-24 shrink-0">
@@ -221,7 +221,7 @@ export default function StudentAttendancePage() {
           </Section>
         </>
       ) : (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CheckSquare}
             title="No attendance recorded yet"

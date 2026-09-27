@@ -74,7 +74,7 @@ export default function GuardianAttendancePage() {
     return (
       <div className="space-y-5">
         <PageHeader title="Attendance" />
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
             title="No children linked to your account"
@@ -100,7 +100,7 @@ export default function GuardianAttendancePage() {
       ) : failed ? (
         <ErrorState description="Attendance did not load." onRetry={load} />
       ) : !records.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={CheckSquare}
             title="No attendance recorded yet"
@@ -137,7 +137,7 @@ export default function GuardianAttendancePage() {
 
           {absences.length > 0 && (
             <Section title="Recent absences">
-              <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+              <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
                 {absences.map(({ session }: any) => (
                   <li key={session._id} className="flex items-center gap-4 px-4 py-3">
                     <span className="w-24 shrink-0 text-dense text-ink tabular">
@@ -154,7 +154,7 @@ export default function GuardianAttendancePage() {
           )}
 
           <Section title="Every class">
-            <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+            <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
               {records.map(({ session, record }: any) => (
                 <li key={session._id} className="flex items-center gap-4 px-4 py-3">
                   <div className="w-24 shrink-0">

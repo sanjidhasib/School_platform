@@ -243,7 +243,7 @@ export default function TeacherResultsPage() {
         {loadingMarks ? (
           <TableSkeleton cols={4} />
         ) : !rows.length ? (
-          <div className="rounded-card border border-line bg-surface">
+          <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={BarChart3}
               title="No students in this class"
@@ -256,7 +256,7 @@ export default function TeacherResultsPage() {
               Press Enter or the down arrow to move to the next student.
             </p>
 
-            <div className="scrollbar-thin overflow-x-auto rounded-card border border-line bg-surface">
+            <div className="scrollbar-thin overflow-x-auto rounded-card border border-line bg-surface shadow-card">
               <table className="w-full border-collapse text-dense">
                 <thead>
                   <tr className="border-b border-line">
@@ -390,7 +390,7 @@ export default function TeacherResultsPage() {
       ) : failed ? (
         <ErrorState description="Your assessments did not load." onRetry={load} />
       ) : !assessments.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={BarChart3}
             title="No assessments yet"
@@ -404,7 +404,7 @@ export default function TeacherResultsPage() {
           />
         </div>
       ) : (
-        <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+        <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
           {assessments.map((a: any) => (
             <li key={a._id}>
               <button

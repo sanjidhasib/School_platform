@@ -69,7 +69,7 @@ export default function GuardianDashboardPage() {
     return (
       <div className="space-y-5">
         <PageHeader title="Your children" />
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={Users}
             title="No children linked to your account"
@@ -130,7 +130,7 @@ export default function GuardianDashboardPage() {
             </Button>
           }
         >
-          <div className="rounded-card border border-line bg-surface p-5">
+          <div className="rounded-card border border-line bg-surface shadow-card p-5">
             {child.totalSessions ? (
               <>
                 <p className="text-3xl font-semibold text-ink tabular">
@@ -158,7 +158,7 @@ export default function GuardianDashboardPage() {
         </Section>
 
         <Section title="Homework">
-          <div className="rounded-card border border-line bg-surface p-5">
+          <div className="rounded-card border border-line bg-surface shadow-card p-5">
             {child.pendingHomework > 0 ? (
               <>
                 <p className="text-3xl font-semibold text-ink tabular">{child.pendingHomework}</p>
@@ -187,7 +187,7 @@ export default function GuardianDashboardPage() {
         }
       >
         {!child.grades?.length ? (
-          <div className="rounded-card border border-line bg-surface">
+          <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={BarChart3}
               title="No grades published yet"
@@ -196,7 +196,7 @@ export default function GuardianDashboardPage() {
             />
           </div>
         ) : (
-          <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
             {child.grades.slice(0, 6).map((g: any) => (
               <li key={g._id} className="flex items-center gap-4 px-4 py-3">
                 <div className="min-w-0 flex-1">

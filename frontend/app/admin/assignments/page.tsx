@@ -181,7 +181,7 @@ export default function AssignmentsPage() {
       ) : failed ? (
         <ErrorState description="The assignment list did not load." onRetry={load} />
       ) : !assignments.length ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={ClipboardList}
             title="No assignments yet"

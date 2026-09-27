@@ -9,6 +9,7 @@ import { PageHeader, Section } from '@/components/shared/PageHeader';
 import { SummaryStrip } from '@/components/shared/SummaryStrip';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
+import { EnrollmentChart, type ClassEnrollment } from '@/components/shared/EnrollmentChart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Panel } from '@/components/ui/card';
@@ -17,6 +18,7 @@ import { cn, formatDateLong, formatTime, formatDate, minutesFromMidnight } from 
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<any>(null);
+  const [classes, setClasses] = useState<ClassEnrollment[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
 
@@ -31,6 +33,25 @@ export default function AdminDashboardPage() {
         toast.error('Could not load the dashboard');
       })
       .finally(() => setLoading(false));
+
+    // Real enrolment figures for the chart — a second, small fetch rather
+    // than growing the dashboard endpoint's payload for every consumer.
+    adminAPI
+      .getClasses()
+      .then((r) =>
+        setClasses(
+          (r.data.data ?? [])
+            .slice()
+            .sort((a: any, b: any) => (a.gradeNumber ?? 0) - (b.gradeNumber ?? 0))
+            .map((c: any) => ({
+              id: c._id,
+              label: `${c.name} ${c.section ?? ''}`.trim(),
+              enrolled: c.enrollmentCount ?? 0,
+              capacity: c.capacity ?? 40,
+            }))
+        )
+      )
+      .catch(() => setClasses([]));
   };
 
   useEffect(load, []);
@@ -84,7 +105,7 @@ export default function AdminDashboardPage() {
         }
       >
         {!timetable.length ? (
-          <div className="rounded-card border border-line bg-surface">
+          <div className="rounded-card border border-line bg-surface shadow-card">
             <EmptyState
               icon={CalendarClock}
               title="No classes scheduled today"
@@ -100,7 +121,7 @@ export default function AdminDashboardPage() {
             />
           </div>
         ) : (
-          <ul className="divide-y divide-line rounded-card border border-line bg-surface">
+          <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
             {timetable.map((entry: any) => {
               const start = minutesFromMidnight(entry.startTime);
               const end = minutesFromMidnight(entry.endTime);
@@ -146,6 +167,14 @@ export default function AdminDashboardPage() {
           </ul>
         )}
       </Section>
+
+      {classes && classes.length > 0 && (
+        <Section title="Class enrolment" description="Against the school's 40-seat cap.">
+          <Panel>
+            <EnrollmentChart data={classes} />
+          </Panel>
+        </Section>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Panel title="Notices">
@@ -218,7 +247,7 @@ function DashboardSkeleton() {
       </div>
       <div className="space-y-3">
         <Skeleton className="h-5 w-40" />
-        <div className="divide-y divide-line rounded-card border border-line bg-surface">
+        <div className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-4 px-4 py-3">
               <Skeleton className="h-4 w-16" />

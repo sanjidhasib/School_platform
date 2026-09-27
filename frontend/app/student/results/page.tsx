@@ -7,7 +7,9 @@ import { studentAPI } from '@/lib/api/student';
 import { PageHeader, Section } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
+import { GradeChart } from '@/components/shared/GradeChart';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Panel } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Combobox } from '@/components/ui/combobox';
 import { Field } from '@/components/ui/field';
@@ -21,6 +23,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { apiErrorMessage, formatDate, gradeTone } from '@/lib/utils';
+import { subjectBn } from '@/lib/design/subjects';
 
 export default function StudentResultsPage() {
   const [data, setData] = useState<any>(null);
@@ -104,7 +107,7 @@ export default function StudentResultsPage() {
       />
 
       {!hasAnything ? (
-        <div className="rounded-card border border-line bg-surface">
+        <div className="rounded-card border border-line bg-surface shadow-card">
           <EmptyState
             icon={BarChart3}
             title="No results yet"
@@ -129,9 +132,27 @@ export default function StudentResultsPage() {
             </Field>
           )}
 
+          {/* Only when there's enough data for a chart to say more than the
+              table already does — two bars would just be decoration. */}
+          {visibleGrades.length >= 3 && (
+            <Section title="Progress at a glance">
+              <Panel>
+                <GradeChart
+                  data={visibleGrades.map((g: any) => ({
+                    id: g._id,
+                    subject: g.subjectId?.name ?? 'Subject',
+                    subjectBn: subjectBn(g.subjectId),
+                    percentage: g.percentage ?? 0,
+                    grade: g.grade,
+                  }))}
+                />
+              </Panel>
+            </Section>
+          )}
+
           <Section title="Subject grades">
             {!visibleGrades.length ? (
-              <div className="rounded-card border border-line bg-surface">
+              <div className="rounded-card border border-line bg-surface shadow-card">
                 <EmptyState
                   icon={BarChart3}
                   title="No grades for this term"
