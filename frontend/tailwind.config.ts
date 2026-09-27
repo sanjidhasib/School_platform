@@ -121,12 +121,19 @@ const config: Config = {
           from: { transform: 'translateY(100%)' },
           to: { transform: 'translateY(0)' },
         },
+        // The homepage news strip: the list is rendered twice, so moving by
+        // half its width lands exactly where it started — a seamless loop.
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 180ms ease-out',
         'scale-in': 'scale-in 200ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-from-right': 'slide-from-right 240ms cubic-bezier(0.16, 1, 0.3, 1)',
         'slide-from-bottom': 'slide-from-bottom 240ms cubic-bezier(0.16, 1, 0.3, 1)',
+        marquee: 'marquee var(--marquee-duration, 40s) linear infinite',
       },
     },
   },

@@ -116,6 +116,9 @@
 
   html {
     -webkit-tap-highlight-color: transparent;
+    /* The homepage links jump between sections; glide instead. Reduced
+       motion switches this off in the block at the end of the file. */
+    scroll-behavior: smooth;
   }
 
   body {

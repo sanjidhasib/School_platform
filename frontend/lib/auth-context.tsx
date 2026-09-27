@@ -23,10 +23,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/auth/me');
-      if (res.data.success) {
-        setUser(res.data.data);
-      }
+      // /auth/session answers 200 with the user or null, so a signed-out
+      // visitor isn't an error; it also renews a lapsed access token itself.
+      const res = await api.get('/auth/session');
+      setUser(res.data.success ? res.data.data ?? null : null);
     } catch (err) {
       setUser(null);
     } finally {

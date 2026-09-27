@@ -1,249 +1,518 @@
 import Link from 'next/link';
-import {
-  UserCheck,
-  BookMarked,
-  BarChart3,
-  CalendarDays,
-  Trophy,
-  Phone,
-  Mail,
-  MapPin,
-} from 'lucide-react';
+import { Trophy, Phone, Mail, MapPin, CalendarDays, Newspaper, GraduationCap, LogIn } from 'lucide-react';
 import { publicAPI } from '@/lib/api/public';
-import { SchoolCarousel } from '@/components/shared/SchoolCarousel';
+import { SchoolCarousel, type CarouselSlide } from '@/components/shared/SchoolCarousel';
+import { PublicNavbar } from '@/components/layout/PublicNavbar';
 import { LogoMark } from '@/components/layout/Logo';
-import { formatDate } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 
-/** Re-fetch notices and achievements at most once a minute. */
+/** Re-fetch notices, achievements and seats at most once a minute. */
 export const revalidate = 60;
 
-const SCHOOL_SLIDES = [
-  { src: '/school-images/slide-1.jpg', alt: 'The main building of Barishal Zilla School' },
-  { src: '/school-images/slide-3.jpg', alt: 'A classroom during a lesson' },
-  { src: '/school-images/slide-4.jpg', alt: 'The school library' },
-  { src: '/school-images/slide-5.jpg', alt: 'Students working in the science laboratory' },
-  { src: '/school-images/slide-6.jpg', alt: 'The morning assembly' },
-  { src: '/school-images/slide-7.jpg', alt: 'The sports field' },
-  { src: '/school-images/slide-8.jpg', alt: 'The school campus' },
+/*
+  "Explore SchoolOS" leads to sign-in: the one public entry point into
+  SchoolOS, and where each role's own pages begin.
+*/
+const SLIDES: CarouselSlide[] = [
+  {
+    id: 'manage',
+    title: 'Smart School Management',
+    description:
+      'SchoolOS brings students, teachers, guardians, and administrators together in one digital platform.',
+    image: '/school-images/bzs-campus.jpg',
+    alt: 'Students of Barishal Zilla School gathered on the school field',
+    href: '/login',
+  },
+  {
+    id: 'learn',
+    title: 'Learn Smarter',
+    description:
+      'Help students learn through organized academic resources and an intelligent AI-powered learning assistant.',
+    image: '/school-images/slide-8.jpg',
+    alt: 'Shelves of books in a library',
+    href: '/login',
+  },
+  {
+    id: 'teach',
+    title: 'Empower Teachers',
+    description:
+      'Teachers can manage attendance, academic results, classes, and student information from one place.',
+    image: '/school-images/slide-4.jpg',
+    alt: 'A teacher at the blackboard while a student raises a hand',
+    href: '/login',
+  },
+  {
+    id: 'connect',
+    title: 'Stay Connected',
+    description:
+      "Guardians can easily monitor attendance, results, notices, and their child's academic progress.",
+    image: '/school-images/bzs-guardian-meeting.jpg',
+    alt: 'A meeting with guardians in the Barishal Zilla School auditorium',
+    href: '/login',
+  },
+  {
+    id: 'platform',
+    title: 'One Platform. Every School.',
+    description:
+      'SchoolOS digitizes everyday school activities and creates a connected learning environment.',
+    image: '/school-images/slide-5.jpg',
+    alt: 'A school building across a green lawn',
+    href: '/login',
+  },
 ];
 
-/** What each role actually gets — described in their own terms, not in slogans. */
-const ROLES = [
-  {
-    icon: UserCheck,
-    title: 'For teachers',
-    body: 'Take attendance from the class on your routine, set homework, and enter marks for a whole class in one pass.',
-  },
-  {
-    icon: BookMarked,
-    title: 'For students',
-    body: 'See what is due, hand your work in, check your attendance and grades, and ask questions about your textbook.',
-  },
-  {
-    icon: BarChart3,
-    title: 'For guardians',
-    body: "Follow your child's attendance and results, and download their progress report whenever you need it.",
-  },
-  {
-    icon: CalendarDays,
-    title: 'For the office',
-    body: 'Admit students against class capacity, assign teachers to subjects, and build the school routine without clashes.',
-  },
-];
+const CATEGORY_TONE: Record<string, string> = {
+  EXAM: 'bg-warning-bg text-warning',
+  HOLIDAY: 'bg-success-bg text-success',
+  EVENT: 'bg-info-bg text-info',
+  ACADEMIC: 'bg-brand-wash text-brand',
+  URGENT: 'bg-danger-bg text-danger',
+  GENERAL: 'bg-surface-sunken text-ink-muted',
+};
+
+const categoryLabel = (c?: string) => (c ? c.charAt(0) + c.slice(1).toLowerCase() : 'Notice');
 
 async function getPublicData() {
-  try {
-    const [achievements, upcoming, school] = await Promise.all([
-      publicAPI.getAchievements(),
-      publicAPI.getUpcoming(),
-      publicAPI.getSchool(),
-    ]);
-    return {
-      achievements: achievements.data.data ?? [],
-      upcoming: upcoming.data.data ?? [],
-      school: school.data.data ?? null,
-    };
-  } catch {
-    return { achievements: [], upcoming: [], school: null };
-  }
+  // Each list fails on its own: one slow endpoint shouldn't blank the page.
+  const settle = async (p: Promise<any>) => {
+    try {
+      return (await p).data.data ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const [achievements, upcoming, news, admission, school] = await Promise.all([
+    settle(publicAPI.getAchievements()),
+    settle(publicAPI.getUpcoming()),
+    settle(publicAPI.getNews()),
+    settle(publicAPI.getAdmission()),
+    settle(publicAPI.getSchool()),
+  ]);
+  return {
+    achievements: achievements ?? [],
+    upcoming: upcoming ?? [],
+    news: news ?? [],
+    admission: admission ?? [],
+    school,
+  };
 }
 
 export default async function HomePage() {
-  const { achievements, upcoming, school } = await getPublicData();
+  const { achievements, upcoming, news, admission, school } = await getPublicData();
 
-  /*
-    The public endpoint currently returns only {_id, logoUrl, address}: the
-    backend selects `schoolName`/`phone`/`email` while the model stores
-    `name`/`contactPhone`/`contactEmail`. That is a pre-existing backend bug
-    documented in docs/UI_REDESIGN_PLAN.md. Reading both shapes means the real
-    values flow through the moment it is fixed, with no change here.
-  */
-  const schoolName = school?.schoolName || school?.name || 'Barishal Zilla School';
+  const schoolName = school?.name || school?.schoolName || 'Barishal Zilla School';
   const address = school?.address;
   const phone = school?.contactPhone || school?.phone;
   const email = school?.contactEmail || school?.email;
 
   return (
     <div className="min-h-dvh bg-paper">
-      <header className="sticky top-0 z-40 border-b border-line bg-surface">
-        <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-btn bg-brand text-brand-contrast">
-              <LogoMark />
-            </span>
-            <span className="text-dense font-semibold text-ink">SchoolOS</span>
-          </Link>
-
-          <nav className="ml-auto flex items-center gap-2">
-            <Link
-              href="/login"
-              className="rounded-btn bg-brand px-3.5 py-1.5 text-dense font-medium text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-            >
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <PublicNavbar schoolName={schoolName} />
 
       <main>
-        {/* Hero: a plain, centred headline. The real campus carousel below
-            carries the visual weight instead of a product screenshot. */}
-        <section className="mx-auto max-w-[760px] px-4 pb-10 pt-12 text-center sm:px-6 lg:pb-14 lg:pt-16">
-          <h1 className="text-3xl font-semibold leading-tight text-ink sm:text-4xl">
-            {schoolName} runs on SchoolOS
-          </h1>
-          <p className="mx-auto mt-4 max-w-lg text-lg text-ink-muted">
-            The routine, attendance, homework and results for Classes 3 to 10 — in one place
-            for teachers, students, guardians and the office.
-          </p>
-
-          <div className="mt-7 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/login"
-              className="rounded-btn bg-brand px-5 py-2.5 text-body font-medium text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2"
-            >
-              Sign in
-            </Link>
-          </div>
-
-          {address && (
-            <p className="mx-auto mt-7 flex items-start justify-center gap-2 text-dense text-ink-subtle">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={1.75} />
-              {address}
-            </p>
-          )}
-        </section>
-
-        <section className="mx-auto max-w-[1200px] px-4 pb-14 sm:px-6 lg:pb-20">
-          <SchoolCarousel slides={SCHOOL_SLIDES} autoPlay intervalMs={6000} />
-        </section>
-
-        <section className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
-          <h2 className="text-2xl font-semibold text-ink">What it does</h2>
-          <ul className="mt-6 grid gap-x-10 gap-y-8 sm:grid-cols-2">
-            {ROLES.map((role) => (
-              <li key={role.title} className="flex gap-3.5">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-btn bg-wash text-brand">
-                  <role.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
-                </span>
-                <div>
-                  <h3 className="text-dense font-semibold text-ink">{role.title}</h3>
-                  <p className="mt-1 text-body text-ink-muted">{role.body}</p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {upcoming.length > 0 && (
-          <section className="border-t border-line bg-surface">
-            <div className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
-              <h2 className="text-2xl font-semibold text-ink">Notice board</h2>
-              <ul className="mt-6 divide-y divide-line border-y border-line">
-                {upcoming.slice(0, 6).map((n: any) => (
-                  <li key={n._id} className="flex gap-5 py-4">
-                    <div className="w-14 shrink-0 text-center">
-                      <p className="text-meta uppercase text-ink-subtle">
-                        {formatDate(n.eventDate).split(' ')[1]}
-                      </p>
-                      <p className="text-xl font-semibold text-ink tabular">
-                        {formatDate(n.eventDate).split(' ')[0]}
-                      </p>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-dense font-semibold text-ink">{n.title}</h3>
-                      {n.description && (
-                        <p className="mt-1 line-clamp-2 text-dense text-ink-muted">
-                          {n.description}
-                        </p>
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
+        {/* ── Hero ── */}
+        <section className="mx-auto max-w-[1600px] px-4 pb-8 pt-10 sm:px-6 sm:pt-14 lg:px-10 lg:pb-10 lg:pt-16">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <p lang="bn" className="font-bn text-base font-medium text-brand sm:text-lg">
+                বরিশাল জিলা স্কুল
+              </p>
+              <h1 className="mt-2 text-[2.6rem] font-extrabold leading-[1.02] tracking-tight text-ink sm:text-6xl lg:text-7xl xl:text-8xl">
+                {schoolName}
+              </h1>
+              <p className="mt-4 text-xl font-medium text-ink-muted sm:text-2xl lg:text-3xl">
+                Where legends are born.
+              </p>
             </div>
-          </section>
-        )}
+            {address && (
+              <p className="flex max-w-sm items-start gap-2.5 rounded-card border border-line bg-surface px-4 py-3 text-dense text-ink-muted shadow-card lg:mb-2">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                <span>
+                  <span className="sr-only">Location: </span>
+                  {address}
+                </span>
+              </p>
+            )}
+          </div>
+        </section>
 
-        {achievements.length > 0 && (
-          <section className="mx-auto max-w-[1200px] px-4 py-16 sm:px-6">
-            <h2 className="text-2xl font-semibold text-ink">What the school has won</h2>
-            <ul className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {achievements.map((a: any) => (
+        <section className="mx-auto max-w-[1600px] px-4 pb-16 sm:px-6 lg:px-10 lg:pb-24">
+          <SchoolCarousel slides={SLIDES} autoPlay intervalMs={6000} />
+        </section>
+
+        {/* ── Achievements ── */}
+        <Section
+          id="achievements"
+          icon={Trophy}
+          eyebrow="Achievements"
+          title="What our students have won"
+        >
+          {!achievements.length ? (
+            <Quiet>Achievements will appear here once the school publishes them.</Quiet>
+          ) : (
+            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {achievements.map((a: any, i: number) => (
                 <li
                   key={a._id}
-                  className="flex flex-col rounded-card border border-line bg-surface shadow-card p-4"
-                >
-                  <Trophy
-                    className="h-4 w-4 text-highlighter"
-                    strokeWidth={1.75}
-                    aria-hidden="true"
-                  />
-                  <h3 className="mt-2 text-dense font-semibold text-ink">{a.title}</h3>
-                  {a.description && (
-                    <p className="mt-1 flex-1 text-dense text-ink-muted">{a.description}</p>
+                  className={cn(
+                    'group relative flex flex-col overflow-hidden rounded-[20px] border border-line bg-surface p-6 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover',
+                    i === 0 && 'lg:border-transparent lg:bg-[#2446C9] lg:text-white'
                   )}
-                  <p className="mt-3 text-meta text-ink-subtle tabular">
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span
+                      className={cn(
+                        'flex h-10 w-10 items-center justify-center rounded-full',
+                        i === 0 ? 'bg-highlighter-wash text-highlighter lg:bg-white/15 lg:text-white' : 'bg-highlighter-wash text-highlighter'
+                      )}
+                    >
+                      <Trophy className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />
+                    </span>
+                    {a.category && (
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-1 text-meta font-medium',
+                          i === 0 ? 'bg-surface-sunken text-ink-muted lg:bg-white/15 lg:text-white' : 'bg-surface-sunken text-ink-muted'
+                        )}
+                      >
+                        {a.category}
+                      </span>
+                    )}
+                  </div>
+                  <h3
+                    className={cn(
+                      'mt-5 font-semibold leading-snug text-ink',
+                      i === 0 ? 'text-lg lg:text-white' : 'text-lg'
+                    )}
+                  >
+                    {a.title}
+                  </h3>
+                  {a.description && (
+                    <p className={cn('mt-2 flex-1 text-body text-ink-muted', i === 0 && 'lg:text-white/80')}>
+                      {a.description}
+                    </p>
+                  )}
+                  <p className={cn('mt-5 text-meta font-medium text-ink-subtle tabular', i === 0 && 'lg:text-white/70')}>
                     {formatDate(a.achievementDate)}
                   </p>
                 </li>
               ))}
             </ul>
-          </section>
-        )}
-      </main>
+          )}
+        </Section>
 
-      <footer className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6">
-          <div className="flex flex-wrap items-start justify-between gap-8">
+        {/* ── Notices: what's coming up ── */}
+        <Section
+          id="upcoming"
+          icon={CalendarDays}
+          eyebrow="Notice board"
+          title="Upcoming at school"
+          className="bg-surface"
+        >
+          {!upcoming.length ? (
+            <Quiet>No upcoming events or notices right now.</Quiet>
+          ) : (
+            <ul className="grid gap-4 md:grid-cols-2">
+              {upcoming.slice(0, 6).map((n: any) => {
+                const date = new Date(n.eventDate);
+                return (
+                  <li
+                    key={n._id}
+                    className="flex gap-5 rounded-[20px] border border-line bg-paper p-5 transition-colors hover:border-line-strong"
+                  >
+                    <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-brand text-brand-contrast">
+                      <span className="text-meta font-semibold uppercase tracking-wide opacity-80">
+                        {date.toLocaleDateString('en-GB', { month: 'short' })}
+                      </span>
+                      <span className="text-2xl font-bold leading-none tabular">{date.getDate()}</span>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <span
+                        className={cn(
+                          'inline-flex rounded-full px-2 py-0.5 text-meta font-medium',
+                          CATEGORY_TONE[n.category] ?? CATEGORY_TONE.GENERAL
+                        )}
+                      >
+                        {categoryLabel(n.category)}
+                      </span>
+                      <h3 className="mt-2 text-base font-semibold text-ink">{n.title}</h3>
+                      {n.description && (
+                        <p className="mt-1 line-clamp-2 text-dense text-ink-muted">{n.description}</p>
+                      )}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Section>
+
+        {/* ── News: a strip that scrolls by itself ── */}
+        <section id="news" className="scroll-mt-20 py-16 lg:py-24">
+          <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
+            <SectionHeading icon={Newspaper} eyebrow="News" title="Latest from the school" />
+          </div>
+          {!news.length ? (
+            <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
+              <Quiet>News will appear here as the school publishes it.</Quiet>
+            </div>
+          ) : (
+            <NewsStrip items={news} />
+          )}
+        </section>
+
+        {/* ── Admission ── */}
+        <Section
+          id="admission"
+          icon={GraduationCap}
+          eyebrow="Admission"
+          title="Admission information"
+          className="bg-surface"
+        >
+          <div className="grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:gap-12">
             <div>
-              <p className="text-dense font-semibold text-ink">{schoolName}</p>
-              {address && <p className="mt-1 max-w-xs text-dense text-ink-muted">{address}</p>}
+              <p className="max-w-2xl text-body text-ink-muted">
+                {schoolName} teaches Classes 3 to 10, with at most 40 students in each class. Seats open
+                for admission right now:
+              </p>
+              {admission.length ? (
+                <ul className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {admission.map((c: any) => {
+                    const full = c.seatsLeft <= 0;
+                    return (
+                      <li key={c._id} className="rounded-2xl border border-line bg-paper p-4">
+                        <p className="text-dense font-semibold text-ink">
+                          {c.name}
+                          {c.section ? <span className="font-normal text-ink-subtle"> · {c.section}</span> : null}
+                        </p>
+                        <p className={cn('mt-2 text-2xl font-bold tabular', full ? 'text-danger' : 'text-ink')}>
+                          {full ? 'Full' : c.seatsLeft}
+                        </p>
+                        <p className="text-meta text-ink-subtle">
+                          {full ? 'no seats left' : `of ${c.capacity} seats left`}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ul>
+              ) : (
+                <Quiet>Seat availability will appear here.</Quiet>
+              )}
             </div>
 
-            {(phone || email) && (
-              <div className="space-y-1.5">
+            <div className="rounded-[20px] bg-[#12162B] p-6 text-white ring-1 ring-white/5 sm:p-8">
+              <h3 className="text-xl font-semibold">How to apply</h3>
+              <p className="mt-2 text-body text-white/75">
+                Admission is handled by the school office. Contact the office for forms, dates and the
+                documents you need.
+              </p>
+              <ul className="mt-6 space-y-4 text-dense">
+                {address && (
+                  <ContactLine icon={MapPin} label="Visit">
+                    {address}
+                  </ContactLine>
+                )}
                 {phone && (
-                  <p className="flex items-center gap-2 text-dense text-ink-muted">
-                    <Phone className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                    <span className="tabular">{phone}</span>
-                  </p>
+                  <ContactLine icon={Phone} label="Call">
+                    <a href={`tel:${phone.replace(/[^\d+]/g, '')}`} className="tabular hover:underline">
+                      {phone}
+                    </a>
+                  </ContactLine>
                 )}
                 {email && (
-                  <p className="flex items-center gap-2 text-dense text-ink-muted">
-                    <Mail className="h-3.5 w-3.5 shrink-0" strokeWidth={1.75} />
-                    {email}
-                  </p>
+                  <ContactLine icon={Mail} label="Email">
+                    <a href={`mailto:${email}`} className="break-all hover:underline">
+                      {email}
+                    </a>
+                  </ContactLine>
                 )}
-              </div>
-            )}
+              </ul>
+            </div>
+          </div>
+        </Section>
+      </main>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-white/10 bg-[#12162B] text-white">
+        <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-10">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-9 w-9 items-center justify-center rounded-btn bg-white/10">
+                <LogoMark />
+              </span>
+              <span className="text-lg font-bold">{schoolName}</span>
+            </div>
+            <p className="mt-3 text-body text-white/70">Where legends are born.</p>
+            {address && <p className="mt-4 max-w-xs text-dense text-white/60">{address}</p>}
           </div>
 
-          <p className="mt-8 border-t border-line pt-6 text-meta text-ink-subtle">
+          <FooterColumn title="Explore">
+            <FooterLink href="#achievements">Achievements</FooterLink>
+            <FooterLink href="#news">News</FooterLink>
+            <FooterLink href="#upcoming">Upcoming</FooterLink>
+            <FooterLink href="#admission">Admission</FooterLink>
+          </FooterColumn>
+
+          <FooterColumn title="Contact">
+            {phone && (
+              <FooterLink href={`tel:${phone.replace(/[^\d+]/g, '')}`}>
+                <span className="tabular">{phone}</span>
+              </FooterLink>
+            )}
+            {email && <FooterLink href={`mailto:${email}`}>{email}</FooterLink>}
+            {!phone && !email && <li className="text-dense text-white/60">Contact the school office.</li>}
+          </FooterColumn>
+
+          <FooterColumn title="SchoolOS">
+            <li>
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-dense font-semibold text-[#1B2240] transition-colors hover:bg-white/90"
+              >
+                <LogIn className="h-4 w-4" strokeWidth={2} />
+                Login
+              </Link>
+            </li>
+            <li className="text-meta text-white/60">For students, teachers, guardians and the office.</li>
+          </FooterColumn>
+        </div>
+        <div className="border-t border-white/10">
+          <p className="mx-auto max-w-[1600px] px-4 py-6 text-meta text-white/50 sm:px-6 lg:px-10">
             © {new Date().getFullYear()} {schoolName}. Powered by SchoolOS.
           </p>
         </div>
       </footer>
     </div>
+  );
+}
+
+// ── Pieces ──────────────────────────────────────────────────────────────────
+
+function Section({
+  id,
+  icon,
+  eyebrow,
+  title,
+  className,
+  children,
+}: {
+  id: string;
+  icon: React.ElementType;
+  eyebrow: string;
+  title: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className={cn('scroll-mt-16 py-16 lg:py-24', className)}>
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-10">
+        <SectionHeading icon={icon} eyebrow={eyebrow} title={title} />
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function SectionHeading({ icon: Icon, eyebrow, title }: { icon: React.ElementType; eyebrow: string; title: string }) {
+  return (
+    <div className="mb-8 lg:mb-10">
+      <p className="flex items-center gap-2 text-dense font-semibold uppercase tracking-[0.14em] text-brand">
+        <Icon className="h-4 w-4" strokeWidth={2} aria-hidden="true" />
+        {eyebrow}
+      </p>
+      <h2 className="mt-2 text-3xl font-bold tracking-tight text-ink sm:text-4xl lg:text-5xl">{title}</h2>
+    </div>
+  );
+}
+
+function Quiet({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="rounded-[20px] border border-dashed border-line-strong px-6 py-10 text-center text-body text-ink-subtle">
+      {children}
+    </p>
+  );
+}
+
+/**
+ * The news list runs past on its own, twice over so the loop is seamless.
+ * Hovering (or focusing a card) holds it still; with reduced motion it's a
+ * plain strip the reader scrolls themselves.
+ */
+function NewsStrip({ items }: { items: any[] }) {
+  // Short lists are repeated so the strip is always wider than the screen.
+  const base = items.length >= 6 ? items : [...items, ...items, ...items].slice(0, Math.max(6, items.length));
+  const seconds = Math.max(30, base.length * 7);
+  const card = (n: any, i: number, hidden: boolean) => (
+    <li
+      key={`${n._id}-${i}-${hidden ? 'b' : 'a'}`}
+      aria-hidden={hidden || undefined}
+      className="w-[300px] shrink-0 rounded-[20px] border border-line bg-surface p-5 shadow-card sm:w-[340px]"
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span
+          className={cn(
+            'inline-flex rounded-full px-2 py-0.5 text-meta font-medium',
+            CATEGORY_TONE[n.category] ?? CATEGORY_TONE.GENERAL
+          )}
+        >
+          {categoryLabel(n.category)}
+        </span>
+        <span className="text-meta text-ink-subtle tabular">{formatDate(n.publishAt)}</span>
+      </div>
+      <h3 className="mt-3 line-clamp-2 text-base font-semibold text-ink">{n.title}</h3>
+      {n.description && <p className="mt-1.5 line-clamp-3 text-dense text-ink-muted">{n.description}</p>}
+    </li>
+  );
+
+  return (
+    <div
+      className="group relative overflow-hidden motion-reduce:overflow-x-auto"
+      style={{
+        maskImage: 'linear-gradient(to right, transparent, black 4%, black 96%, transparent)',
+        WebkitMaskImage: 'linear-gradient(to right, transparent, black 4%, black 96%, transparent)',
+      }}
+    >
+      <ul
+        className="flex w-max gap-4 px-4 py-2 animate-marquee group-hover:[animation-play-state:paused] group-focus-within:[animation-play-state:paused] motion-reduce:animate-none"
+        style={{ ['--marquee-duration' as string]: `${seconds}s` }}
+        aria-label="Latest news"
+      >
+        {base.map((n, i) => card(n, i, false))}
+        {base.map((n, i) => card(n, i, true))}
+      </ul>
+    </div>
+  );
+}
+
+function ContactLine({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
+  return (
+    <li className="flex gap-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
+        <Icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-meta uppercase tracking-wide text-white/50">{label}</p>
+        <div className="text-white">{children}</div>
+      </div>
+    </li>
+  );
+}
+
+function FooterColumn({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p className="text-meta font-semibold uppercase tracking-[0.14em] text-white/50">{title}</p>
+      <ul className="mt-4 space-y-2.5">{children}</ul>
+    </div>
+  );
+}
+
+function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+  return (
+    <li>
+      <a href={href} className="break-all text-dense text-white/80 transition-colors hover:text-white">
+        {children}
+      </a>
+    </li>
   );
 }

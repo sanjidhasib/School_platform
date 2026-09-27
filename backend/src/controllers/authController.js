@@ -82,3 +82,44 @@ exports.changePassword = asyncHandler(async (req, res) => {
   await user.save();
   res.json({ success: true, message: 'Password changed successfully' });
 });
+
+/**
+ * "Who is signed in?" for the app's startup check. Always answers 200, with
+ * the user or null — a signed-out visitor to the public homepage is a normal
+ * state, not an error, and shouldn't put two failed requests in the console
+ * (/auth/me 401, then a refresh attempt 401). If the access token has
+ * lapsed but the refresh token is still good, the session is renewed here in
+ * the same call.
+ */
+exports.session = asyncHandler(async (req, res) => {
+  const { accessToken, refreshToken } = req.cookies || {};
+  let userId = null;
+
+  if (accessToken) {
+    try {
+      const decoded = jwt.verify(accessToken, env.JWT_SECRET);
+      userId = decoded.id || decoded.userId;
+    } catch {
+      // expired or invalid — fall through to the refresh token
+    }
+  }
+
+  if (!userId && refreshToken) {
+    try {
+      const decoded = jwt.verify(refreshToken, env.JWT_SECRET);
+      const candidate = await User.findById(decoded.id).select('isActive');
+      if (candidate?.isActive) {
+        const tokens = generateTokens(candidate._id);
+        setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+        userId = candidate._id;
+      } else {
+        clearAuthCookies(res);
+      }
+    } catch {
+      clearAuthCookies(res);
+    }
+  }
+
+  const user = userId ? await User.findById(userId).select('-passwordHash') : null;
+  res.json({ success: true, data: user && user.isActive ? user : null });
+});
