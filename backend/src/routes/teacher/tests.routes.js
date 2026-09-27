@@ -1,0 +1,17 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/teacher/classTestController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const teacher = [protect, requireRole('TEACHER')];
+router.get('/', ...teacher, c.list);
+router.post('/', ...teacher, c.create);
+router.patch('/attempts/:attemptId', ...teacher, c.markAttempt);
+router.get('/:id', ...teacher, c.get);
+router.patch('/:id', ...teacher, c.update);
+router.delete('/:id', ...teacher, c.remove);
+router.post('/:id/publish', ...teacher, c.publish);
+router.post('/:id/close', ...teacher, c.close);
+router.get('/:id/attempts', ...teacher, c.attempts);
+router.post('/:id/results', ...teacher, c.publishResults);
+module.exports = router;

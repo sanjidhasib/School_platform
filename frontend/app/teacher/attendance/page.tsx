@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, CalendarClock, Check, Users, CheckCircle2 } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, CalendarClock, Check, Users, CheckCircle2, Sheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { teacherAPI } from '@/lib/api/teacher';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -256,7 +257,18 @@ export default function TeacherAttendancePage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Attendance" description={formatDateLong(new Date())} />
+      <PageHeader
+        title="Attendance"
+        description={formatDateLong(new Date())}
+        actions={
+          <Button variant="secondary" asChild>
+            <Link href="/teacher/register">
+              <Sheet className="h-4 w-4" strokeWidth={1.75} />
+              Open register
+            </Link>
+          </Button>
+        }
+      />
 
       {loadingSchedule ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

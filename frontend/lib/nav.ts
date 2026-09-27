@@ -17,6 +17,8 @@ import {
   MessageSquare,
   FileText,
   Library,
+  Sheet,
+  Timer,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -91,7 +93,9 @@ const teacherNav: NavGroup[] = [
     title: 'Teaching',
     items: [
       { label: 'Attendance', href: '/teacher/attendance', icon: UserCheck, primary: true },
+      { label: 'Attendance register', href: '/teacher/register', icon: Sheet },
       { label: 'Homework', href: '/teacher/homework', icon: ClipboardCheck, primary: true },
+      { label: 'Class tests', href: '/teacher/tests', icon: Timer },
       { label: 'Results', href: '/teacher/results', icon: BarChart3 },
       { label: 'Schedule', href: '/teacher/schedule', icon: CalendarDays, primary: true },
     ],
@@ -108,6 +112,7 @@ const studentNav: NavGroup[] = [
       { label: 'Homework', href: '/student/homework', icon: BookMarked, primary: true },
       { label: 'Attendance', href: '/student/attendance', icon: CheckSquare },
       { label: 'Results', href: '/student/results', icon: BarChart3, primary: true },
+      { label: 'Class tests', href: '/student/tests', icon: Timer },
     ],
   },
   {

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { usePathname } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { useAuth } from '@/hooks/useAuth';
@@ -72,19 +72,23 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
               onSearchClick={() => setPaletteOpen(true)}
             />
             <main className="scrollbar-thin flex-1 overflow-y-auto">
-              {/* A short crossfade on route change - not a slide-up per section. */}
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={pathname}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15, ease: 'easeOut' }}
-                  className="mx-auto w-full max-w-[1440px] px-4 pb-24 pt-5 sm:px-6 lg:pb-8"
-                >
-                  {children}
-                </motion.div>
-              </AnimatePresence>
+              {/*
+                A short fade-in on route change. Deliberately no exit
+                animation: with the App Router, AnimatePresence's exiting
+                element renders the *new* page, and in production the swap
+                could stall until the next state change — which remounted
+                the page and silently threw away the user's first click
+                (e.g. "Add question" in the test builder did nothing).
+              */}
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.15, ease: 'easeOut' }}
+                className="mx-auto w-full max-w-[1440px] px-4 pb-24 pt-5 sm:px-6 lg:pb-8"
+              >
+                {children}
+              </motion.div>
             </main>
           </div>
 

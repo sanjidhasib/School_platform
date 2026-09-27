@@ -7,6 +7,12 @@ export const studentAPI = {
   submitHomework: (id: string, data: any) => api.post(`/student/homework/${id}/submit`, data),
   getResults: () => api.get('/student/results'),
   getTimetable: () => api.get('/student/timetable'),
+  // Class tests
+  getTests: () => api.get('/student/tests'),
+  startTest: (id: string) => api.post(`/student/tests/${id}/start`),
+  saveTestAnswers: (id: string, answers: any[]) => api.put(`/student/tests/${id}/answers`, { answers }),
+  submitTest: (id: string, answers: any[]) => api.post(`/student/tests/${id}/submit`, { answers }),
+  getTestResult: (id: string) => api.get(`/student/tests/${id}/result`),
   getNotifications: (params?: any) => api.get('/student/notifications', { params }),
   markNotificationRead: (id: string) => api.patch(`/student/notifications/${id}/read`, {}),
   markAllRead: () => api.patch('/student/notifications/read-all', {}),

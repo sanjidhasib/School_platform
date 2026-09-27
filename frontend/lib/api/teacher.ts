@@ -17,4 +17,19 @@ export const teacherAPI = {
   getMarks: (assessmentId: string) => api.get(`/teacher/results/assessments/${assessmentId}/marks`),
   saveMarks: (assessmentId: string, marks: any[]) => api.put(`/teacher/results/assessments/${assessmentId}/marks`, { marks }),
   saveGrades: (grades: any[]) => api.put('/teacher/results/grades', { grades }),
+  // Attendance register
+  getRegister: (params: { assignmentId: string; from?: string; to?: string }) => api.get('/teacher/attendance/register', { params }),
+  saveRegister: (data: { assignmentId: string; changes: { date: string; studentId: string; status: string | null }[] }) =>
+    api.put('/teacher/attendance/register', data),
+  // Class tests
+  getTests: () => api.get('/teacher/tests'),
+  getTest: (id: string) => api.get(`/teacher/tests/${id}`),
+  createTest: (data: any) => api.post('/teacher/tests', data),
+  updateTest: (id: string, data: any) => api.patch(`/teacher/tests/${id}`, data),
+  deleteTest: (id: string) => api.delete(`/teacher/tests/${id}`),
+  publishTest: (id: string) => api.post(`/teacher/tests/${id}/publish`),
+  closeTest: (id: string) => api.post(`/teacher/tests/${id}/close`),
+  getTestAttempts: (id: string) => api.get(`/teacher/tests/${id}/attempts`),
+  markAttempt: (attemptId: string, awards: Record<string, number>) => api.patch(`/teacher/tests/attempts/${attemptId}`, { awards }),
+  publishTestResults: (id: string, data: { term: string }) => api.post(`/teacher/tests/${id}/results`, data),
 };

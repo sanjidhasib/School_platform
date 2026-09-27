@@ -1,0 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/student/classTestController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const student = [protect, requireRole('STUDENT')];
+router.get('/', ...student, c.list);
+router.post('/:id/start', ...student, c.start);
+router.put('/:id/answers', ...student, c.saveAnswers);
+router.post('/:id/submit', ...student, c.submit);
+router.get('/:id/result', ...student, c.result);
+module.exports = router;

@@ -13,6 +13,10 @@ const schoolSettingsSchema = new mongoose.Schema({
     gradePoint: Number
   }],
   activeDays: [{ type: Number }], // 0-6
+  // Exam dates: the attendance register counts "attendance before the
+  // half-yearly exam" up to this day.
+  halfYearlyExamDate: { type: Date },
+  annualExamDate: { type: Date },
   periods: [{
     name: String,
     startTime: String,

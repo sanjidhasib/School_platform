@@ -34,6 +34,8 @@ export default function SettingsPage() {
   const [savingIdentity, setSavingIdentity] = useState(false);
   const [activeDays, setActiveDays] = useState<number[]>([]);
   const [savingWeek, setSavingWeek] = useState(false);
+  const [exams, setExams] = useState({ halfYearlyExamDate: '', annualExamDate: '' });
+  const [savingExams, setSavingExams] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -51,6 +53,8 @@ export default function SettingsPage() {
           logoUrl: d.logoUrl ?? '',
         });
         setActiveDays(d.activeDays ?? []);
+        const day = (v?: string) => (v ? new Date(v).toLocaleDateString('en-CA') : '');
+        setExams({ halfYearlyExamDate: day(d.halfYearlyExamDate), annualExamDate: day(d.annualExamDate) });
       })
       .catch(() => {
         setFailed(true);
@@ -85,6 +89,22 @@ export default function SettingsPage() {
       toast.error(apiErrorMessage(err, 'Could not save the school week'));
     } finally {
       setSavingWeek(false);
+    }
+  };
+
+  const saveExams = async () => {
+    setSavingExams(true);
+    try {
+      await adminAPI.updateSettings({
+        halfYearlyExamDate: exams.halfYearlyExamDate ? new Date(`${exams.halfYearlyExamDate}T00:00:00`).toISOString() : null,
+        annualExamDate: exams.annualExamDate ? new Date(`${exams.annualExamDate}T00:00:00`).toISOString() : null,
+      });
+      toast.success('Exam dates saved');
+      load();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, 'Could not save the exam dates'));
+    } finally {
+      setSavingExams(false);
     }
   };
 
@@ -204,6 +224,33 @@ export default function SettingsPage() {
           </p>
           <Button onClick={saveWeek} loading={savingWeek} disabled={!weekChanged}>
             Save week
+          </Button>
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Exam dates"
+        description="Teachers' attendance registers count attendance up to the day before the half-yearly exam."
+      >
+        <SettingRow label="Half-yearly exam" htmlFor="exam-half">
+          <Input
+            id="exam-half"
+            type="date"
+            value={exams.halfYearlyExamDate}
+            onChange={(e) => setExams((x) => ({ ...x, halfYearlyExamDate: e.target.value }))}
+          />
+        </SettingRow>
+        <SettingRow label="Annual exam" htmlFor="exam-annual">
+          <Input
+            id="exam-annual"
+            type="date"
+            value={exams.annualExamDate}
+            onChange={(e) => setExams((x) => ({ ...x, annualExamDate: e.target.value }))}
+          />
+        </SettingRow>
+        <div className="flex justify-end border-t border-line px-4 py-3">
+          <Button onClick={saveExams} loading={savingExams}>
+            Save exam dates
           </Button>
         </div>
       </SettingsSection>
