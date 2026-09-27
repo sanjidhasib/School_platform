@@ -27,9 +27,17 @@ import {
   SheetFooter,
 } from '@/components/ui/sheet';
 import { apiErrorMessage, cn, formatDate, formatRelativeTime } from '@/lib/utils';
+import { HOMEWORK_TYPES, homeworkType, type HomeworkType } from '@/lib/design/homework';
 import { subjectBn } from '@/lib/design/subjects';
 
-const emptyForm = { teacherAssignmentId: '', title: '', description: '', dueAt: '', maxMarks: 10 };
+const emptyForm = {
+  teacherAssignmentId: '',
+  type: 'HOMEWORK' as HomeworkType,
+  title: '',
+  description: '',
+  dueAt: '',
+  maxMarks: 10,
+};
 
 export default function TeacherHomeworkPage() {
   const [homeworks, setHomeworks] = useState<any[]>([]);
@@ -105,6 +113,7 @@ export default function TeacherHomeworkPage() {
         teacherAssignmentId: assignment._id,
         classId: assignment.classId?._id,
         subjectId: assignment.subjectId?._id,
+        type: form.type,
         title: form.title,
         description: form.description,
         assignedAt: new Date().toISOString(),
@@ -441,6 +450,9 @@ export default function TeacherHomeworkPage() {
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="truncate text-dense font-medium text-ink">{h.title}</span>
+                      <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', homeworkType(h.type).tone)}>
+                        {homeworkType(h.type).label}
+                      </span>
                       <StatusPill status={h.status} />
                       {dueSoon && <Badge tone="warning">Due soon</Badge>}
                       {overdue && h.status === 'PUBLISHED' && <Badge tone="neutral">Past due</Badge>}
@@ -483,6 +495,28 @@ export default function TeacherHomeworkPage() {
                     placeholder="Choose a class"
                     searchPlaceholder="Find a class"
                   />
+                )}
+              </Field>
+
+              <Field label="Kind of work" required description={homeworkType(form.type).hint}>
+                {() => (
+                  <div className="grid grid-cols-3 gap-1 rounded-btn border border-line p-0.5" role="group" aria-label="Kind of work">
+                    {HOMEWORK_TYPES.map((t) => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        aria-pressed={form.type === t.value}
+                        onClick={() => setForm((f) => ({ ...f, type: t.value }))}
+                        className={cn(
+                          'rounded-chip px-2 py-1.5 text-meta font-medium leading-tight transition-colors',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                          form.type === t.value ? 'bg-wash text-brand' : 'text-ink-muted hover:text-ink'
+                        )}
+                      >
+                        {t.value === 'NEXT_CLASS' ? 'Next class prep' : t.label}
+                      </button>
+                    ))}
+                  </div>
                 )}
               </Field>
 

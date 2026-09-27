@@ -30,6 +30,13 @@ module.exports = {
     CLOSED: 'CLOSED',
     ARCHIVED: 'ARCHIVED'
   },
+  // What kind of work it is: take-home homework, a longer assignment, or
+  // reading/preparation to do before the next class of that subject.
+  HOMEWORK_TYPE: {
+    HOMEWORK: 'HOMEWORK',
+    ASSIGNMENT: 'ASSIGNMENT',
+    NEXT_CLASS: 'NEXT_CLASS'
+  },
   HOMEWORK_SUBMISSION_STATUS: {
     NOT_SUBMITTED: 'NOT_SUBMITTED',
     SUBMITTED: 'SUBMITTED',

@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Library, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Library, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { studentAPI } from '@/lib/api/student';
-import { PageHeader, Section } from '@/components/shared/PageHeader';
+import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { subjectBn, subjectTint } from '@/lib/design/subjects';
 
@@ -32,9 +31,11 @@ export default function StudentLibraryPage() {
 
   useEffect(load, [load]);
 
-  // One shelf per subject, both language versions side by side.
+  // One shelf for every subject the class studies — books or not — so the
+  // library always shows the full set, and which ones are still to come.
   const shelves = useMemo(() => {
     const map = new Map<string, { subject: any; books: any[] }>();
+    for (const s of data?.subjects ?? []) map.set(s._id, { subject: s, books: [] });
     for (const b of data?.books ?? []) {
       const key = b.subjectId?._id ?? 'other';
       if (!map.has(key)) map.set(key, { subject: b.subjectId, books: [] });
@@ -44,6 +45,7 @@ export default function StudentLibraryPage() {
       (a.subject?.name ?? '').localeCompare(b.subject?.name ?? '')
     );
   }, [data]);
+  const available = shelves.filter((s) => s.books.length).length;
 
   if (loading) {
     return (
@@ -80,62 +82,84 @@ export default function StudentLibraryPage() {
           />
         </div>
       ) : (
-        shelves.map(({ subject, books }) => (
-          <Section
-            key={subject?._id ?? 'other'}
-            title={subject?.name ?? 'Other books'}
-            description={subjectBn(subject) ?? undefined}
-          >
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {books.map((b) => (
-                <BookCard key={b._id} book={b} />
-              ))}
-            </div>
-          </Section>
-        ))
+        <>
+          <p className="text-dense text-ink-muted">
+            <span className="font-semibold text-ink tabular">{available}</span> of{' '}
+            <span className="tabular">{shelves.length}</span> subjects have their textbook here.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {shelves.map(({ subject, books }) => (
+              <SubjectShelf key={subject?._id ?? 'other'} subject={subject} books={books} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
 }
 
-function BookCard({ book }: { book: any }) {
-  const bangla = book.language === 'BN';
+function SubjectShelf({ subject, books }: { subject: any; books: any[] }) {
+  const bn = subjectBn(subject);
+  const ready = books.length > 0;
   return (
-    <Link
-      href={`/student/library/${book._id}`}
+    <div
       className={cn(
-        'group flex overflow-hidden rounded-card border border-line bg-surface shadow-card transition-all',
-        'hover:-translate-y-0.5 hover:border-line-strong hover:shadow-card-hover',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand'
+        'flex overflow-hidden rounded-[18px] border bg-surface shadow-card',
+        ready ? 'border-line' : 'border-dashed border-line-strong bg-transparent shadow-none'
       )}
     >
       {/* The spine: the subject's own colour, same as everywhere else. */}
-      <span className={cn('w-2.5 shrink-0', subjectTint(book.subjectId))} aria-hidden="true" />
+      <span className={cn('w-2.5 shrink-0', ready ? subjectTint(subject) : 'bg-line')} aria-hidden="true" />
       <div className="flex min-w-0 flex-1 flex-col gap-3 p-4">
-        <div className="min-w-0 space-y-1">
-          <p className="line-clamp-2 text-dense font-medium text-ink group-hover:text-brand">
-            {book.title}
-          </p>
-          {book.edition && <p className="text-meta text-ink-subtle">{book.edition}</p>}
+        <div className="flex items-start gap-3">
+          <span
+            className={cn(
+              'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
+              ready ? subjectTint(subject) : 'bg-surface-sunken'
+            )}
+          >
+            <BookOpen className={cn('h-5 w-5', ready ? 'text-ink' : 'text-ink-subtle')} strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-body font-semibold text-ink">{subject?.name ?? 'Other books'}</p>
+            {bn && (
+              <p lang="bn" className="truncate font-bn text-meta text-ink-muted">
+                {bn}
+              </p>
+            )}
+          </div>
         </div>
-        <div className="mt-auto flex flex-wrap items-center gap-1.5">
-          <Badge tone="outline" lang={bangla ? 'bn' : undefined} className={cn(bangla && 'font-bn')}>
-            {bangla ? 'বাংলা ভার্সন' : 'English version'}
-          </Badge>
-          {book.pageCount > 0 && (
-            <span className="text-meta text-ink-subtle tabular">{book.pageCount} pages</span>
-          )}
-          {book.status === 'COMPLETED' && book.textStatus === 'OK' && (
-            <span
-              className="ml-auto inline-flex items-center gap-1 text-meta text-ink-muted"
-              title="The AI study helper can answer from this book"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-brand" strokeWidth={1.75} aria-hidden="true" />
-              AI ready
-            </span>
-          )}
-        </div>
+
+        {!ready ? (
+          <p className="mt-auto text-meta text-ink-subtle">Textbook not added yet.</p>
+        ) : (
+          <ul className="mt-auto space-y-2">
+            {books.map((b) => {
+              const bangla = b.language === 'BN';
+              return (
+                <li key={b._id}>
+                  <Link
+                    href={`/student/library/${b._id}`}
+                    className="group flex items-center gap-2 rounded-xl border border-line px-3 py-2 transition-colors hover:border-brand/40 hover:bg-brand-wash focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                  >
+                    <span
+                      lang={bangla ? 'bn' : undefined}
+                      className={cn('flex-1 text-dense font-medium text-ink group-hover:text-brand', bangla && 'font-bn')}
+                    >
+                      {bangla ? 'বাংলা ভার্সন' : 'English version'}
+                    </span>
+                    {b.pageCount > 0 && <span className="text-meta text-ink-subtle tabular">{b.pageCount} pages</span>}
+                    {b.status === 'COMPLETED' && b.textStatus === 'OK' && (
+                      <Sparkles className="h-3.5 w-3.5 text-brand" strokeWidth={1.75} aria-label="AI ready" />
+                    )}
+                    <ArrowRight className="h-4 w-4 text-ink-subtle transition-transform group-hover:translate-x-0.5 group-hover:text-brand" strokeWidth={1.75} aria-hidden="true" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
-    </Link>
+    </div>
   );
 }

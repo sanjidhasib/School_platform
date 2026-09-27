@@ -45,6 +45,6 @@ exports.getHomework = asyncHandler(async (req, res) => {
 exports.getResults = asyncHandler(async (req, res) => {
   const student = await getGuardianStudent(req.user._id, req.params.id);
   const marks = await Mark.find({ studentId: student._id }).populate({ path: 'assessmentId', populate: { path: 'subjectId', select: 'code name nameBn' } });
-  const grades = await SubjectGrade.find({ studentId: student._id }).populate('subjectId', 'code name nameBn');
+  const grades = await SubjectGrade.find({ studentId: student._id, status: 'FINAL' }).populate('subjectId', 'code name nameBn');
   res.json({ success: true, data: { marks, grades } });
 });

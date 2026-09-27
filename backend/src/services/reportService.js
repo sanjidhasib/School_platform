@@ -128,7 +128,7 @@ const generateReport = async (studentId) => {
   const sessionFilter = session ? { academicSessionId: session._id } : {};
 
   const [grades, marks, attendance] = await Promise.all([
-    SubjectGrade.find({ studentId, ...sessionFilter })
+    SubjectGrade.find({ studentId, status: 'FINAL', ...sessionFilter })
       .populate('subjectId', 'name code')
       .lean(),
     Mark.find({ studentId })

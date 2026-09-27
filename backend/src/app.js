@@ -65,6 +65,7 @@ app.use('/api/student/notifications', require('./routes/student/notifications.ro
 app.use('/api/student/report', require('./routes/student/report.routes'));
 app.use('/api/student/subjects', require('./routes/student/subjects.routes'));
 app.use('/api/student/textbooks', require('./routes/student/textbooks.routes'));
+app.use('/api/student/timetable', require('./routes/student/timetable.routes'));
 
 // Guardian
 app.use('/api/guardian/dashboard', require('./routes/guardian/dashboard.routes'));

@@ -22,8 +22,9 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table';
-import { apiErrorMessage, formatDate, gradeTone } from '@/lib/utils';
+import { apiErrorMessage, cn, formatDate, gradeTone } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
+import { homeworkType } from '@/lib/design/homework';
 
 export default function StudentResultsPage() {
   const [data, setData] = useState<any>(null);
@@ -49,6 +50,7 @@ export default function StudentResultsPage() {
 
   const grades: any[] = useMemo(() => data?.grades ?? [], [data]);
   const marks: any[] = useMemo(() => data?.marks ?? [], [data]);
+  const homework: any[] = useMemo(() => data?.homework ?? [], [data]);
 
   const terms = useMemo(() => {
     const set = new Set<string>();
@@ -90,7 +92,7 @@ export default function StudentResultsPage() {
 
   if (failed) return <ErrorState description="Your results did not load." onRetry={load} />;
 
-  const hasAnything = grades.length > 0 || marks.length > 0;
+  const hasAnything = grades.length > 0 || marks.length > 0 || homework.length > 0;
 
   return (
     <div className="space-y-7">
@@ -150,13 +152,13 @@ export default function StudentResultsPage() {
             </Section>
           )}
 
-          <Section title="Subject grades">
+          <Section title="Final grades" description="Submitted by your subject teachers.">
             {!visibleGrades.length ? (
               <div className="rounded-card border border-line bg-surface shadow-card">
                 <EmptyState
                   icon={BarChart3}
-                  title="No grades for this term"
-                  description="Try another term."
+                  title={grades.length ? 'No grades for this term' : 'No final grades yet'}
+                  description={grades.length ? 'Try another term.' : 'Your grades appear here once your subject teachers submit them.'}
                   compact
                 />
               </div>
@@ -201,6 +203,49 @@ export default function StudentResultsPage() {
               </TableWrap>
             )}
           </Section>
+
+          {homework.length > 0 && (
+            <Section title="Homework results" description="Marks and feedback on the work you handed in.">
+              <TableWrap>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Homework</TableHead>
+                      <TableHead className="hidden md:table-cell">Subject</TableHead>
+                      <TableHead numeric>Marks</TableHead>
+                      <TableHead className="hidden lg:table-cell">Teacher&apos;s feedback</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {homework.map((h: any) => {
+                      const t = homeworkType(h.homework?.type);
+                      const max = h.homework?.maxMarks;
+                      return (
+                        <TableRow key={h._id}>
+                          <TableCell>
+                            <span className="block font-medium text-ink">{h.homework?.title}</span>
+                            <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                              <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', t.tone)}>{t.label}</span>
+                              <span className="text-meta text-ink-subtle md:hidden">{h.homework?.subjectId?.name}</span>
+                            </span>
+                            {h.feedback && <span className="mt-1 block text-meta text-ink-muted lg:hidden">“{h.feedback}”</span>}
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <SubjectLabel subject={h.homework?.subjectId} className="text-ink" />
+                          </TableCell>
+                          <TableCell numeric>
+                            <span className="font-semibold text-ink">{h.marks ?? '—'}</span>
+                            {max ? <span className="text-ink-subtle"> / {max}</span> : null}
+                          </TableCell>
+                          <TableCell className="hidden max-w-sm text-ink-muted lg:table-cell">{h.feedback || '—'}</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableWrap>
+            </Section>
+          )}
 
           {marks.length > 0 && (
             <Section title="Test and exam marks">

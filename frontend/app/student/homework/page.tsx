@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/sheet';
 import { apiErrorMessage, cn, formatDate, formatRelativeTime } from '@/lib/utils';
 import { subjectTint } from '@/lib/design/subjects';
+import { HOMEWORK_TYPES, homeworkType, type HomeworkType } from '@/lib/design/homework';
 
 type Filter = 'all' | 'pending' | 'submitted' | 'graded' | 'overdue';
 
@@ -37,6 +38,7 @@ export default function StudentHomeworkPage() {
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
+  const [kind, setKind] = useState<HomeworkType | 'ALL'>('ALL');
 
   const [selected, setSelected] = useState<any>(null);
   const [answer, setAnswer] = useState('');
@@ -58,31 +60,37 @@ export default function StudentHomeworkPage() {
 
   useEffect(load, [load]);
 
+  // The kind filter narrows the list first; the status tabs count within it.
+  const ofKind = useMemo(
+    () => (kind === 'ALL' ? homeworks : homeworks.filter((h) => (h.type ?? 'HOMEWORK') === kind)),
+    [homeworks, kind]
+  );
+
   const counts = useMemo(
     () => ({
-      all: homeworks.length,
-      pending: homeworks.filter((h) => submissionStatus(h) === 'NOT_SUBMITTED' && !isOverdue(h)).length,
-      submitted: homeworks.filter((h) => ['SUBMITTED', 'LATE'].includes(submissionStatus(h))).length,
-      graded: homeworks.filter((h) => submissionStatus(h) === 'GRADED').length,
-      overdue: homeworks.filter(isOverdue).length,
+      all: ofKind.length,
+      pending: ofKind.filter((h) => submissionStatus(h) === 'NOT_SUBMITTED' && !isOverdue(h)).length,
+      submitted: ofKind.filter((h) => ['SUBMITTED', 'LATE'].includes(submissionStatus(h))).length,
+      graded: ofKind.filter((h) => submissionStatus(h) === 'GRADED').length,
+      overdue: ofKind.filter(isOverdue).length,
     }),
-    [homeworks]
+    [ofKind]
   );
 
   const visible = useMemo(() => {
     switch (filter) {
       case 'pending':
-        return homeworks.filter((h) => submissionStatus(h) === 'NOT_SUBMITTED' && !isOverdue(h));
+        return ofKind.filter((h) => submissionStatus(h) === 'NOT_SUBMITTED' && !isOverdue(h));
       case 'submitted':
-        return homeworks.filter((h) => ['SUBMITTED', 'LATE'].includes(submissionStatus(h)));
+        return ofKind.filter((h) => ['SUBMITTED', 'LATE'].includes(submissionStatus(h)));
       case 'graded':
-        return homeworks.filter((h) => submissionStatus(h) === 'GRADED');
+        return ofKind.filter((h) => submissionStatus(h) === 'GRADED');
       case 'overdue':
-        return homeworks.filter(isOverdue);
+        return ofKind.filter(isOverdue);
       default:
-        return homeworks;
+        return ofKind;
     }
-  }, [homeworks, filter]);
+  }, [ofKind, filter]);
 
   const openHomework = (hw: any) => {
     setSelected(hw);
@@ -116,6 +124,28 @@ export default function StudentHomeworkPage() {
   return (
     <div className="space-y-5">
       <PageHeader title="Homework" />
+
+      <div className="flex flex-wrap gap-2" role="group" aria-label="Kind of work">
+        {([{ value: 'ALL', plural: 'Everything' }, ...HOMEWORK_TYPES] as { value: HomeworkType | 'ALL'; plural: string }[]).map((t) => {
+          const n = t.value === 'ALL' ? homeworks.length : homeworks.filter((h) => (h.type ?? 'HOMEWORK') === t.value).length;
+          return (
+            <button
+              key={t.value}
+              type="button"
+              aria-pressed={kind === t.value}
+              onClick={() => setKind(t.value)}
+              className={cn(
+                'inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-dense font-medium transition-colors',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                kind === t.value ? 'border-brand bg-brand text-brand-contrast' : 'border-line bg-surface text-ink-muted hover:border-line-strong hover:text-ink'
+              )}
+            >
+              {t.plural}
+              <span className={cn('text-meta tabular', kind === t.value ? 'opacity-80' : 'text-ink-subtle')}>{n}</span>
+            </button>
+          );
+        })}
+      </div>
 
       <Tabs value={filter} onValueChange={(v) => setFilter(v as Filter)}>
         <TabsList>
@@ -190,7 +220,10 @@ export default function StudentHomeworkPage() {
                       <span className="min-w-0 flex-1">
                         <span className="flex flex-wrap items-center gap-2">
                           <span className="truncate text-dense font-medium text-ink">{hw.title}</span>
-                          <StatusPill status={overdue ? 'ABSENT' : status} />
+                          <span className={cn('rounded-full px-2 py-0.5 text-meta font-medium', homeworkType(hw.type).tone)}>
+                            {homeworkType(hw.type).label}
+                          </span>
+                          {!overdue && <StatusPill status={status} />}
                           {overdue && <Badge tone="danger">Overdue</Badge>}
                           {dueSoon && <Badge tone="warning">Due soon</Badge>}
                         </span>

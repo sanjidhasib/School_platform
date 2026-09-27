@@ -1,56 +1,69 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import {
-  BookMarked,
   CalendarClock,
   MessageSquare,
   Bell,
-  ArrowRight,
   CheckSquare,
+  Clock,
+  MapPin,
+  PartyPopper,
+  Check,
+  ArrowRight,
+  Sun,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { studentAPI } from '@/lib/api/student';
 import { PageHeader, Section } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
-import { SubjectLabel } from '@/components/shared/SubjectLabel';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { PersonAvatar } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { subjectTint, subjectBn } from '@/lib/design/subjects';
-import {
-  cn,
-  firstName,
-  formatDate,
-  formatDateLong,
-  formatPercentage,
-  formatTime,
-  minutesFromMidnight,
-} from '@/lib/utils';
+import { HOMEWORK_TYPES } from '@/lib/design/homework';
+import { cn, firstName, formatDateLong, formatPercentage, formatTime, minutesFromMidnight } from '@/lib/utils';
+
+const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const DAY_BN = ['রবিবার', 'সোমবার', 'মঙ্গলবার', 'বুধবার', 'বৃহস্পতিবার', 'শুক্রবার', 'শনিবার'];
+
+type Entry = {
+  _id: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  room?: string;
+  subject: any;
+  teacher: { fullName: string } | null;
+};
 
 export default function StudentDashboardPage() {
   const [data, setData] = useState<any>(null);
+  const [routine, setRoutine] = useState<{ days: number[]; entries: Entry[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [nowMinutes, setNowMinutes] = useState<number | null>(null);
 
-  const load = () => {
+  const load = useCallback(() => {
     setLoading(true);
     setFailed(false);
-    studentAPI
-      .getDashboard()
-      .then((r) => setData(r.data.data))
+    Promise.all([studentAPI.getDashboard(), studentAPI.getTimetable()])
+      .then(([d, t]) => {
+        setData(d.data.data);
+        setRoutine(t.data.data);
+      })
       .catch(() => {
         setFailed(true);
         toast.error('Could not load your dashboard');
       })
       .finally(() => setLoading(false));
-  };
+  }, []);
 
-  useEffect(load, []);
+  useEffect(load, [load]);
 
+  // The clock drives "Now" / "Next" on today's routine.
   useEffect(() => {
     const tick = () => {
       const d = new Date();
@@ -61,243 +74,94 @@ export default function StudentDashboardPage() {
     return () => clearInterval(id);
   }, []);
 
-  const schedule: any[] = useMemo(() => data?.todaySchedule ?? [], [data]);
-
-  const { current, next } = useMemo(() => {
-    if (nowMinutes === null) return { current: null, next: null };
-    let cur: any = null;
-    let nxt: any = null;
-    for (const slot of schedule) {
-      const s = minutesFromMidnight(slot.startTime);
-      const e = minutesFromMidnight(slot.endTime);
-      if (s === null || e === null) continue;
-      if (nowMinutes >= s && nowMinutes < e) cur = slot;
-      else if (nowMinutes < s && !nxt) nxt = slot;
+  const today = new Date().getDay();
+  const byDay = useMemo(() => {
+    const map = new Map<number, Entry[]>();
+    for (const e of routine?.entries ?? []) {
+      if (!map.has(e.dayOfWeek)) map.set(e.dayOfWeek, []);
+      map.get(e.dayOfWeek)!.push(e);
     }
-    return { current: cur, next: nxt };
-  }, [schedule, nowMinutes]);
-
-  const focus = current ?? next;
-  const focusIsNow = Boolean(current);
+    return map;
+  }, [routine]);
 
   if (loading) return <DashboardSkeleton />;
   if (failed) return <ErrorState description="Your dashboard did not load." onRetry={load} />;
 
   const student = data?.student;
-  const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
-    return 'Good evening';
-  })();
-
-  const pending: any[] = data?.pendingHomework ?? [];
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const days = routine?.days?.length ? routine.days : Array.from(byDay.keys()).sort();
+  const todayEntries = byDay.get(today) ?? [];
   const attendancePct = data?.attendancePercentage;
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <PageHeader
         title={`${greeting}, ${firstName(student?.fullName) || 'there'}`}
         description={`${student?.classId?.name ?? ''} ${student?.classId?.section ?? ''} · ${formatDateLong(new Date())}`.trim()}
       />
 
-      {/* The one bold element: the class they are in, or the one coming up. */}
-      {focus && (
-        <section
-          className={cn(
-            'rounded-card border p-5',
-            focusIsNow ? 'border-highlighter bg-highlighter-wash' : 'border-line bg-surface'
-          )}
-        >
-          <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
-            <div className="min-w-0 flex-1">
-              <Badge tone={focusIsNow ? 'warning' : 'neutral'}>
-                {focusIsNow ? 'Happening now' : 'Next class'}
-              </Badge>
-              <h2 className="mt-2 text-2xl font-semibold text-ink">
-                {focus.teacherAssignmentId?.subjectId?.name ?? 'Class'}
-              </h2>
-              {subjectBn(focus.teacherAssignmentId?.subjectId) && (
-                <p lang="bn" className="font-bn text-body text-ink-muted">
-                  {subjectBn(focus.teacherAssignmentId?.subjectId)}
-                </p>
-              )}
-            </div>
-
-            <dl className="flex gap-x-8">
-              <div>
-                <dt className="text-meta text-ink-subtle">Time</dt>
-                <dd className="mt-0.5 text-dense font-medium text-ink tabular">
-                  {formatTime(focus.startTime)}
-                </dd>
-              </div>
-              {focus.room && (
-                <div>
-                  <dt className="text-meta text-ink-subtle">Room</dt>
-                  <dd className="mt-0.5 text-dense font-medium text-ink">{focus.room}</dd>
-                </div>
-              )}
-            </dl>
+      {/* ── The whole week ── */}
+      <Section title="Weekly routine" description="Every class this week, with the teacher who takes it.">
+        {!days.length ? (
+          <Empty icon={CalendarClock} title="No routine yet" text="Your class routine appears here once the school publishes it." />
+        ) : (
+          <div className="space-y-3">
+            {days.map((day) => (
+              <DayRow key={day} day={day} entries={byDay.get(day) ?? []} isToday={day === today} />
+            ))}
           </div>
-        </section>
-      )}
+        )}
+      </Section>
 
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Section
-          title="Due soon"
-          actions={
-            pending.length ? (
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/student/homework">See all</Link>
-              </Button>
-            ) : undefined
-          }
-        >
-          {!pending.length ? (
-            <div className="rounded-card border border-line bg-surface shadow-card">
-              <EmptyState
-                icon={BookMarked}
-                title="Nothing due"
-                description="You have handed in everything that was set."
-                compact
-              />
-            </div>
-          ) : (
-            <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
-              {pending.slice(0, 4).map((hw: any) => {
-                const overdue = hw.dueAt && new Date(hw.dueAt) < new Date();
-                return (
-                  <li key={hw._id}>
-                    <Link
-                      href="/student/homework"
-                      className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-wash/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
-                    >
-                      <span
-                        className={cn('h-8 w-1 shrink-0 rounded-full', subjectTint(hw.subjectId))}
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-dense font-medium text-ink">
-                          {hw.title}
-                        </span>
-                        <SubjectLabel
-                          subject={hw.subjectId}
-                          className="text-meta text-ink-muted"
-                          inline
-                        />
-                      </span>
-                      <span className="shrink-0 text-right">
-                        <span className="block text-meta text-ink-subtle">Due</span>
-                        <span
-                          className={cn(
-                            'block text-meta tabular',
-                            overdue ? 'font-medium text-danger' : 'text-ink'
-                          )}
-                        >
-                          {formatDate(hw.dueAt)}
-                        </span>
-                      </span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </Section>
+      {/* ── Today, period by period ── */}
+      <Section
+        title="Today's routine"
+        description={`${DAY_NAMES[today]} · ${todayEntries.length} ${todayEntries.length === 1 ? 'class' : 'classes'}`}
+      >
+        {!todayEntries.length ? (
+          <Empty icon={Sun} title="No classes today" text="Enjoy your day off — your routine picks up on the next school day." />
+        ) : (
+          <ol className="space-y-3">
+            {todayEntries.map((e, i) => (
+              <TodayCard key={e._id} entry={e} index={i} nowMinutes={nowMinutes} entries={todayEntries} />
+            ))}
+          </ol>
+        )}
+      </Section>
 
+      {/* ── What's due next school day ── */}
+      <NextDayWork work={data?.nextDayWork ?? []} nextDay={data?.nextSchoolDay} />
+
+      <div className="grid gap-8 lg:grid-cols-3">
         <Section title="Your attendance">
-          <div className="rounded-card border border-line bg-surface shadow-card p-5">
-            {attendancePct === undefined || attendancePct === null ? (
-              <EmptyState
-                icon={CheckSquare}
-                title="No attendance recorded yet"
-                description="It appears once your teachers start taking attendance."
-                compact
-              />
+          <div className="rounded-card border border-line bg-surface p-5 shadow-card">
+            {!data?.totalSessions ? (
+              <EmptyState icon={CheckSquare} title="No attendance recorded yet" compact />
             ) : (
               <>
-                <p className="text-3xl font-semibold text-ink tabular">
-                  {formatPercentage(attendancePct)}
-                </p>
+                <p className="text-3xl font-semibold text-ink tabular">{formatPercentage(attendancePct)}</p>
                 <Progress
                   value={attendancePct}
                   tone={attendancePct >= 90 ? 'success' : attendancePct >= 75 ? 'warning' : 'danger'}
                   className="mt-3"
                   label="Attendance"
                 />
-                <Button variant="ghost" size="sm" asChild className="mt-3 -ml-2">
+                <Button variant="ghost" size="sm" asChild className="-ml-2 mt-3">
                   <Link href="/student/attendance">See your record</Link>
                 </Button>
               </>
             )}
           </div>
         </Section>
-      </div>
 
-      <Section title="Today's classes">
-        {!schedule.length ? (
-          <div className="rounded-card border border-line bg-surface shadow-card">
-            <EmptyState icon={CalendarClock} title="No classes today" compact />
-          </div>
-        ) : (
-          <ol className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
-            {schedule.map((slot: any) => {
-              const s = minutesFromMidnight(slot.startTime);
-              const e = minutesFromMidnight(slot.endTime);
-              const live =
-                nowMinutes !== null && s !== null && e !== null && nowMinutes >= s && nowMinutes < e;
-              const done = nowMinutes !== null && e !== null && nowMinutes >= e;
-
-              return (
-                <li
-                  key={slot._id}
-                  className={cn('flex items-center gap-4 px-4 py-3', live && 'bg-highlighter-wash')}
-                >
-                  <div className="w-20 shrink-0">
-                    <p
-                      className={cn(
-                        'text-dense tabular',
-                        done ? 'text-ink-subtle' : 'font-medium text-ink'
-                      )}
-                    >
-                      {formatTime(slot.startTime)}
-                    </p>
-                    {live && <p className="text-meta font-medium text-warning">Now</p>}
-                  </div>
-                  <span
-                    className={cn(
-                      'h-8 w-1 shrink-0 rounded-full',
-                      subjectTint(slot.teacherAssignmentId?.subjectId)
-                    )}
-                    aria-hidden="true"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <SubjectLabel
-                      subject={slot.teacherAssignmentId?.subjectId}
-                      className={cn('text-dense', done ? 'text-ink-muted' : 'font-medium text-ink')}
-                    />
-                  </div>
-                  {slot.room && (
-                    <span className="shrink-0 text-meta text-ink-subtle">{slot.room}</span>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        )}
-      </Section>
-
-      <div className="grid gap-8 lg:grid-cols-2">
-        {/* A plain section with a normal button — not a gradient banner. */}
-        <Section
-          title="Ask about your textbook"
-          description="Stuck on something? Ask a question about what you are studying."
-        >
-          <div className="rounded-card border border-line bg-surface shadow-card p-5">
-            <Button asChild>
+        <Section title="Stuck on something?">
+          <div className="rounded-card border border-line bg-surface p-5 shadow-card">
+            <p className="text-dense text-ink-muted">Ask the AI study helper about your textbook, in Bangla or English.</p>
+            <Button asChild className="mt-4">
               <Link href="/student/ai-learning">
                 <MessageSquare className="h-4 w-4" strokeWidth={1.75} />
-                Start a question
+                Ask a question
               </Link>
             </Button>
           </div>
@@ -307,7 +171,7 @@ export default function StudentDashboardPage() {
           title="From the school"
           actions={
             <Button variant="ghost" size="sm" asChild>
-              <Link href="/student/notifications">All notifications</Link>
+              <Link href="/student/notifications">All</Link>
             </Button>
           }
         >
@@ -317,12 +181,10 @@ export default function StudentDashboardPage() {
             </div>
           ) : (
             <ul className="divide-y divide-line rounded-card border border-line bg-surface shadow-card">
-              {data.recentNotices.slice(0, 4).map((n: any) => (
+              {data.recentNotices.slice(0, 3).map((n: any) => (
                 <li key={n._id} className="px-4 py-3">
                   <p className="text-dense font-medium text-ink">{n.title}</p>
-                  {n.description && (
-                    <p className="mt-0.5 line-clamp-2 text-meta text-ink-muted">{n.description}</p>
-                  )}
+                  {n.description && <p className="mt-0.5 line-clamp-2 text-meta text-ink-muted">{n.description}</p>}
                 </li>
               ))}
             </ul>
@@ -333,17 +195,264 @@ export default function StudentDashboardPage() {
   );
 }
 
+// ── Weekly routine: one long card per day ──────────────────────────────────
+
+function DayRow({ day, entries, isToday }: { day: number; entries: Entry[]; isToday: boolean }) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col overflow-hidden rounded-[18px] border bg-surface shadow-card md:flex-row',
+        isToday ? 'border-brand/40 ring-1 ring-brand/25' : 'border-line'
+      )}
+    >
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-between gap-2 px-4 py-3 md:w-36 md:flex-col md:items-start md:justify-center md:py-4',
+          isToday ? 'bg-brand text-brand-contrast' : 'bg-surface-sunken'
+        )}
+      >
+        <div>
+          <p className={cn('text-dense font-semibold', !isToday && 'text-ink')}>{DAY_NAMES[day]}</p>
+          <p lang="bn" className={cn('font-bn text-meta', isToday ? 'opacity-85' : 'text-ink-muted')}>
+            {DAY_BN[day]}
+          </p>
+        </div>
+        {isToday ? (
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-meta font-semibold">Today</span>
+        ) : (
+          <span className="text-meta text-ink-subtle tabular md:mt-1">
+            {entries.length} {entries.length === 1 ? 'class' : 'classes'}
+          </span>
+        )}
+      </div>
+
+      {!entries.length ? (
+        <p className="flex-1 px-4 py-4 text-dense text-ink-subtle">No classes.</p>
+      ) : (
+        // Scrolls sideways on narrow screens; a clean row on wide ones.
+        <ol className="scrollbar-thin flex flex-1 gap-2.5 overflow-x-auto p-3">
+          {entries.map((e) => (
+            <li
+              key={e._id}
+              className="w-44 shrink-0 rounded-xl border border-line bg-paper p-3 md:w-auto md:min-w-[9.5rem] md:flex-1"
+            >
+              <p className="flex items-center gap-1 text-meta text-ink-subtle tabular">
+                <Clock className="h-3 w-3" strokeWidth={2} aria-hidden="true" />
+                {formatTime(e.startTime)} – {formatTime(e.endTime)}
+              </p>
+              <div className="mt-2 flex items-start gap-2">
+                <span className={cn('mt-0.5 h-8 w-1 shrink-0 rounded-full', subjectTint(e.subject))} aria-hidden="true" />
+                <div className="min-w-0">
+                  <p className="truncate text-dense font-semibold text-ink">{e.subject?.name ?? 'Class'}</p>
+                  <p className="truncate text-meta text-ink-muted">{e.teacher?.fullName ?? 'Teacher to be assigned'}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+// ── Today's routine: long cards with live state ────────────────────────────
+
+function TodayCard({
+  entry: e,
+  entries,
+  index,
+  nowMinutes,
+}: {
+  entry: Entry;
+  entries: Entry[];
+  index: number;
+  nowMinutes: number | null;
+}) {
+  const s = minutesFromMidnight(e.startTime);
+  const end = minutesFromMidnight(e.endTime);
+  const live = nowMinutes !== null && s !== null && end !== null && nowMinutes >= s && nowMinutes < end;
+  const done = nowMinutes !== null && end !== null && nowMinutes >= end;
+  // "Next" is the first class that hasn't started, when none is running.
+  const firstUpcoming = entries.findIndex((x) => {
+    const xs = minutesFromMidnight(x.startTime);
+    return nowMinutes !== null && xs !== null && xs > nowMinutes;
+  });
+  const anyLive = entries.some((x) => {
+    const xs = minutesFromMidnight(x.startTime);
+    const xe = minutesFromMidnight(x.endTime);
+    return nowMinutes !== null && xs !== null && xe !== null && nowMinutes >= xs && nowMinutes < xe;
+  });
+  const isNext = !anyLive && index === firstUpcoming;
+  const bn = subjectBn(e.subject);
+
+  return (
+    <li
+      className={cn(
+        'relative flex flex-col gap-4 overflow-hidden rounded-[18px] border bg-surface p-4 shadow-card transition-colors sm:flex-row sm:items-center sm:gap-6 sm:p-5',
+        live ? 'border-highlighter bg-highlighter-wash' : isNext ? 'border-brand/40' : 'border-line',
+        done && 'opacity-60'
+      )}
+    >
+      <span className={cn('absolute inset-y-0 left-0 w-1.5', subjectTint(e.subject))} aria-hidden="true" />
+
+      <div className="flex items-center gap-3 pl-2 sm:w-44 sm:shrink-0 sm:flex-col sm:items-start sm:gap-1">
+        <span className="text-meta font-semibold uppercase tracking-wide text-ink-subtle">Period {index + 1}</span>
+        <span className="text-lg font-bold text-ink tabular">{formatTime(e.startTime)}</span>
+        <span className="text-meta text-ink-subtle tabular">to {formatTime(e.endTime)}</span>
+      </div>
+
+      <div className="min-w-0 flex-1 pl-2 sm:pl-0">
+        <p className="text-lg font-semibold text-ink">{e.subject?.name ?? 'Class'}</p>
+        {bn && (
+          <p lang="bn" className="font-bn text-dense text-ink-muted">
+            {bn}
+          </p>
+        )}
+      </div>
+
+      <div className="flex items-center gap-3 pl-2 sm:w-56 sm:shrink-0 sm:pl-0">
+        <PersonAvatar name={e.teacher?.fullName} className="h-10 w-10" />
+        <div className="min-w-0">
+          <p className="text-meta text-ink-subtle">Teacher</p>
+          <p className="truncate text-dense font-medium text-ink">{e.teacher?.fullName ?? 'To be assigned'}</p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 pl-2 sm:w-32 sm:shrink-0 sm:flex-col sm:items-end sm:pl-0">
+        {e.room ? (
+          <span className="inline-flex items-center gap-1 text-meta text-ink-muted">
+            <MapPin className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
+            {e.room}
+          </span>
+        ) : (
+          <span />
+        )}
+        {live ? (
+          <span className="rounded-full bg-highlighter px-2.5 py-0.5 text-meta font-semibold text-[#1B2240]">Now</span>
+        ) : isNext ? (
+          <span className="rounded-full bg-brand-wash px-2.5 py-0.5 text-meta font-semibold text-brand">Next</span>
+        ) : done ? (
+          <span className="inline-flex items-center gap-1 text-meta text-ink-subtle">
+            <Check className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            Done
+          </span>
+        ) : null}
+      </div>
+    </li>
+  );
+}
+
+// ── Work due by the next school day ─────────────────────────────────────────
+
+function NextDayWork({ work, nextDay }: { work: any[]; nextDay?: string }) {
+  const date = nextDay ? new Date(nextDay) : null;
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const isTomorrow = date ? date.toDateString() === tomorrow.toDateString() : true;
+  const dayLabel = isTomorrow ? 'tomorrow' : `on ${DAY_NAMES[date!.getDay()]}`;
+
+  return (
+    <Section
+      title={isTomorrow ? 'For tomorrow' : `For ${DAY_NAMES[date!.getDay()]}`}
+      description="Assignments, homework and what to prepare before your next classes."
+      actions={
+        <Button variant="ghost" size="sm" asChild>
+          <Link href="/student/homework">
+            All homework
+            <ArrowRight className="h-4 w-4" strokeWidth={1.75} />
+          </Link>
+        </Button>
+      }
+    >
+      {!work.length ? (
+        <div className="flex flex-col items-center gap-3 rounded-[18px] border border-line bg-surface px-6 py-12 text-center shadow-card">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-success-bg text-success">
+            <PartyPopper className="h-6 w-6" strokeWidth={1.75} aria-hidden="true" />
+          </span>
+          <p className="text-lg font-semibold text-ink">No homework {dayLabel}</p>
+          <p className="text-body text-ink-muted">Have a good day!</p>
+        </div>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-3">
+          {HOMEWORK_TYPES.map((t) => {
+            const items = work.filter((w) => (w.type ?? 'HOMEWORK') === t.value);
+            return (
+              <div key={t.value} className="flex flex-col rounded-[18px] border border-line bg-surface shadow-card">
+                <div className="flex items-center gap-2.5 border-b border-line px-4 py-3">
+                  <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg', t.tone)}>
+                    <t.icon className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-dense font-semibold text-ink">{t.plural}</p>
+                    <p lang="bn" className="font-bn text-meta text-ink-muted">
+                      {t.labelBn}
+                    </p>
+                  </div>
+                  <span className="text-meta font-medium text-ink-subtle tabular">{items.length}</span>
+                </div>
+                {!items.length ? (
+                  <p className="px-4 py-6 text-center text-dense text-ink-subtle">Nothing {dayLabel}.</p>
+                ) : (
+                  <ul className="divide-y divide-line">
+                    {items.map((w) => {
+                      const handedIn = ['SUBMITTED', 'LATE', 'GRADED'].includes(w.submission?.status);
+                      return (
+                        <li key={w._id}>
+                          <Link
+                            href="/student/homework"
+                            className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-wash/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
+                          >
+                            <span className={cn('mt-1 h-8 w-1 shrink-0 rounded-full', subjectTint(w.subjectId))} aria-hidden="true" />
+                            <span className="min-w-0 flex-1">
+                              <span className="block text-dense font-medium text-ink">{w.title}</span>
+                              <span className="block truncate text-meta text-ink-muted">
+                                {w.subjectId?.name}
+                                {w.teacherId?.fullName ? ` · ${w.teacherId.fullName}` : ''}
+                              </span>
+                            </span>
+                            {handedIn ? (
+                              <span className="shrink-0 rounded-full bg-success-bg px-2 py-0.5 text-meta font-medium text-success">
+                                Done
+                              </span>
+                            ) : (
+                              <span className="shrink-0 text-meta text-ink-subtle tabular">
+                                {new Date(w.dueAt).toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true })}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </Section>
+  );
+}
+
+function Empty({ icon, title, text }: { icon: any; title: string; text: string }) {
+  return (
+    <div className="rounded-[18px] border border-line bg-surface shadow-card">
+      <EmptyState icon={icon} title={title} description={text} />
+    </div>
+  );
+}
+
 function DashboardSkeleton() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="space-y-2">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-48" />
       </div>
-      <Skeleton className="h-32 w-full rounded-card" />
-      <div className="grid gap-8 lg:grid-cols-2">
-        <Skeleton className="h-52 rounded-card" />
-        <Skeleton className="h-52 rounded-card" />
+      <div className="space-y-3">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-24 w-full rounded-[18px]" />
+        ))}
       </div>
     </div>
   );

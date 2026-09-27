@@ -4,6 +4,7 @@
  */
 const Student = require('../../models/Student');
 const TextbookDocument = require('../../models/TextbookDocument');
+const Subject = require('../../models/Subject');
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
 const { sendPdf } = require('../admin/textbookController');
@@ -17,13 +18,18 @@ async function studentClass(req) {
 
 exports.list = asyncHandler(async (req, res) => {
   const cls = await studentClass(req);
-  const books = await TextbookDocument.find({ classNumber: cls.gradeNumber, fileName: { $exists: true } })
-    .select('title classNumber subjectId language edition pageCount fileSize status textStatus createdAt')
-    .populate('subjectId', 'code name nameBn')
-    .sort({ createdAt: -1 });
+  const [books, subjects] = await Promise.all([
+    TextbookDocument.find({ classNumber: cls.gradeNumber, fileName: { $exists: true } })
+      .select('title classNumber subjectId language edition pageCount fileSize status textStatus createdAt')
+      .populate('subjectId', 'code name nameBn')
+      .sort({ createdAt: -1 }),
+    // Every subject the class studies, so the library can show a shelf for
+    // each — including the ones whose book hasn't been uploaded yet.
+    Subject.find({ classIds: cls._id, isActive: true }).select('code name nameBn').sort({ name: 1 })
+  ]);
   res.json({
     success: true,
-    data: { class: { name: cls.name, section: cls.section, gradeNumber: cls.gradeNumber }, books }
+    data: { class: { name: cls.name, section: cls.section, gradeNumber: cls.gradeNumber }, books, subjects }
   });
 });
 

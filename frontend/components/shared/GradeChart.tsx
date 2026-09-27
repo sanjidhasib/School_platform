@@ -70,7 +70,7 @@ export function GradeChart({ data, className }: { data: SubjectGradeRow[]; class
             axisLine={false}
             tickLine={false}
             tick={{ fill: axisColor, fontSize: 12 }}
-            width={34}
+            width={40}
             tickFormatter={(v) => `${v}`}
           />
           <Tooltip cursor={{ fill: 'rgb(var(--wash))' }} content={<CustomTooltip />} />
