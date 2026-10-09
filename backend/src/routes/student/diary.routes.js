@@ -1,0 +1,11 @@
+const express = require('express');
+const router = express.Router();
+const c = require('../../controllers/student/diaryController');
+const { protect } = require('../../middleware/auth');
+const { requireRole } = require('../../middleware/rbac');
+const student = [protect, requireRole('STUDENT')];
+router.get('/', ...student, c.list);
+router.post('/', ...student, c.create);
+router.patch('/:id', ...student, c.update);
+router.delete('/:id', ...student, c.remove);
+module.exports = router;

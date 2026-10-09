@@ -4,7 +4,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "nctb-subjects": "node scripts/applyNctbSubjects.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",

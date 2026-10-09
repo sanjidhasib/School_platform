@@ -7,6 +7,11 @@ export const studentAPI = {
   submitHomework: (id: string, data: any) => api.post(`/student/homework/${id}/submit`, data),
   getResults: () => api.get('/student/results'),
   getTimetable: () => api.get('/student/timetable'),
+  // Personal diary
+  getDiary: (date: string) => api.get('/student/diary', { params: { date } }),
+  addDiaryEntry: (data: { date: string; kind: 'HOMEWORK' | 'STUDY'; subjectId?: string; text: string }) => api.post('/student/diary', data),
+  updateDiaryEntry: (id: string, data: { done?: boolean; text?: string }) => api.patch(`/student/diary/${id}`, data),
+  deleteDiaryEntry: (id: string) => api.delete(`/student/diary/${id}`),
   // Class tests
   getTests: () => api.get('/student/tests'),
   startTest: (id: string) => api.post(`/student/tests/${id}/start`),

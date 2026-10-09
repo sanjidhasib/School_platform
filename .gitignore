@@ -32,3 +32,6 @@ Thumbs.db
 
 # Textbook PDFs
 backend/storage/
+
+# Data backups written by maintenance scripts
+backend/scripts/backups/
