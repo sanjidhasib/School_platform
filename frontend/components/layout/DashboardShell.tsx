@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import dynamic from 'next/dynamic';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -11,7 +12,10 @@ import { titleForPath } from '@/lib/nav';
 import { AppSidebar } from './AppSidebar';
 import { Topbar } from './Topbar';
 import { MobileNav } from './MobileNav';
-import { CommandPalette, useCommandPalette } from './CommandPalette';
+import { useCommandPalette } from './useCommandPalette';
+
+// The search palette (cmdk) loads the first time it is opened, not with every page.
+const CommandPalette = dynamic(() => import('./CommandPalette').then((m) => m.CommandPalette), { ssr: false });
 import { t } from '@/lib/i18n';
 
 const COLLAPSE_KEY = 'schoolos.sidebar.collapsed';
@@ -22,6 +26,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [collapsed, setCollapsed] = React.useState(false);
   const { open: paletteOpen, setOpen: setPaletteOpen } = useCommandPalette();
+  const [paletteUsed, setPaletteUsed] = React.useState(false);
+  React.useEffect(() => {
+    if (paletteOpen) setPaletteUsed(true);
+  }, [paletteOpen]);
 
   // Remember the collapsed state, but read it after mount so the server and
   // client render the same markup.
@@ -94,7 +102,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <MobileNav />
-          <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+          {paletteUsed && <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />}
         </div>
       </TooltipProvider>
     </SchoolProvider>

@@ -3,9 +3,10 @@
 import * as React from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -20,7 +21,10 @@ export function ThemeToggle() {
       type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
       aria-label={mounted ? (isDark ? t('Switch to light theme') : t('Switch to dark theme')) : t('Switch theme')}
-      className="flex h-8 w-8 items-center justify-center rounded-btn text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+      className={cn(
+        'flex h-8 w-8 items-center justify-center rounded-btn text-ink-subtle transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
+        className
+      )}
     >
       {mounted && isDark ? (
         <Sun className="h-4 w-4" strokeWidth={1.75} />

@@ -120,14 +120,14 @@ export default async function HomePage() {
                   key={a._id}
                   className={cn(
                     'group relative flex flex-col overflow-hidden rounded-[20px] border border-line bg-surface p-6 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover',
-                    i === 0 && 'lg:border-transparent lg:bg-[#1F2A5A] lg:text-white'
+                    i === 0 && 'lg:border-transparent lg:bg-[#104028] dark:lg:bg-[#1F2A5A] lg:text-white'
                   )}
                 >
                   <div className="flex items-center justify-between gap-3">
                     <span
                       className={cn(
                         'flex h-10 w-10 items-center justify-center rounded-full',
-                        i === 0 ? 'bg-highlighter-wash text-highlighter lg:bg-white/15 lg:text-white' : 'bg-highlighter-wash text-highlighter'
+                        i === 0 ? 'bg-highlighter-wash text-warning dark:text-highlighter lg:bg-white/15 lg:text-white' : 'bg-highlighter-wash text-warning dark:text-highlighter'
                       )}
                     >
                       <Trophy className="h-5 w-5" strokeWidth={1.75} aria-hidden="true" />

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { LogIn, Menu, X } from 'lucide-react';
 import { SchoolBadge } from '@/components/layout/Logo';
 import { LanguageToggle } from '@/components/i18n/LanguageToggle';
+import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 
@@ -40,7 +41,7 @@ export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logo
   return (
     <header
       className={cn(
-        'chrome-bar sticky top-0 z-50 border-b bg-surface transition-shadow',
+        'chrome chrome-bar sticky top-0 z-50 border-b bg-surface transition-shadow',
         scrolled ? 'border-line shadow-card' : 'border-transparent'
       )}
     >
@@ -65,6 +66,7 @@ export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logo
         </nav>
 
         <LanguageToggle compact className="ml-auto md:ml-3" />
+        <ThemeToggle className="h-9 w-9 shrink-0 rounded-full" />
 
         <Link
           href="/login"

@@ -17,10 +17,9 @@
 @layer base {
   :root {
     /*
-      Light theme: one green (#3CB371) carried through every accent, set on
-      warm neutrals (white surfaces on a beige-white page, gray secondary
-      text) with near-black type. Soft pink and lavender are the
-      complementary tones; navy and deep brown are the bold accents.
+      Light theme: one green (#3CB371) carried through every accent, a deep
+      green frame (sidebar, header, footer), warm neutrals and black text.
+      Soft gold and navy are the only other tones, used sparingly.
     */
 
     /* Surfaces */
@@ -47,9 +46,9 @@
     /* Green used as text needs a deeper shade of the same hue to be readable */
     --brand-text: 30 122 72; /* #1E7A48 - 5.3:1 on white */
 
-    /* Soft pink: reserved for "now" */
-    --highlighter: 244 166 192; /* #F4A6C0 */
-    --highlighter-wash: 253 236 242; /* #FDECF2 */
+    /* Soft gold: reserved for "now" - sits with the green without clashing */
+    --highlighter: 214 168 62; /* #D6A83E */
+    --highlighter-wash: 251 243 221; /* #FBF3DD */
 
     /* Bold accents */
     --navy: 31 42 90; /* #1F2A5A */
@@ -63,8 +62,8 @@
     --danger-bg: 252 234 237;
     --warning: 154 101 16;
     --warning-bg: 253 243 226;
-    --info: 107 79 160; /* light purple */
-    --info-bg: 242 237 249;
+    --info: 36 72 122; /* navy */
+    --info-bg: 232 238 246;
 
     /* Subject tints - keyed by subject code, carry --ink text */
     --subj-ban: 243 232 228;
@@ -172,10 +171,14 @@
   :root:not(.dark) .group:hover .group-hover\:text-brand {
     color: rgb(var(--brand-text));
   }
-  /* Sidebar: deep formal green. Re-scoping the tokens recolours everything
-     inside it (logo text, nav items, user menu) without touching dark mode. */
+  /*
+    Light theme frame: the sidebar, the header bars and the footer share one
+    deep green. Re-scoping the tokens recolours everything inside them (logo
+    text, nav items, toggles) without touching dark mode.
+  */
   :root:not(.dark) .chrome {
     --surface: 16 64 40; /* #104028 */
+    --surface-sunken: 24 78 51;
     --wash: 33 94 62; /* hover / active item */
     --ink: 255 255 255;
     --ink-muted: 226 240 231;
@@ -185,24 +188,13 @@
     --brand-text: 140 228 176; /* active nav item */
     color: rgb(var(--ink));
   }
-  /* Header bars: light green with a brand-green rule underneath */
+  /* Header bars: the same green, with a brand-green rule like the footer's */
   :root:not(.dark) .chrome-bar {
-    background-color: rgb(var(--brand-wash));
-    border-bottom: 2px solid rgb(var(--brand));
+    border-bottom: 3px solid rgb(var(--brand));
   }
-  /* Cards: green-gray border and a green top edge */
+  /* Cards: a green-gray border, flat colours — no gradients anywhere */
   :root:not(.dark) .shadow-card.rounded-card {
-    border-color: rgb(200 226 210);
-    border-top: 3px solid rgb(var(--brand));
-    box-shadow: 0 1px 2px rgb(16 64 40 / 0.06), 0 4px 14px -8px rgb(16 64 40 / 0.18);
-  }
-
-  :root:not(.dark) body {
-    background-image:
-      radial-gradient(1200px 520px at 0% -10%, rgb(60 179 113 / 0.12), transparent 60%),
-      radial-gradient(900px 480px at 100% 0%, rgb(196 168 230 / 0.16), transparent 60%),
-      radial-gradient(800px 600px at 50% 120%, rgb(244 166 192 / 0.10), transparent 60%);
-    background-attachment: fixed;
+    border-color: rgb(206 226 213);
   }
 
   /* Figures that sit in columns must align; prose must not look stiff. */

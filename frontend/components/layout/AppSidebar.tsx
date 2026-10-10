@@ -42,7 +42,7 @@ export function AppSidebar({
     <div
       className={cn(
         'chrome flex h-full flex-col border-r border-line bg-surface transition-[width] duration-200',
-        collapsed ? 'w-16' : 'w-60'
+        collapsed ? 'w-[88px]' : 'w-60'
       )}
     >
       <div
@@ -170,9 +170,10 @@ function SidebarLink({
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'relative flex h-8 items-center gap-2.5 rounded-btn px-2 text-dense font-medium transition-colors',
+        'relative flex items-center rounded-btn font-medium transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand',
-        collapsed && 'justify-center px-0',
+        // Collapsed still names every icon: a small label under it.
+        collapsed ? 'flex-col justify-center gap-1 px-1 py-1.5 text-[10.5px] leading-tight' : 'h-8 gap-2.5 px-2 text-dense',
         active ? 'text-brand' : 'text-ink-muted hover:bg-wash/60 hover:text-ink'
       )}
     >
@@ -184,12 +185,14 @@ function SidebarLink({
         />
       )}
       <item.icon className="relative h-4 w-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-      {!collapsed && <span className="relative truncate">{t(item.label)}</span>}
+      <span className={cn('relative', collapsed ? 'line-clamp-2 w-full break-words text-center' : 'truncate')}>
+        {t(item.label)}
+      </span>
     </Link>
   );
 
   return collapsed ? (
-    <Tooltip content={item.label} side="right">
+    <Tooltip content={t(item.label)} side="right">
       {link}
     </Tooltip>
   ) : (

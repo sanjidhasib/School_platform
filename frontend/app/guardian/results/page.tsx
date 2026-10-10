@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BarChart3, Users, Download } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,7 +9,6 @@ import { PageHeader, Section } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { ChildSwitcher } from '@/components/shared/ChildSwitcher';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
-import { GradeChart } from '@/components/shared/GradeChart';
 import { Skeleton, TableSkeleton } from '@/components/ui/skeleton';
 import { Panel } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,13 @@ import {
 import { apiErrorMessage, formatDate, gradeTone, termLabel } from '@/lib/utils';
 import { subjectBn } from '@/lib/design/subjects';
 import { t } from '@/lib/i18n';
+
+// The chart library (recharts) is large; it loads only on the pages that draw a chart.
+const GradeChart = dynamic(() => import('@/components/shared/GradeChart').then((m) => m.GradeChart), {
+  ssr: false,
+  loading: () => <div className="skeleton w-full" style={{ height: 220 }} />,
+});
+
 
 export default function GuardianResultsPage() {
   const [children, setChildren] = useState<any[]>([]);

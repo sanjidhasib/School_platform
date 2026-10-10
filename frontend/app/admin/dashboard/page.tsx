@@ -1,5 +1,6 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays, Bell, Plus, UserPlus, CalendarClock } from 'lucide-react';
@@ -9,13 +10,20 @@ import { PageHeader, Section } from '@/components/shared/PageHeader';
 import { SummaryStrip } from '@/components/shared/SummaryStrip';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { SubjectLabel } from '@/components/shared/SubjectLabel';
-import { EnrollmentChart, type ClassEnrollment } from '@/components/shared/EnrollmentChart';
+import type { ClassEnrollment } from '@/components/shared/EnrollmentChart';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Panel } from '@/components/ui/card';
 import { subjectTint } from '@/lib/design/subjects';
 import { cn, formatDateLong, formatTime, formatDate, minutesFromMidnight } from '@/lib/utils';
 import { t } from '@/lib/i18n';
+
+// The chart library (recharts) is large; it loads only on the pages that draw a chart.
+const EnrollmentChart = dynamic(() => import('@/components/shared/EnrollmentChart').then((m) => m.EnrollmentChart), {
+  ssr: false,
+  loading: () => <div className="skeleton w-full" style={{ height: 260 }} />,
+});
+
 
 export default function AdminDashboardPage() {
   const [data, setData] = useState<any>(null);
