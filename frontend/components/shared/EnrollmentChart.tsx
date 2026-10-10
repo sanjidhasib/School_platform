@@ -31,7 +31,7 @@ export interface ClassEnrollment {
  * surfaces (all six checks pass, mode light and dark).
  */
 const CHART_COLORS = {
-  light: { room: '#2446C9', filling: '#9A6510', full: '#A01E38' },
+  light: { room: '#2BA562', filling: '#9A6510', full: '#A01E38' },
   dark: { room: '#5C7DEA', filling: '#BC8720', full: '#D85A75' },
 };
 

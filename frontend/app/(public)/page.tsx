@@ -80,7 +80,7 @@ export default async function HomePage() {
               </p>
               <h1
                 lang={bangla ? 'bn' : undefined}
-                className="mt-2 bg-gradient-to-r from-[#14201A] via-[#1E7A48] to-[#3CB371] bg-clip-text pb-1 text-[2.6rem] font-extrabold leading-[1.1] tracking-tight text-transparent sm:text-6xl lg:text-7xl xl:text-8xl dark:bg-none dark:text-ink"
+                className="mt-2 pb-1 text-[2.6rem] font-extrabold leading-[1.1] tracking-tight text-ink sm:text-6xl lg:text-7xl xl:text-8xl"
               >
                 {t(schoolName)}
               </h1>
@@ -263,7 +263,7 @@ export default async function HomePage() {
               )}
             </div>
 
-            <div className="rounded-[20px] bg-[#12162B] p-6 text-white ring-1 ring-white/5 sm:p-8">
+            <div className="rounded-[20px] bg-[#104028] p-6 dark:bg-[#12162B] text-white ring-1 ring-white/5 sm:p-8">
               <h3 className="text-xl font-semibold">{t('How to apply')}</h3>
               <p className="mt-2 text-body text-white/75">
                 {t('Admission is handled by the school office. Contact the office for forms, dates and the documents you need.')}
@@ -295,7 +295,7 @@ export default async function HomePage() {
       </main>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-white/10 bg-[#12162B] text-white">
+      <footer className="border-t-4 border-t-brand bg-[#104028] text-white dark:border-t dark:border-t-white/10 dark:bg-[#12162B]">
         <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-10">
           <div>
             <div className="flex items-center gap-2.5">
@@ -327,7 +327,7 @@ export default async function HomePage() {
             <li>
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-dense font-semibold text-[#1B2240] transition-colors hover:bg-white/90"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-dense font-semibold text-[#104028] transition-colors hover:bg-white/90 dark:text-[#1B2240]"
               >
                 <LogIn className="h-4 w-4" strokeWidth={2} />
                 {t('Login')}

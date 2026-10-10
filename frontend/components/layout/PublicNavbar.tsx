@@ -40,7 +40,7 @@ export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logo
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 border-b bg-surface transition-shadow',
+        'chrome-bar sticky top-0 z-50 border-b bg-surface transition-shadow',
         scrolled ? 'border-line shadow-card' : 'border-transparent'
       )}
     >

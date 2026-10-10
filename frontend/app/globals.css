@@ -26,13 +26,14 @@
     /* Surfaces */
     --paper: 248 246 240; /* #F8F6F0 - warm beige-white app background */
     --surface: 255 255 255; /* #FFFFFF - cards, sheets, tables */
-    --surface-sunken: 243 241 234; /* #F3F1EA - table header, inset areas */
+    --surface-sunken: 234 244 237; /* #EAF4ED - table headers, inset areas: a pale green */
     --wash: 230 245 236; /* #E6F5EC - light green: selected rows, active nav */
 
-    /* Text: black, with grays for secondary text */
-    --ink: 20 32 26; /* #14201A - primary text, near-black */
-    --ink-muted: 75 85 80; /* #4B5550 */
-    --ink-subtle: 111 120 114; /* #6F7872 */
+    /* Text: black for headings and body alike - a formal, single text colour.
+       Only small meta text (dates, hints) steps down to a dark gray. */
+    --ink: 17 24 20; /* #111814 */
+    --ink-muted: 17 24 20; /* same as --ink: body text is black */
+    --ink-subtle: 72 80 76; /* #48504C - hints and timestamps, 8.4:1 */
 
     /* Lines: warm grays */
     --line: 230 226 216; /* #E6E2D8 */
@@ -171,6 +172,31 @@
   :root:not(.dark) .group:hover .group-hover\:text-brand {
     color: rgb(var(--brand-text));
   }
+  /* Sidebar: deep formal green. Re-scoping the tokens recolours everything
+     inside it (logo text, nav items, user menu) without touching dark mode. */
+  :root:not(.dark) .chrome {
+    --surface: 16 64 40; /* #104028 */
+    --wash: 33 94 62; /* hover / active item */
+    --ink: 255 255 255;
+    --ink-muted: 226 240 231;
+    --ink-subtle: 176 207 188; /* 6.9:1 on the green */
+    --line: 36 88 60;
+    --line-strong: 56 112 80;
+    --brand-text: 140 228 176; /* active nav item */
+    color: rgb(var(--ink));
+  }
+  /* Header bars: light green with a brand-green rule underneath */
+  :root:not(.dark) .chrome-bar {
+    background-color: rgb(var(--brand-wash));
+    border-bottom: 2px solid rgb(var(--brand));
+  }
+  /* Cards: green-gray border and a green top edge */
+  :root:not(.dark) .shadow-card.rounded-card {
+    border-color: rgb(200 226 210);
+    border-top: 3px solid rgb(var(--brand));
+    box-shadow: 0 1px 2px rgb(16 64 40 / 0.06), 0 4px 14px -8px rgb(16 64 40 / 0.18);
+  }
+
   :root:not(.dark) body {
     background-image:
       radial-gradient(1200px 520px at 0% -10%, rgb(60 179 113 / 0.12), transparent 60%),

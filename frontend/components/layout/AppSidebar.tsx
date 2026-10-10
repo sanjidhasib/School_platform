@@ -41,7 +41,7 @@ export function AppSidebar({
   return (
     <div
       className={cn(
-        'flex h-full flex-col border-r border-line bg-surface transition-[width] duration-200',
+        'chrome flex h-full flex-col border-r border-line bg-surface transition-[width] duration-200',
         collapsed ? 'w-16' : 'w-60'
       )}
     >
