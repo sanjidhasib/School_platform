@@ -11,7 +11,7 @@
 const env = require('../config/env');
 
 const BASE = 'https://generativelanguage.googleapis.com/v1beta';
-const CHAT_MODEL = () => env.GEMINI_MODEL || 'gemini-2.5-flash';
+const CHAT_MODEL = () => env.GEMINI_MODEL || 'gemini-3.8-flash';
 const EMBED_MODEL = () => env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001';
 // 768 keeps a whole library of books small enough to score in memory, and
 // the provider's own guidance is that quality barely drops from the full size.
@@ -49,12 +49,12 @@ function recordFailure(res, json) {
   return err;
 }
 
-async function call(path, body, method = 'POST') {
+async function call(path, body, method = 'POST', timeoutMs = 60_000) {
   const res = await fetch(`${BASE}/${path}${path.includes('?') ? '&' : '?'}key=${encodeURIComponent(env.GEMINI_API_KEY)}`, {
     method,
     headers: { 'Content-Type': 'application/json' },
     body: body ? JSON.stringify(body) : undefined,
-    signal: AbortSignal.timeout(60_000)
+    signal: AbortSignal.timeout(timeoutMs)
   });
   const json = await res.json().catch(() => ({}));
   if (!res.ok) throw recordFailure(res, json);
@@ -106,15 +106,35 @@ async function embed(texts, taskType = 'RETRIEVAL_DOCUMENT') {
  * history: [{ role: 'user' | 'assistant', content }], oldest first, ending
  * with the student's current question.
  */
+// The website forwards API calls with a ~30 s limit (Next.js locally, Vercel
+// when hosted), so an answer must be back well inside that, retry included.
+const ANSWER_BUDGET_MS = 26_000;
+
+// "High demand", rate limits and timeouts usually pass within seconds.
+const isTransient = (err) =>
+  [429, 500, 502, 503, 504].includes(err.status) || err.name === 'TimeoutError' || /high demand|overloaded|try again/i.test(err.message);
+
 async function generate({ system, history }) {
-  const json = await call(`models/${CHAT_MODEL()}:generateContent`, {
+  const body = {
     systemInstruction: { parts: [{ text: system }] },
     contents: history.map((m) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }]
     })),
     generationConfig: { temperature: 0.3, maxOutputTokens: 2048 }
-  });
+  };
+  const deadline = Date.now() + ANSWER_BUDGET_MS;
+  let json;
+  for (let attempt = 1; ; attempt++) {
+    try {
+      json = await call(`models/${CHAT_MODEL()}:generateContent`, body, 'POST', Math.max(1_000, deadline - Date.now()));
+      break;
+    } catch (err) {
+      // One quick retry, only if there's still time for it to finish.
+      if (attempt >= 2 || !isTransient(err) || deadline - Date.now() < 8_000) throw err;
+      await new Promise((r) => setTimeout(r, 1_500));
+    }
+  }
   const text = json?.candidates?.[0]?.content?.parts?.map((p) => p.text || '').join('').trim();
   if (!text) {
     const why = json?.candidates?.[0]?.finishReason || json?.promptFeedback?.blockReason || 'empty';

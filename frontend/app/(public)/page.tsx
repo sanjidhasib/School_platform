@@ -80,7 +80,7 @@ export default async function HomePage() {
               </p>
               <h1
                 lang={bangla ? 'bn' : undefined}
-                className="mt-2 pb-1 text-[2.6rem] font-extrabold leading-[1.1] tracking-tight text-ink sm:text-6xl lg:text-7xl xl:text-8xl"
+                className="mt-2 bg-gradient-to-r from-[#0F3D26] via-[#1E7A48] to-[#2E9A5C] bg-clip-text pb-1 text-[2.6rem] font-extrabold leading-[1.1] tracking-tight text-transparent dark:from-[#E8EAF2] dark:via-[#B9C6F5] dark:to-[#7D97EE] sm:text-6xl lg:text-7xl xl:text-8xl"
               >
                 {t(schoolName)}
               </h1>

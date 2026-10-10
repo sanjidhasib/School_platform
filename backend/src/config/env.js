@@ -32,7 +32,7 @@ const env = {
   // Vercel also forwards /api.
   TRUST_PROXY: parseTrustProxy(process.env.TRUST_PROXY),
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
-  GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+  GEMINI_MODEL: process.env.GEMINI_MODEL || 'gemini-3.8-flash',
   GEMINI_EMBEDDING_MODEL: process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001',
   // Textbook PDFs live outside the public /uploads folder and are only served
   // through the authenticated textbook routes.

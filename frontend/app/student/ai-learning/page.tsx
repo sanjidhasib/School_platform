@@ -365,7 +365,7 @@ function AILearningPage() {
             <EmptyState
               icon={MessageSquare}
               title={t('Ask about your textbook')}
-              description={t('Pick a subject and ask in Bangla or English. Answers come from your {value}NCTB textbook, and each one shows the page it came from.', { value: className ? `${className} ` : '' })}
+              description={t('Pick a subject and ask in Bangla or English. When your {value}NCTB textbook covers it, the answer quotes the book and shows the page; anything else is answered too, marked as beyond the textbook.', { value: className ? `${className} ` : '' })}
               action={
                 <div className="space-y-3">
                   {startControls()}
@@ -575,6 +575,12 @@ function AILearningPage() {
  */
 function SourceChips({ message }: { message: any }) {
   const sources: any[] = message.sources ?? [];
+
+  if (message.mode === 'GENERAL') {
+    return (
+      <p className="text-meta text-ink-subtle">{t('General answer — not from your textbook. Check with your teacher for exams.')}</p>
+    );
+  }
 
   if (message.mode === 'NOT_FOUND' || (!sources.length && message.mode)) {
     return (

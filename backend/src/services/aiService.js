@@ -1,12 +1,17 @@
 /**
- * Answers a student's question from their own class's NCTB textbooks.
+ * Answers a student's question, with their own class's NCTB textbooks as the
+ * first reference.
  *
  * 1. Find the passages that match (meaning-based search when the books are
  *    embedded, keyword search otherwise).
- * 2. If a model is available, have it answer ONLY from those passages, in the
- *    student's chosen language, at their class level, citing pages.
- * 3. If no model is available, still help: show the matching passages with
- *    their page numbers, so the student can read the answer in the book.
+ * 2. If the question matches the book, the model quotes the book's own lines
+ *    (with the page) and explains them; anything it adds beyond the book is
+ *    marked as such.
+ * 3. If the book has nothing on it, the model still answers from general
+ *    knowledge, at the student's class level, clearly labelled as not from
+ *    the textbook.
+ * 4. With no model available, show the matching passages with their page
+ *    numbers, so the student can read the answer in the book.
  */
 const TextbookDocument = require('../models/TextbookDocument');
 const TextbookChunk = require('../models/TextbookChunk');
@@ -141,23 +146,81 @@ const BN_CLASS = { 1: 'প্রথম', 2: 'দ্বিতীয়', 3: 'ত�
 const bnClass = (n) => BN_CLASS[n] || n;
 const bnDigits = (n) => String(n).replace(/\d/g, (d) => '০১২৩৪৫৬৭৮৯'[d]);
 
+// The model ends its answer with this when the passages turned out not to be
+// about the question, so the answer isn't shown with textbook page chips.
+const NO_BOOK = '[[NO_BOOK]]';
+
+/**
+ * The chat shows answers as plain text, so markdown the model slips in anyway
+ * would show up as stray asterisks. Keep the words, drop the symbols.
+ */
+function plainText(text) {
+  return text
+    .replace(NO_BOOK, '')
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/(^|[^\w*])\*(?!\s)([^*\n]+?)\*(?!\w)/g, '$1$2')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/^\s*[*-]\s+/gm, '• ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/[ \t]+$/gm, '')
+    .trim();
+}
+
+/**
+ * Pages the answer actually cites — "(page 49)", "(p. 49)", "(পৃ. ৪৯)",
+ * "পৃষ্ঠা ৪৯" — so the chips under it point only at pages it used, not at
+ * every passage the search turned up.
+ */
+function citedPages(text) {
+  const pages = new Set();
+  const western = (d) => d.replace(/[০-৯]/g, (c) => '০১২৩৪৫৬৭৮৯'.indexOf(c));
+  const re = /(?:\bpages?|\bp\.|পৃষ্ঠা|পৃ\.)\s*([0-9০-৯]+)/giu;
+  let m;
+  while ((m = re.exec(text))) pages.add(Number(western(m[1])));
+  return pages;
+}
+
+function commonRules({ classNumber, language }) {
+  return `- Explain at a Class ${classNumber} level: short sentences, everyday words, and one small example when it helps. For maths, show every step and check the final answer.
+- Reply in ${language === 'BN' ? 'Bangla (বাংলা), in standard Unicode Bangla script' : 'English'}. If the student clearly asks for the other language, use that instead.
+- Keep answers focused: a short paragraph or a few numbered steps. No headings.
+- Plain text only: no markdown (no **, *, #, or backticks). Use "1." for steps and "•" for lists.
+- Be accurate. If you are not sure of a fact, say so rather than guess.
+- You may help with any school subject, general knowledge, writing, or study skills. Politely refuse anything unsafe or not suitable for a school student.`;
+}
+
 function systemPrompt({ classNumber, subjectName, language, passages }) {
   const context = passages
     .map((p, i) => `[${i + 1}] ${p.documentTitle || 'Textbook'}${p.chapter ? ` — ${p.chapter}` : ''}, page ${p.pageNumber}\n${p.content}`)
     .join('\n\n');
 
-  return `You are the SchoolOS study helper: a patient, encouraging teacher for a Class ${classNumber} student in Bangladesh, studying ${subjectName} from the NCTB textbook.
+  return `You are the SchoolOS study helper: a patient, encouraging teacher for a Class ${classNumber} student in Bangladesh. The current subject is ${subjectName}, from the NCTB textbook.
 
-Rules:
-- Answer ONLY from the textbook passages below. If they do not contain the answer, say plainly that it isn't in this part of the textbook and suggest asking the class teacher. Never invent facts, chapters or page numbers.
-- Explain at a Class ${classNumber} level: short sentences, everyday words, and one small example when it helps. For maths, show every step.
-- Reply in ${language === 'BN' ? 'Bangla (বাংলা), in standard Unicode Bangla script' : 'English'}. If a passage is in the other language, translate its meaning faithfully and keep the book's technical terms (you may give the other-language term in brackets). If the student clearly asks for the other language, use that instead.
-- Mention the page you used in brackets, like (p. 42) or (পৃ. ৪২).
-- Keep answers focused: a short paragraph or a few numbered steps. No headings.
-- Only help with studying. If asked something unrelated or unsafe, kindly steer back to the lesson.
+How to use the textbook passages below:
+- If they answer the question (or match a question from the book), the textbook is your main reference. Start with the book's own words: quote the relevant line or two, translated faithfully if the passage is in the other language, with the page in brackets, like (p. 42) or (পৃ. ৪২). Then explain it simply.
+- Keep the book's technical terms; you may give the other-language term in brackets.
+- If the passages only partly answer it, use them for that part, then complete the answer from your own knowledge and say clearly which part goes beyond the textbook (for example "Beyond the textbook:" / "পাঠ্যবইয়ের বাইরে:").
+- If the passages are not really about the question, ignore them, answer from your own knowledge, do not mention pages, and end your reply with the exact text ${NO_BOOK}
+- Cite only the page number in each passage's header line ("page 49"), never a number printed inside the passage text, so the citation matches the page the student can open.
+- Never invent page numbers or claim something is in the book when it isn't.
+
+Other rules:
+${commonRules({ classNumber, language })}
 
 Textbook passages:
 ${context}`;
+}
+
+function generalPrompt({ classNumber, subjectName, language, hasBook }) {
+  return `You are the SchoolOS study helper: a patient, encouraging teacher for a Class ${classNumber} student in Bangladesh. The current subject is ${subjectName}.
+
+${hasBook
+    ? "This question was not found in the student's NCTB textbook, so answer from your own knowledge."
+    : "The student's NCTB textbook for this subject has not been added yet, so answer from your own knowledge."} Follow the Bangladesh NCTB curriculum's terms and methods where they apply. Do not mention page numbers or claim the answer comes from the textbook.
+
+Rules:
+${commonRules({ classNumber, language })}`;
 }
 
 function passagesAnswer(language, passages) {
@@ -197,7 +260,20 @@ async function answerQuestion({ classNumber, subjectId, subjectName, subjectName
     excerpt: p.content.slice(0, 280)
   }));
 
+  const turn = [...history.slice(-8), { role: 'user', content: question }];
+
   if (!passages.length) {
+    if (provider.isConfigured()) {
+      try {
+        const content = await provider.generate({
+          system: generalPrompt({ classNumber, subjectName, language, hasBook: books.length > 0 }),
+          history: turn
+        });
+        return { content: plainText(content), sources: [], sourceChunkIds: [], mode: 'GENERAL' };
+      } catch (err) {
+        provider.logFailure('General answer', err);
+      }
+    }
     const content = !books.length
       ? L(language,
           `Your Class ${classNumber} ${subjectName} textbook hasn’t been added to SchoolOS yet, so I can’t answer from it. Please ask your teacher, and check back once the school uploads the book.`,
@@ -212,9 +288,21 @@ async function answerQuestion({ classNumber, subjectId, subjectName, subjectName
     try {
       const content = await provider.generate({
         system: systemPrompt({ classNumber, subjectName, language, passages }),
-        history: [...history.slice(-8), { role: 'user', content: question }]
+        history: turn
       });
-      return { content, sources, sourceChunkIds: passages.map((p) => p._id), mode: 'AI' };
+      // The passages weren't about this question: a general answer, no page chips.
+      if (content.includes(NO_BOOK)) {
+        return { content: plainText(content), sources: [], sourceChunkIds: [], mode: 'GENERAL' };
+      }
+      const cited = citedPages(content);
+      const used = cited.size ? passages.filter((p) => cited.has(p.pageNumber)) : passages;
+      const keep = used.length ? used : passages;
+      return {
+        content: plainText(content),
+        sources: sources.filter((s) => keep.some((p) => p.pageNumber === s.pageNumber && String(p.documentId) === String(s.documentId))),
+        sourceChunkIds: keep.map((p) => p._id),
+        mode: 'AI'
+      };
     } catch (err) {
       provider.logFailure('Answer generation', err);
     }
@@ -228,4 +316,4 @@ async function answerQuestion({ classNumber, subjectId, subjectName, subjectName
   };
 }
 
-module.exports = { answerQuestion, searchTextbook, tokenize };
+module.exports = { answerQuestion, searchTextbook, tokenize, plainText, citedPages };

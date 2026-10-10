@@ -19,8 +19,9 @@ const aiMessageSchema = new mongoose.Schema({
   sources: { type: [sourceSchema], default: [] },
   // How the answer was produced: AI = model answered from the book;
   // PASSAGES = no model available, the matching passages are shown instead;
-  // NOT_FOUND = nothing relevant in this class's books.
-  mode: { type: String, enum: ['AI', 'PASSAGES', 'NOT_FOUND'], default: undefined }
+  // GENERAL = not in the books, answered from the model's general knowledge;
+  // NOT_FOUND = nothing relevant in this class's books and no model.
+  mode: { type: String, enum: ['AI', 'PASSAGES', 'GENERAL', 'NOT_FOUND'], default: undefined }
 }, { timestamps: true });
 
 module.exports = mongoose.model('AiMessage', aiMessageSchema);
