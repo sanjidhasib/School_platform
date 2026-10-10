@@ -1,7 +1,22 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 
+/**
+ * Where API calls go.
+ * - Locally: straight to the backend (http://localhost:5000/api).
+ * - Hosted: NEXT_PUBLIC_API_URL is "/api", so the browser calls the website's
+ *   own domain and next.config.mjs forwards it to the backend. Login cookies
+ *   then belong to the website's domain, which is what the page guard in
+ *   middleware.ts reads.
+ * - On the server (homepage data) a relative URL has no host, so the backend
+ *   is called directly through API_PROXY_TARGET.
+ */
+const PUBLIC_API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const SERVER_API_URL = process.env.API_PROXY_TARGET
+  ? `${process.env.API_PROXY_TARGET.replace(/\/$/, '')}/api`
+  : PUBLIC_API_URL;
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: typeof window === 'undefined' ? SERVER_API_URL : PUBLIC_API_URL,
   withCredentials: true,
 });
 
@@ -77,7 +92,16 @@ api.interceptors.response.use(
 export default api;
 
 /** The backend's origin, for files it serves (uploaded logo, carousel pictures). */
-export const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+// With the hosted "/api" setting this is "", so pictures load from the
+// website's own /uploads path, which is forwarded to the backend too.
+export const API_ORIGIN = PUBLIC_API_URL.replace(/\/api\/?$/, '');
+
+/**
+ * Big uploads (textbook PDFs) can't pass through the hosting forwarder, which
+ * caps request bodies at a few MB. When NEXT_PUBLIC_DIRECT_API_URL is set they
+ * go straight to the backend instead, signed with a short-lived upload token.
+ */
+export const DIRECT_API_URL = process.env.NEXT_PUBLIC_DIRECT_API_URL || '';
 
 /** "/uploads/branding/x.jpg" → a full URL; anything else passes through. */
 export function mediaUrl(path?: string | null): string | null {

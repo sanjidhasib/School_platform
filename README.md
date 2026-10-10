@@ -104,6 +104,10 @@ schoolos/
 
 ---
 
+## Hosting
+
+To put SchoolOS online (Vercel + Render + MongoDB Atlas), follow [DEPLOY.md](DEPLOY.md).
+
 ## Docker (Optional)
 
 ```bash

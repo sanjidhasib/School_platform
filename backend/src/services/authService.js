@@ -14,36 +14,32 @@ const generateTokens = (userId) => {
   return { accessToken, refreshToken };
 };
 
-const setAuthCookies = (res, accessToken, refreshToken) => {
+// Shared by every cookie this server sets, so clearing matches setting.
+const cookieBase = () => {
   const isProd = env.NODE_ENV === 'production';
-  
-  res.cookie('accessToken', accessToken, {
+  return {
     httpOnly: true,
     secure: isProd,
     sameSite: isProd ? 'strict' : 'lax',
+    ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {})
+  };
+};
+
+const setAuthCookies = (res, accessToken, refreshToken) => {
+  res.cookie('accessToken', accessToken, {
+    ...cookieBase(),
     maxAge: 15 * 60 * 1000 // 15 mins
   });
 
   res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? 'strict' : 'lax',
+    ...cookieBase(),
     maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
   });
 };
 
 const clearAuthCookies = (res) => {
-  const isProd = env.NODE_ENV === 'production';
-  res.cookie('accessToken', '', {
-    httpOnly: true,
-    secure: isProd,
-    expires: new Date(0)
-  });
-  res.cookie('refreshToken', '', {
-    httpOnly: true,
-    secure: isProd,
-    expires: new Date(0)
-  });
+  res.cookie('accessToken', '', { ...cookieBase(), expires: new Date(0) });
+  res.cookie('refreshToken', '', { ...cookieBase(), expires: new Date(0) });
 };
 
 module.exports = { generateTokens, setAuthCookies, clearAuthCookies };

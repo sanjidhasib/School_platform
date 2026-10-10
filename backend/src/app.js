@@ -9,10 +9,13 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// So rate limits count real visitors, not the hosting proxy.
+app.set('trust proxy', env.TRUST_PROXY);
+
 // Security & parsing
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(cors({
-  origin: env.FRONTEND_URL || 'http://localhost:3000',
+  origin: (env.FRONTEND_URL || 'http://localhost:3000').split(',').map((o) => o.trim()).filter(Boolean),
   credentials: true,
   // The textbook reader loads big PDFs in ranges and needs to see these.
   exposedHeaders: ['Accept-Ranges', 'Content-Range', 'Content-Length', 'Content-Disposition']
@@ -28,7 +31,7 @@ if (env.NODE_ENV !== 'production') app.use(morgan('dev'));
 app.use('/uploads', (req, res, next) => {
   res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   next();
-}, express.static(path.join(__dirname, '..', 'uploads')));
+}, express.static(path.resolve(env.UPLOAD_DIR || './uploads')));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'SchoolOS API running' }));

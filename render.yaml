@@ -1,0 +1,33 @@
+# Render blueprint for the SchoolOS backend (API).
+# Render → New → Blueprint → pick this repo. You will be asked for the
+# values marked `sync: false`. See DEPLOY.md.
+services:
+  - type: web
+    name: schoolos-api
+    runtime: node
+    rootDir: backend
+    plan: starter # a disk (for uploads and textbooks) needs a paid plan
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    disk:
+      name: schoolos-files
+      mountPath: /var/data
+      sizeGB: 5
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false # mongodb+srv://… from MongoDB Atlas
+      - key: JWT_SECRET
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        sync: false # https://your-site.vercel.app
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: TEXTBOOK_DIR
+        value: /var/data/textbooks
+      - key: TRUST_PROXY
+        value: "2" # Vercel's forwarder + Render's load balancer

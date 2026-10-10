@@ -19,7 +19,37 @@ const getTokenFromRequest = (req) => {
   return token;
 };
 
+/**
+ * Textbook PDFs are too big for the website's forwarder, so the browser sends
+ * them straight to this server with a 10-minute upload token. It is signed
+ * with its own key, so it can't pass `protect`, refresh or session anywhere
+ * else - only routes that put this middleware first accept it.
+ */
+const UPLOAD_PURPOSE = 'textbook-upload';
+const uploadSecret = () => `${env.JWT_SECRET}:${UPLOAD_PURPOSE}`;
+const signUploadToken = (userId) =>
+  jwt.sign({ id: userId, purpose: UPLOAD_PURPOSE }, uploadSecret(), { expiresIn: '10m' });
+
+const acceptUploadToken = async (req, res, next) => {
+  const auth = req.headers.authorization || "";
+  if (!auth.startsWith("Bearer ")) return next();
+  let decoded;
+  try {
+    decoded = jwt.verify(auth.slice(7), uploadSecret());
+  } catch {
+    return next(); // not an upload token - let `protect` judge it
+  }
+  if (decoded.purpose !== UPLOAD_PURPOSE) return next();
+  const user = await User.findById(decoded.id).select("-passwordHash");
+  if (!user || !user.isActive) return next(new ApiError(401, "User not found"));
+  req.user = user;
+  req.userId = user._id;
+  req.uploadAuthed = true;
+  next();
+};
+
 const protect = async (req, res, next) => {
+  if (req.uploadAuthed) return next();
   const token = getTokenFromRequest(req);
   if (!token) return next(new ApiError(401, "Authentication required"));
 
@@ -53,4 +83,4 @@ const optionalAuth = async (req, res, next) => {
   next();
 };
 
-module.exports = { protect, verifyToken: protect, optionalAuth, getTokenFromRequest };
+module.exports = { protect, verifyToken: protect, optionalAuth, getTokenFromRequest, acceptUploadToken, signUploadToken };

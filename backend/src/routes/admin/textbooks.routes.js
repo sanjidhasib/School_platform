@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const c = require('../../controllers/admin/textbookController');
-const { protect } = require('../../middleware/auth');
+const { protect, acceptUploadToken } = require('../../middleware/auth');
 const { requireRole } = require('../../middleware/rbac');
 const { textbookUpload } = require('../../middleware/textbookUpload');
 const admin = [protect, requireRole('ADMIN')];
 router.get('/', ...admin, c.list);
-router.post('/', ...admin, textbookUpload.single('file'), c.upload);
+router.post('/', acceptUploadToken, ...admin, textbookUpload.single('file'), c.upload);
 router.patch('/:id', ...admin, c.update);
 router.post('/:id/reprocess', ...admin, c.reprocess);
 router.delete('/:id', ...admin, c.remove);

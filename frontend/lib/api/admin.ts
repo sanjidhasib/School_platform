@@ -1,4 +1,4 @@
-import api from './client';
+import api, { DIRECT_API_URL } from './client';
 export const adminAPI = {
   // Dashboard
   getDashboard: () => api.get('/admin/dashboard'),
@@ -70,11 +70,19 @@ export const adminAPI = {
   getNotifications: (params?: any) => api.get('/admin/notifications', { params }),
   // Textbooks (NCTB PDFs for the library and AI)
   getTextbooks: (params?: any) => api.get('/admin/textbooks', { params }),
-  uploadTextbook: (form: FormData, onProgress?: (percent: number) => void) =>
-    api.post('/admin/textbooks', form, {
-      // Large books take a while; the default timeout (none) is kept on purpose.
-      onUploadProgress: (e) => onProgress?.(e.total ? Math.round((e.loaded / e.total) * 100) : 0),
-    }),
+  uploadTextbook: async (form: FormData, onProgress?: (percent: number) => void) => {
+    // Large books take a while; the default timeout (none) is kept on purpose.
+    const onUploadProgress = (e: { loaded: number; total?: number }) =>
+      onProgress?.(e.total ? Math.round((e.loaded / e.total) * 100) : 0);
+    if (!DIRECT_API_URL) return api.post('/admin/textbooks', form, { onUploadProgress });
+    // Hosted: send the PDF straight to the backend, past the size-capped forwarder.
+    const { data } = await api.post('/auth/upload-token');
+    return api.post(`${DIRECT_API_URL.replace(/\/$/, '')}/admin/textbooks`, form, {
+      onUploadProgress,
+      withCredentials: false,
+      headers: { Authorization: `Bearer ${data.data.token}` },
+    });
+  },
   updateTextbook: (id: string, data: { title?: string; edition?: string }) => api.patch(`/admin/textbooks/${id}`, data),
   reprocessTextbook: (id: string) => api.post(`/admin/textbooks/${id}/reprocess`),
   deleteTextbook: (id: string) => api.delete(`/admin/textbooks/${id}`),
