@@ -171,25 +171,6 @@ function LoginScreen() {
             {t('Sign in')}
           </Button>
         </form>
-
-        <div className="rounded-card border border-line bg-surface shadow-card p-3">
-          <p className="mb-1.5 text-meta font-medium text-ink">{t('Demo accounts')}</p>
-          <dl className="space-y-0.5 text-meta text-ink-muted">
-            {[
-              ['Admin', 'admin', 'Admin@123'],
-              ['Teacher', 'teacher001', 'Teacher@123'],
-              ['Student', 'student001', 'Student@123'],
-              ['Guardian', 'guardian001', 'Guardian@123'],
-            ].map(([role, user, pass]) => (
-              <div key={role} className="flex gap-2">
-                <dt className="w-16 shrink-0">{role}</dt>
-                <dd className="tabular">
-                  {user} / {pass}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </div>
       </div>
     </AuthSplit>
   );

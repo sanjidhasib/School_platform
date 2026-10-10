@@ -411,7 +411,6 @@ export const bn: Record<string, string> = {
   "Delete this notice?": "এই নোটিশটি মুছবেন?",
   "Delete this test?": "এই টেস্টটি মুছবেন?",
   "Delete this textbook?": "এই পাঠ্যবইটি মুছবেন?",
-  "Demo accounts": "ডেমো অ্যাকাউন্ট",
   "Description": "বিবরণ",
   "Details": "বিস্তারিত",
   "Digital School Management System": "ডিজিটাল বিদ্যালয় ব্যবস্থাপনা",
