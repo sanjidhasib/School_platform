@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Follows the phone's light/dark setting, so the website's dark mode follows it too. -->
+    <style name="AppTheme" parent="android:Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorPrimary">#104028</item>
+        <item name="android:colorPrimaryDark">#104028</item>
+        <item name="android:colorAccent">#3CB371</item>
+        <item name="android:statusBarColor">#104028</item>
+        <item name="android:navigationBarColor">#104028</item>
+        <item name="android:windowBackground">@color/paper</item>
+    </style>
+</resources>

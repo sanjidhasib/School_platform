@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The app talks to SchoolOS running on a laptop on the same Wi-Fi, which is
+  plain http (no certificate on a home/school network). Once the site is
+  hosted on https this can be tightened to cleartextTrafficPermitted="false".
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

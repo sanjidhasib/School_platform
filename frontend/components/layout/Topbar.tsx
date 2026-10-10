@@ -54,8 +54,9 @@ export function Topbar({
       </button>
 
       <NotificationBell />
-      <LanguageToggle compact />
-      <ThemeToggle />
+      {/* On phones these live in the "More" sheet, so the page title has room. */}
+      <LanguageToggle compact className="hidden sm:inline-flex" />
+      <ThemeToggle className="hidden sm:flex" />
     </header>
   );
 }

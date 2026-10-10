@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode: bars match the website's dark navy instead of the green. -->
+    <style name="AppTheme" parent="android:Theme.DeviceDefault.DayNight">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:colorPrimary">#1A1F38</item>
+        <item name="android:colorPrimaryDark">#1A1F38</item>
+        <item name="android:colorAccent">#5C7DEA</item>
+        <item name="android:statusBarColor">#1A1F38</item>
+        <item name="android:navigationBarColor">#12162B</item>
+        <item name="android:windowBackground">@color/paper_night</item>
+    </style>
+</resources>

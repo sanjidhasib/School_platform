@@ -65,12 +65,13 @@ export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logo
           ))}
         </nav>
 
-        <LanguageToggle compact className="ml-auto md:ml-3" />
-        <ThemeToggle className="h-9 w-9 shrink-0 rounded-full" />
+        {/* On phones these move into the menu, so the school name has room. */}
+        <LanguageToggle compact className="ml-auto hidden sm:inline-flex md:ml-3" />
+        <ThemeToggle className="hidden h-9 w-9 shrink-0 rounded-full sm:flex" />
 
         <Link
           href="/login"
-          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-brand px-3.5 py-2 sm:px-4 text-dense font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 md:ml-3"
+          className="ml-auto inline-flex shrink-0 items-center gap-2 rounded-full bg-brand px-3.5 py-2 text-dense font-semibold text-brand-contrast transition-colors hover:bg-brand-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 sm:ml-0 sm:px-4 md:ml-3"
         >
           <LogIn className="hidden h-4 w-4 sm:block" strokeWidth={2} aria-hidden="true" />
           {t('Login')}
@@ -104,6 +105,10 @@ export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logo
               {t(l.label)}
             </a>
           ))}
+          <div className="mt-2 flex items-center justify-between gap-3 border-t border-line px-3 pt-3 sm:hidden">
+            <LanguageToggle />
+            <ThemeToggle className="h-10 w-10 rounded-full" />
+          </div>
         </nav>
       )}
     </header>

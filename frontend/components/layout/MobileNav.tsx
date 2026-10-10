@@ -8,6 +8,8 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { primaryNav, navForRole } from '@/lib/nav';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from '@/components/ui/sheet';
+import { ThemeToggle } from './ThemeToggle';
+import { LanguageToggle } from '@/components/i18n/LanguageToggle';
 import { t } from '@/lib/i18n';
 
 /**
@@ -72,7 +74,7 @@ export function MobileNav() {
             {groups.map((group, gi) => (
               <div key={group.title ?? `g-${gi}`} className="space-y-1">
                 {group.title && (
-                  <p className="px-1 text-meta font-medium text-ink-subtle">{group.title}</p>
+                  <p className="px-1 text-meta font-medium text-ink-subtle">{t(group.title)}</p>
                 )}
                 {group.items.map((item) => (
                   <Link
@@ -90,6 +92,12 @@ export function MobileNav() {
                 ))}
               </div>
             ))}
+
+            {/* Phones: the header has no room for these. */}
+            <div className="flex items-center justify-between gap-3 border-t border-line px-1 pt-4 sm:hidden">
+              <LanguageToggle />
+              <ThemeToggle className="h-10 w-10 rounded-full" />
+            </div>
 
             <div className="space-y-1 border-t border-line pt-4">
               <Link
