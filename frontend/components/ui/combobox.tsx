@@ -50,7 +50,9 @@ export function Combobox({
   const selected = options.find((o) => o.value === value);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    // Modal, so the list scrolls even inside a Sheet or Dialog: those block
+    // scrolling outside themselves, and the list is rendered outside them.
+    <Popover open={open} onOpenChange={setOpen} modal>
       <PopoverTrigger asChild>
         <button
           id={id}
