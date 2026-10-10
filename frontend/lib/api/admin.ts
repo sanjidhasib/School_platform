@@ -49,6 +49,7 @@ export const adminAPI = {
   deleteAssignment: (id: string) => api.delete(`/admin/assignments/${id}`),
   // Timetable
   getTimetable: (params?: any) => api.get('/admin/timetable', { params }),
+  getTimetableClashes: () => api.get('/admin/timetable/clashes'),
   createTimetableEntry: (data: any) => api.post('/admin/timetable', data),
   updateTimetableEntry: (id: string, data: any) => api.patch(`/admin/timetable/${id}`, data),
   deleteTimetableEntry: (id: string) => api.delete(`/admin/timetable/${id}`),

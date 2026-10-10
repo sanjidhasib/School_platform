@@ -1,6 +1,7 @@
 const Timetable = require('../../models/Timetable');
 const TeacherAssignment = require('../../models/TeacherAssignment');
-const { checkClassConflict, checkTeacherConflict } = require('../../services/timetableService');
+const Teacher = require('../../models/Teacher');
+const { findClassClash, findTeacherClash, listTeacherClashes, describe } = require('../../services/timetableService');
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
 
@@ -20,15 +21,41 @@ exports.list = asyncHandler(async (req, res) => {
   res.json({ success: true, data: entries });
 });
 
+/** Rejects a period that would put the class or the teacher in two places at once. */
+async function assertNoClash({ classId, assignment, dayOfWeek, startTime, endTime, excludeId }) {
+  if (!startTime || !endTime) throw new ApiError(400, 'Give the period a start and end time');
+  if (startTime >= endTime) throw new ApiError(400, 'The period must end after it starts');
+  if (String(assignment.classId) !== String(classId)) {
+    throw new ApiError(400, 'That teacher and subject belong to a different class');
+  }
+  const classClash = await findClassClash({ classId, dayOfWeek, startTime, endTime, excludeId });
+  if (classClash) throw new ApiError(409, `This class already has ${describe(classClash)}`);
+  const teacherClash = await findTeacherClash({
+    teacherId: assignment.teacherId,
+    dayOfWeek,
+    startTime,
+    endTime,
+    excludeIds: [excludeId]
+  });
+  if (teacherClash) {
+    const teacher = await Teacher.findById(assignment.teacherId).select('fullName').lean();
+    throw new ApiError(409, `${teacher?.fullName || 'This teacher'} is already teaching ${describe(teacherClash)}`);
+  }
+}
+
 exports.create = asyncHandler(async (req, res) => {
-  const { classId, teacherAssignmentId, dayOfWeek, startTime, academicSessionId } = req.body;
-  const classConflict = await checkClassConflict(classId, dayOfWeek, startTime, academicSessionId);
-  if (classConflict) throw new ApiError(409, `Class already has a subject at ${startTime} on this day`);
-  const assignment = await TeacherAssignment.findById(teacherAssignmentId);
+  const { classId, teacherAssignmentId, dayOfWeek, startTime, endTime } = req.body;
+  const assignment = await TeacherAssignment.findOne({ _id: teacherAssignmentId, isActive: true });
   if (!assignment) throw new ApiError(404, 'Teacher assignment not found');
-  const teacherConflict = await checkTeacherConflict(assignment.teacherId, dayOfWeek, startTime, academicSessionId);
-  if (teacherConflict) throw new ApiError(409, `Teacher is already assigned to another class at ${startTime} on this day`);
-  const entry = await Timetable.create(req.body);
+  await assertNoClash({ classId, assignment, dayOfWeek, startTime, endTime });
+
+  // A removed period keeps its row (marked inactive), and the database allows
+  // one row per class, day and start time — so filling that slot again reuses it.
+  const fields = { ...req.body, dayOfWeek: Number(dayOfWeek), isActive: true };
+  const cleared = await Timetable.findOne({ classId, dayOfWeek: Number(dayOfWeek), startTime, isActive: false });
+  const entry = cleared
+    ? await Timetable.findByIdAndUpdate(cleared._id, fields, { new: true })
+    : await Timetable.create(fields);
   res.status(201).json({ success: true, data: entry });
 });
 
@@ -36,35 +63,27 @@ exports.update = asyncHandler(async (req, res) => {
   const existing = await Timetable.findById(req.params.id);
   if (!existing) throw new ApiError(404, 'Timetable entry not found');
 
-  // Editing an entry has to respect the same clashes as creating one. Without
-  // this, moving a period onto an occupied slot hit the unique index and
-  // surfaced as a raw database error instead of a readable message.
   const classId = req.body.classId ?? existing.classId;
-  const dayOfWeek = req.body.dayOfWeek ?? existing.dayOfWeek;
+  const dayOfWeek = Number(req.body.dayOfWeek ?? existing.dayOfWeek);
   const startTime = req.body.startTime ?? existing.startTime;
-  const academicSessionId = req.body.academicSessionId ?? existing.academicSessionId;
+  const endTime = req.body.endTime ?? existing.endTime;
   const teacherAssignmentId = req.body.teacherAssignmentId ?? existing.teacherAssignmentId;
 
-  const movingSlot =
-    String(classId) !== String(existing.classId) ||
-    dayOfWeek !== existing.dayOfWeek ||
-    startTime !== existing.startTime;
-
-  const assignment = await TeacherAssignment.findById(teacherAssignmentId);
+  const assignment = await TeacherAssignment.findOne({ _id: teacherAssignmentId, isActive: true });
   if (!assignment) throw new ApiError(404, 'Teacher assignment not found');
+  await assertNoClash({ classId, assignment, dayOfWeek, startTime, endTime, excludeId: existing._id });
 
-  if (movingSlot) {
-    const classConflict = await checkClassConflict(classId, dayOfWeek, startTime, academicSessionId);
-    if (classConflict) throw new ApiError(409, `Class already has a subject at ${startTime} on this day`);
+  // Moving onto a slot an old, removed period still holds: clear that row first.
+  if (String(classId) !== String(existing.classId) || dayOfWeek !== existing.dayOfWeek || startTime !== existing.startTime) {
+    await Timetable.deleteOne({ classId, dayOfWeek, startTime, isActive: false, _id: { $ne: existing._id } });
   }
-
-  const teacherConflict = await checkTeacherConflict(assignment.teacherId, dayOfWeek, startTime, academicSessionId);
-  if (teacherConflict && String(teacherConflict._id) !== String(existing._id)) {
-    throw new ApiError(409, `Teacher is already assigned to another class at ${startTime} on this day`);
-  }
-
-  const entry = await Timetable.findByIdAndUpdate(req.params.id, req.body, { new: true });
+  const entry = await Timetable.findByIdAndUpdate(req.params.id, { ...req.body, dayOfWeek }, { new: true });
   res.json({ success: true, data: entry });
+});
+
+/** Teachers booked in two classes at once, for the routine page to flag. */
+exports.clashes = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: await listTeacherClashes() });
 });
 
 exports.remove = asyncHandler(async (req, res) => {

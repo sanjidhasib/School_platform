@@ -15,6 +15,8 @@ const AcademicSession = require('../../models/AcademicSession');
 const { createNotification } = require('../../services/notificationService');
 const asyncHandler = require('../../utils/asyncHandler');
 const ApiError = require('../../utils/ApiError');
+const Timetable = require('../../models/Timetable');
+const { findHandoverClash, describe, DAYS } = require('../../services/timetableService');
 
 const TERM_LABEL = { TERM_1: 'Term 1', TERM_2: 'Term 2', FINAL: 'Final' };
 
@@ -69,6 +71,26 @@ exports.assign = asyncHandler(async (req, res) => {
     return res.json({ success: true, data: null });
   }
   if (current && String(current.teacherId) === String(teacherId)) return res.json({ success: true, data: current });
+  if (teacher.status === 'INACTIVE') throw new ApiError(400, `${teacher.fullName} is inactive`);
+
+  // The new teacher takes over this class-subject's periods in the routine;
+  // none of them may fall on a time they already teach another class.
+  const revived = current ? null : await TeacherAssignment.findOne({ classId: cls._id, subjectId, teacherId: teacher._id });
+  // Periods left behind when this subject's teacher was removed earlier: the
+  // new teacher takes those over too, so the routine shows who teaches now.
+  const leftBehind = current ? [] : await TeacherAssignment.find({
+    classId: cls._id, subjectId, isActive: false, _id: { $ne: revived?._id }
+  }).select('_id').lean();
+  const handedOver = [current?._id, revived?._id, ...leftBehind.map((a) => a._id)].filter(Boolean);
+  if (handedOver.length) {
+    const hit = await findHandoverClash({ teacherId: teacher._id, assignmentIds: handedOver });
+    if (hit) {
+      const { period, clash } = hit;
+      throw new ApiError(409,
+        `${teacher.fullName} already teaches ${describe(clash)}, the same time as ${subject.name} in this class ` +
+        `(${DAYS[period.dayOfWeek]} ${period.startTime}–${period.endTime}). A teacher can't be in two classes at once: change one of the periods in the routine first.`);
+    }
+  }
 
   const session = await AcademicSession.findOne({ isCurrent: true });
   if (current) {
@@ -79,11 +101,19 @@ exports.assign = asyncHandler(async (req, res) => {
     await TeacherRequest.updateMany({ teacherAssignmentId: current._id, status: 'OPEN' }, { teacherId: teacher._id });
     return res.json({ success: true, data: current });
   }
-  const revived = await TeacherAssignment.findOne({ classId: cls._id, subjectId, teacherId: teacher._id });
-  if (revived) { revived.isActive = true; await revived.save(); return res.json({ success: true, data: revived }); }
+  const adopt = (assignmentId) => leftBehind.length
+    ? Timetable.updateMany({ teacherAssignmentId: { $in: leftBehind.map((a) => a._id) }, isActive: true }, { teacherAssignmentId: assignmentId })
+    : null;
+  if (revived) {
+    revived.isActive = true;
+    await revived.save();
+    await adopt(revived._id);
+    return res.json({ success: true, data: revived });
+  }
   const created = await TeacherAssignment.create({
     classId: cls._id, subjectId, teacherId: teacher._id, academicSessionId: session?._id, isActive: true
   });
+  await adopt(created._id);
   res.status(201).json({ success: true, data: created });
 });
 

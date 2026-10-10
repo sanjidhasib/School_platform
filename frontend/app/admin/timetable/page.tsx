@@ -8,6 +8,7 @@ import { PageHeader } from '@/components/shared/PageHeader';
 import { EmptyState, ErrorState } from '@/components/shared/EmptyState';
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog';
 import { TimetableGrid, TimetableDayList } from '@/components/shared/TimetableGrid';
+import { RoutineClashes } from '@/components/admin/RoutineClashes';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +41,8 @@ export default function TimetablePage() {
   const [classes, setClasses] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState('');
+  // Bumped after every routine change, so the clash list refreshes.
+  const [routineVersion, setRoutineVersion] = useState(0);
   const [timetable, setTimetable] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -77,6 +80,7 @@ export default function TimetablePage() {
 
   const loadTimetable = useCallback(() => {
     if (!selectedClass) return;
+    setRoutineVersion((v) => v + 1);
     setFailed(false);
     adminAPI
       .getTimetable({ classId: selectedClass })
@@ -215,6 +219,8 @@ export default function TimetablePage() {
           </Button>
         }
       />
+
+      <RoutineClashes version={routineVersion} onOpenClass={setSelectedClass} />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="w-52">

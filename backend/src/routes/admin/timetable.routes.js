@@ -5,6 +5,7 @@ const { protect } = require('../../middleware/auth');
 const { requireRole } = require('../../middleware/rbac');
 const admin = [protect, requireRole('ADMIN')];
 router.get('/', ...admin, c.list);
+router.get('/clashes', ...admin, c.clashes);
 router.post('/', ...admin, c.create);
 router.patch('/:id', ...admin, c.update);
 router.delete('/:id', ...admin, c.remove);

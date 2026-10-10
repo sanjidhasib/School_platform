@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Plus, Search, Pencil, Trash2, Users, MoreHorizontal, LayoutGrid, List } from 'lucide-react';
+import { Plus, Search, Pencil, Trash2, Users, MoreHorizontal, LayoutGrid, List, BookOpen } from 'lucide-react';
+import { TeacherClasses } from '@/components/admin/TeacherClasses';
 import { toast } from 'sonner';
 import { adminAPI } from '@/lib/api/admin';
 import { PageHeader } from '@/components/shared/PageHeader';
@@ -84,6 +85,7 @@ export default function TeachersPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<any>(null);
   const [removing, setRemoving] = useState(false);
+  const [classesFor, setClassesFor] = useState<any>(null);
 
   useEffect(() => {
     try {
@@ -116,12 +118,13 @@ export default function TeachersPage() {
       .finally(() => setLoading(false));
   }, [search]);
 
-  useEffect(() => {
+  const loadAssignments = useCallback(() => {
     adminAPI
       .getAssignments()
       .then((r) => setAssignments((r.data.data ?? []).filter((a: any) => a.isActive !== false)))
       .catch(() => {});
   }, []);
+  useEffect(loadAssignments, [loadAssignments]);
 
   /**
    * Teachers by the subject they actually teach (from their class
@@ -352,7 +355,7 @@ export default function TeachersPage() {
                 <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {sec.teachers.map(({ t, classes }) => (
                     <li key={t._id}>
-                      <TeacherCard t={t} classes={classes} onEdit={() => openEdit(t)} onDelete={() => setDeleting(t)} />
+                      <TeacherCard t={t} classes={classes} onEdit={() => openEdit(t)} onDelete={() => setDeleting(t)} onClasses={() => setClassesFor(t)} />
                     </li>
                   ))}
                 </ul>
@@ -362,12 +365,12 @@ export default function TeachersPage() {
             <section className="space-y-3">
               <div>
                 <h2 className="text-section text-ink">{tr('Not teaching a class yet')}</h2>
-                <p className="text-meta text-ink-muted">{tr('Assign them a subject on a class page.')}</p>
+                <p className="text-meta text-ink-muted">{tr('Use “Classes & subjects” on a card to give them a class.')}</p>
               </div>
               <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {bySubject.unassigned.map((t) => (
                   <li key={t._id}>
-                    <TeacherCard t={t} classes={[]} onEdit={() => openEdit(t)} onDelete={() => setDeleting(t)} />
+                    <TeacherCard t={t} classes={[]} onEdit={() => openEdit(t)} onDelete={() => setDeleting(t)} onClasses={() => setClassesFor(t)} />
                   </li>
                 ))}
               </ul>
@@ -415,6 +418,7 @@ export default function TeachersPage() {
                       <TeacherMenu
                         onEdit={() => openEdit(t)}
                         onDelete={() => setDeleting(t)}
+                        onClasses={() => setClassesFor(t)}
                         name={t.fullName}
                       />
                     </div>
@@ -425,6 +429,13 @@ export default function TeachersPage() {
           </Table>
         </TableWrap>
       )}
+
+      <TeacherClasses
+        teacher={classesFor}
+        assignments={assignments}
+        onOpenChange={(o) => !o && setClassesFor(null)}
+        onChanged={loadAssignments}
+      />
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent>
@@ -608,10 +619,12 @@ function ViewButton({
 function TeacherMenu({
   onEdit,
   onDelete,
+  onClasses,
   name,
 }: {
   onEdit: () => void;
   onDelete: () => void;
+  onClasses: () => void;
   name: string;
 }) {
   return (
@@ -622,6 +635,10 @@ function TeacherMenu({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={onClasses}>
+          <BookOpen className="h-4 w-4" strokeWidth={1.75} />
+          {tr('Classes & subjects')}
+        </DropdownMenuItem>
         <DropdownMenuItem onSelect={onEdit}>
           <Pencil className="h-4 w-4" strokeWidth={1.75} />
           {tr('Edit')}
@@ -635,7 +652,19 @@ function TeacherMenu({
   );
 }
 
-function TeacherCard({ t, classes, onEdit, onDelete }: { t: any; classes: string[]; onEdit: () => void; onDelete: () => void }) {
+function TeacherCard({
+  t,
+  classes,
+  onEdit,
+  onDelete,
+  onClasses,
+}: {
+  t: any;
+  classes: string[];
+  onEdit: () => void;
+  onDelete: () => void;
+  onClasses: () => void;
+}) {
   return (
     <Card className="flex h-full flex-col p-4">
       <div className="flex items-start gap-3">
@@ -644,7 +673,7 @@ function TeacherCard({ t, classes, onEdit, onDelete }: { t: any; classes: string
           <p className="truncate text-dense font-semibold text-ink">{t.fullName}</p>
           <p className="truncate text-meta text-ink-subtle tabular">{t.teacherId}</p>
         </div>
-        <TeacherMenu onEdit={onEdit} onDelete={onDelete} name={t.fullName} />
+        <TeacherMenu onEdit={onEdit} onDelete={onDelete} onClasses={onClasses} name={t.fullName} />
       </div>
       <div className="mt-3 flex-1 space-y-2">
         {t.degree && <p className="truncate text-meta text-ink-muted">{t.degree}</p>}
@@ -660,6 +689,10 @@ function TeacherCard({ t, classes, onEdit, onDelete }: { t: any; classes: string
           t.specialization && <span className="inline-flex rounded-chip bg-surface-sunken px-2 py-0.5 text-meta text-ink-muted">{t.specialization}</span>
         )}
       </div>
+      <Button variant="secondary" size="sm" className="mt-3 w-full" onClick={onClasses}>
+        <BookOpen className="h-4 w-4" strokeWidth={1.75} />
+        {tr('Classes & subjects')}
+      </Button>
       <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
         <StatusPill status={t.status} />
         {t.phone && <span className="truncate text-meta text-ink-subtle tabular">{t.phone}</span>}
