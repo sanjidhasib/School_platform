@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { apiErrorMessage, cn, formatTime } from '@/lib/utils';
 import { DAYS } from '@/lib/constants';
 import { t } from '@/lib/i18n';
+import { WebsitePictures } from '@/components/admin/WebsitePictures';
 
 /**
  * Sectioned settings in the GitHub/Vercel shape: what the setting is on the
@@ -30,7 +31,6 @@ export default function SettingsPage() {
     address: '',
     contactPhone: '',
     contactEmail: '',
-    logoUrl: '',
   });
   const [savingIdentity, setSavingIdentity] = useState(false);
   const [activeDays, setActiveDays] = useState<number[]>([]);
@@ -51,7 +51,6 @@ export default function SettingsPage() {
           address: d.address ?? '',
           contactPhone: d.contactPhone ?? '',
           contactEmail: d.contactEmail ?? '',
-          logoUrl: d.logoUrl ?? '',
         });
         setActiveDays(d.activeDays ?? []);
         const day = (v?: string) => (v ? new Date(v).toLocaleDateString('en-CA') : '');
@@ -170,14 +169,6 @@ export default function SettingsPage() {
             />
           </SettingRow>
 
-          <SettingRow label={t('Logo URL')} description={t('Optional.')} htmlFor="school-logo">
-            <Input
-              id="school-logo"
-              value={identity.logoUrl}
-              onChange={(e) => setIdentity((s) => ({ ...s, logoUrl: e.target.value }))}
-            />
-          </SettingRow>
-
           <div className="flex justify-end border-t border-line px-4 py-3">
             <Button type="submit" loading={savingIdentity}>
               {t('Save details')}
@@ -185,6 +176,8 @@ export default function SettingsPage() {
           </div>
         </SettingsSection>
       </form>
+
+      <WebsitePictures settings={settings} onChanged={load} />
 
       <SettingsSection
         title={t('School week')}

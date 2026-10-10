@@ -16,40 +16,54 @@
 
 @layer base {
   :root {
+    /*
+      Light theme: one green (#3CB371) carried through every accent, set on
+      warm neutrals (white surfaces on a beige-white page, gray secondary
+      text) with near-black type. Soft pink and lavender are the
+      complementary tones; navy and deep brown are the bold accents.
+    */
+
     /* Surfaces */
-    --paper: 246 247 250; /* #F6F7FA - app background */
+    --paper: 248 246 240; /* #F8F6F0 - warm beige-white app background */
     --surface: 255 255 255; /* #FFFFFF - cards, sheets, tables */
-    --surface-sunken: 241 243 248; /* table header, inset areas */
-    --wash: 238 240 250; /* #EEF0FA - selected rows, active nav */
+    --surface-sunken: 243 241 234; /* #F3F1EA - table header, inset areas */
+    --wash: 230 245 236; /* #E6F5EC - light green: selected rows, active nav */
 
-    /* Text */
-    --ink: 27 34 64; /* #1B2240 - primary text */
-    --ink-muted: 90 99 130; /* secondary text */
-    --ink-subtle: 132 140 166; /* meta, placeholders */
+    /* Text: black, with grays for secondary text */
+    --ink: 20 32 26; /* #14201A - primary text, near-black */
+    --ink-muted: 75 85 80; /* #4B5550 */
+    --ink-subtle: 111 120 114; /* #6F7872 */
 
-    /* Lines */
-    --line: 227 230 238; /* #E3E6EE */
-    --line-strong: 205 210 224;
+    /* Lines: warm grays */
+    --line: 230 226 216; /* #E6E2D8 */
+    --line-strong: 211 206 194; /* #D3CEC2 */
 
-    /* The one brand colour */
-    --brand: 36 70 201; /* #2446C9 */
-    --brand-hover: 29 58 172;
-    --brand-contrast: 255 255 255;
-    --brand-wash: 232 236 250;
+    /* The one brand colour — the same green everywhere */
+    --brand: 60 179 113; /* #3CB371 */
+    --brand-hover: 52 160 101; /* #34A065 */
+    --brand-contrast: 20 32 26; /* black text on green (6.3:1); white would be 2.7:1 */
+    --brand-wash: 227 244 234; /* #E3F4EA */
+    /* Green used as text needs a deeper shade of the same hue to be readable */
+    --brand-text: 30 122 72; /* #1E7A48 - 5.3:1 on white */
 
-    /* Reserved strictly for "now" */
-    --highlighter: 244 197 66; /* #F4C542 */
-    --highlighter-wash: 253 245 224;
+    /* Soft pink: reserved for "now" */
+    --highlighter: 244 166 192; /* #F4A6C0 */
+    --highlighter-wash: 253 236 242; /* #FDECF2 */
+
+    /* Bold accents */
+    --navy: 31 42 90; /* #1F2A5A */
+    --brown: 91 58 41; /* #5B3A29 */
+    --lavender: 231 223 245; /* #E7DFF5 */
 
     /* Status - always paired with an icon and a word, never colour alone */
-    --success: 15 123 87;
-    --success-bg: 231 245 239;
+    --success: 23 107 62;
+    --success-bg: 227 244 234;
     --danger: 180 36 60;
     --danger-bg: 252 234 237;
     --warning: 154 101 16;
     --warning-bg: 253 243 226;
-    --info: 28 93 147;
-    --info-bg: 232 241 249;
+    --info: 107 79 160; /* light purple */
+    --info-bg: 242 237 249;
 
     /* Subject tints - keyed by subject code, carry --ink text */
     --subj-ban: 243 232 228;
@@ -85,6 +99,10 @@
     --brand-hover: 118 147 240;
     --brand-contrast: 12 16 34;
     --brand-wash: 34 44 82;
+    --brand-text: 92 125 234; /* dark mode keeps its blue; text uses it as-is */
+    --navy: 92 125 234;
+    --brown: 196 150 120;
+    --lavender: 44 40 72;
 
     --highlighter: 224 180 58; /* #E0B43A */
     --highlighter-wash: 54 46 26;
@@ -141,6 +159,24 @@
   .font-bn {
     font-family: var(--font-bn), var(--font-ui), sans-serif;
     line-height: 1.75;
+  }
+
+  /*
+    Light theme only. Green as text uses the deeper --brand-text so it stays
+    readable; fills keep the exact #3CB371. The page gets a soft green and
+    lavender glow for depth.
+  */
+  :root:not(.dark) .text-brand,
+  :root:not(.dark) .hover\:text-brand:hover,
+  :root:not(.dark) .group:hover .group-hover\:text-brand {
+    color: rgb(var(--brand-text));
+  }
+  :root:not(.dark) body {
+    background-image:
+      radial-gradient(1200px 520px at 0% -10%, rgb(60 179 113 / 0.12), transparent 60%),
+      radial-gradient(900px 480px at 100% 0%, rgb(196 168 230 / 0.16), transparent 60%),
+      radial-gradient(800px 600px at 50% 120%, rgb(244 166 192 / 0.10), transparent 60%);
+    background-attachment: fixed;
   }
 
   /* Figures that sit in columns must align; prose must not look stiff. */

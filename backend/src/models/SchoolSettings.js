@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const schoolSettingsSchema = new mongoose.Schema({
   name: { type: String, required: true },
   logoUrl: { type: String },
+  // Homepage carousel pictures, one per slide (index = slide). An empty
+  // entry means the slide keeps its built-in picture.
+  carouselImages: { type: [String], default: [] },
   address: { type: String },
   contactEmail: { type: String },
   contactPhone: { type: String },

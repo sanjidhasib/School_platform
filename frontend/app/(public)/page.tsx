@@ -1,67 +1,17 @@
 import Link from 'next/link';
 import { Trophy, Phone, Mail, MapPin, CalendarDays, Newspaper, GraduationCap, LogIn } from 'lucide-react';
 import { publicAPI } from '@/lib/api/public';
-import { SchoolCarousel, type CarouselSlide } from '@/components/shared/SchoolCarousel';
+import { SchoolCarousel } from '@/components/shared/SchoolCarousel';
+import { SLIDES } from '@/lib/design/carousel';
+import { mediaUrl } from '@/lib/api/client';
 import { PublicNavbar } from '@/components/layout/PublicNavbar';
-import { LogoMark } from '@/components/layout/Logo';
+import { SchoolBadge } from '@/components/layout/Logo';
 import { cn, formatDate } from '@/lib/utils';
 import { cookies } from 'next/headers';
 import { t, setLanguage, getLanguage, LANG_COOKIE } from '@/lib/i18n';
 
 /** Re-fetch notices, achievements and seats at most once a minute. */
 export const revalidate = 60;
-
-/*
-  "Explore SchoolOS" leads to sign-in: the one public entry point into
-  SchoolOS, and where each role's own pages begin.
-*/
-const SLIDES: CarouselSlide[] = [
-  {
-    id: 'manage',
-    title: 'Smart School Management',
-    description:
-      'SchoolOS brings students, teachers, guardians, and administrators together in one digital platform.',
-    image: '/school-images/bzs-campus.jpg',
-    alt: 'Students of Barishal Zilla School gathered on the school field',
-    href: '/login',
-  },
-  {
-    id: 'learn',
-    title: 'Learn Smarter',
-    description:
-      'Help students learn through organized academic resources and an intelligent AI-powered learning assistant.',
-    image: '/school-images/slide-8.jpg',
-    alt: 'Shelves of books in a library',
-    href: '/login',
-  },
-  {
-    id: 'teach',
-    title: 'Empower Teachers',
-    description:
-      'Teachers can manage attendance, academic results, classes, and student information from one place.',
-    image: '/school-images/slide-4.jpg',
-    alt: 'A teacher at the blackboard while a student raises a hand',
-    href: '/login',
-  },
-  {
-    id: 'connect',
-    title: 'Stay Connected',
-    description:
-      "Guardians can easily monitor attendance, results, notices, and their child's academic progress.",
-    image: '/school-images/bzs-guardian-meeting.jpg',
-    alt: 'A meeting with guardians in the Barishal Zilla School auditorium',
-    href: '/login',
-  },
-  {
-    id: 'platform',
-    title: 'One Platform. Every School.',
-    description:
-      'SchoolOS digitizes everyday school activities and creates a connected learning environment.',
-    image: '/school-images/slide-5.jpg',
-    alt: 'A school building across a green lawn',
-    href: '/login',
-  },
-];
 
 const CATEGORY_TONE: Record<string, string> = {
   EXAM: 'bg-warning-bg text-warning',
@@ -104,7 +54,8 @@ export default async function HomePage() {
   // A server page: take the visitor's language from the cookie before any text renders.
   setLanguage(cookies().get(LANG_COOKIE)?.value === 'bn' ? 'bn' : 'en');
   const bangla = getLanguage() === 'bn';
-  const slides = SLIDES.map((s) => ({ ...s, title: t(s.title), description: t(s.description), alt: t(s.alt), cta: t('Explore SchoolOS') }));
+  const uploaded: string[] = school?.carouselImages ?? [];
+  const slides = SLIDES.map((s, i) => ({ ...s, image: mediaUrl(uploaded[i]) || s.image, title: t(s.title), description: t(s.description), alt: t(s.alt), cta: t('Explore SchoolOS') }));
 
   const schoolName = school?.name || school?.schoolName || 'Barishal Zilla School';
   const address = school?.address;
@@ -113,7 +64,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-dvh bg-paper">
-      <PublicNavbar schoolName={t(schoolName)} />
+      <PublicNavbar schoolName={t(schoolName)} logoUrl={school?.logoUrl} />
 
       <main>
         {/* ── Hero ── */}
@@ -129,7 +80,7 @@ export default async function HomePage() {
               </p>
               <h1
                 lang={bangla ? 'bn' : undefined}
-                className="mt-2 text-[2.6rem] font-extrabold leading-[1.1] tracking-tight text-ink sm:text-6xl lg:text-7xl xl:text-8xl"
+                className="mt-2 bg-gradient-to-r from-[#14201A] via-[#1E7A48] to-[#3CB371] bg-clip-text pb-1 text-[2.6rem] font-extrabold leading-[1.1] tracking-tight text-transparent sm:text-6xl lg:text-7xl xl:text-8xl dark:bg-none dark:text-ink"
               >
                 {t(schoolName)}
               </h1>
@@ -169,7 +120,7 @@ export default async function HomePage() {
                   key={a._id}
                   className={cn(
                     'group relative flex flex-col overflow-hidden rounded-[20px] border border-line bg-surface p-6 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-card-hover',
-                    i === 0 && 'lg:border-transparent lg:bg-[#2446C9] lg:text-white'
+                    i === 0 && 'lg:border-transparent lg:bg-[#1F2A5A] lg:text-white'
                   )}
                 >
                   <div className="flex items-center justify-between gap-3">
@@ -348,9 +299,7 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-[1600px] gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-10">
           <div>
             <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-btn bg-white/10">
-                <LogoMark />
-              </span>
+              <SchoolBadge logoUrl={school?.logoUrl} className="h-9 w-9 bg-white/10 text-white ring-0" />
               <span className="text-lg font-bold">{t(schoolName)}</span>
             </div>
             <p className="mt-3 text-body text-white/70">{t('Where legends are born.')}</p>

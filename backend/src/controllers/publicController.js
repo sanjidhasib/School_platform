@@ -62,6 +62,6 @@ exports.getSchool = asyncHandler(async (req, res) => {
   // The model's fields are name/contactPhone/contactEmail; this used to
   // select schoolName/phone/email, which don't exist, so the public site
   // never received the school's phone or email.
-  const settings = await SchoolSettings.findOne().select('name logoUrl address contactPhone contactEmail');
+  const settings = await SchoolSettings.findOne().select('name logoUrl carouselImages address contactPhone contactEmail');
   res.json({ success: true, data: settings });
 });

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { LogIn, Menu, X } from 'lucide-react';
-import { LogoMark } from '@/components/layout/Logo';
+import { SchoolBadge } from '@/components/layout/Logo';
 import { LanguageToggle } from '@/components/i18n/LanguageToggle';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
@@ -19,7 +19,7 @@ const LINKS = [
  * The public site's bar: school name on the left, section links in the
  * middle, sign-in on the right. On phones the links fold into a menu.
  */
-export function PublicNavbar({ schoolName }: { schoolName: string }) {
+export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logoUrl?: string | null }) {
   const [open, setOpen] = React.useState(false);
   const [scrolled, setScrolled] = React.useState(false);
 
@@ -46,9 +46,7 @@ export function PublicNavbar({ schoolName }: { schoolName: string }) {
     >
       <div className="mx-auto flex h-16 max-w-[1600px] items-center gap-2 px-4 sm:gap-4 sm:px-6 lg:px-10">
         <Link href="/" className="flex min-w-0 items-center gap-2 sm:gap-2.5" onClick={() => setOpen(false)}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-btn bg-brand text-brand-contrast">
-            <LogoMark />
-          </span>
+          <SchoolBadge logoUrl={logoUrl} className="h-9 w-9" />
           <span className="truncate text-[0.96rem] font-bold tracking-tight text-ink min-[400px]:text-[1.0625rem] sm:text-lg">
             {schoolName}
           </span>

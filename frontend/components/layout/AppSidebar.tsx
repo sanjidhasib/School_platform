@@ -52,7 +52,7 @@ export function AppSidebar({
         )}
       >
         <Link href="/" className="min-w-0 flex-1 rounded-btn focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand">
-          <Logo schoolName={school.name} compact={collapsed} />
+          <Logo schoolName={school.name} logoUrl={school.logoUrl} compact={collapsed} />
         </Link>
         {onToggleCollapse && !collapsed && (
           <button

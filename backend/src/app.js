@@ -23,7 +23,12 @@ app.use(cookieParser());
 if (env.NODE_ENV !== 'production') app.use(morgan('dev'));
 
 // Static file serving for uploads
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// Uploaded pictures (logo, carousel) are shown by the website on another
+// origin, so they may be loaded cross-origin.
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(__dirname, '..', 'uploads')));
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ success: true, message: 'SchoolOS API running' }));

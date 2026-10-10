@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
+import { mediaUrl } from '@/lib/api/client';
 
 /**
  * The mark is an open exercise book seen from above — the object every student
@@ -25,21 +26,42 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
+/**
+ * The school's uploaded logo (Settings → Website pictures), or the built-in
+ * mark when none is set. `className` sizes the box it sits in.
+ */
+export function SchoolBadge({ logoUrl, className }: { logoUrl?: string | null; className?: string }) {
+  const src = mediaUrl(logoUrl);
+  if (src) {
+    return (
+      <span className={cn('flex shrink-0 items-center justify-center overflow-hidden rounded-btn bg-surface ring-1 ring-line', className)}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt="" className="h-full w-full object-contain" />
+      </span>
+    );
+  }
+  return (
+    <span className={cn('flex shrink-0 items-center justify-center rounded-btn bg-brand text-brand-contrast', className)}>
+      <LogoMark />
+    </span>
+  );
+}
+
 /** Logo mark plus the school's own name, which comes from settings. */
 export function Logo({
   schoolName,
+  logoUrl,
   className,
   compact,
 }: {
   schoolName?: string | null;
+  logoUrl?: string | null;
   className?: string;
   compact?: boolean;
 }) {
   return (
     <span className={cn('flex min-w-0 items-center gap-2.5', className)}>
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-btn bg-brand text-brand-contrast">
-        <LogoMark />
-      </span>
+      <SchoolBadge logoUrl={logoUrl} className="h-8 w-8" />
       {!compact && (
         <span className="min-w-0 leading-tight">
           <span className="block truncate text-dense font-semibold text-ink">{t('SchoolOS')}</span>

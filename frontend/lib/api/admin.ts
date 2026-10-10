@@ -4,6 +4,14 @@ export const adminAPI = {
   getDashboard: () => api.get('/admin/dashboard'),
   getSettings: () => api.get('/admin/settings'),
   updateSettings: (data: any) => api.patch('/admin/settings', data),
+  // Website pictures: target is 'logo' or 'slide-0' … 'slide-4'
+  uploadSchoolPicture: (target: string, file: File) => {
+    const form = new FormData();
+    form.append('target', target);
+    form.append('file', file);
+    return api.post('/admin/settings/media', form);
+  },
+  resetSchoolPicture: (target: string) => api.delete(`/admin/settings/media/${target}`),
   // Teachers
   getTeachers: (params?: any) => api.get('/admin/teachers', { params }),
   getTeacher: (id: string) => api.get(`/admin/teachers/${id}`),

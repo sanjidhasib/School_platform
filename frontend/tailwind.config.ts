@@ -52,6 +52,10 @@ const config: Config = {
         danger: { DEFAULT: token('danger'), bg: token('danger-bg') },
         warning: { DEFAULT: token('warning'), bg: token('warning-bg') },
         info: { DEFAULT: token('info'), bg: token('info-bg') },
+        // Bold accents and the lavender complement (light theme palette)
+        navy: token('navy'),
+        brown: token('brown'),
+        lavender: token('lavender'),
 
         subject: {
           ban: token('subj-ban'),

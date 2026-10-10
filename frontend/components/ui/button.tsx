@@ -11,7 +11,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: 'bg-brand text-brand-contrast hover:bg-brand-hover',
+        // Light theme: a soft green gradient with a green glow; dark keeps the flat fill.
+        primary:
+          'bg-brand text-brand-contrast hover:bg-brand-hover bg-gradient-to-b from-[#4FC787] to-[#3CB371] shadow-[0_6px_16px_-8px_rgb(60_179_113/0.75)] hover:from-[#3CB371] hover:to-[#34A065] dark:bg-none dark:shadow-none',
         secondary: 'border border-line bg-surface text-ink hover:bg-surface-sunken',
         ghost: 'text-ink-muted hover:bg-wash hover:text-ink',
         destructive: 'bg-danger text-white hover:opacity-90',

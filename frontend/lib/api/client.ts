@@ -75,3 +75,12 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+/** The backend's origin, for files it serves (uploaded logo, carousel pictures). */
+export const API_ORIGIN = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+
+/** "/uploads/branding/x.jpg" → a full URL; anything else passes through. */
+export function mediaUrl(path?: string | null): string | null {
+  if (!path) return null;
+  return path.startsWith('/uploads/') ? `${API_ORIGIN}${path}` : path;
+}
