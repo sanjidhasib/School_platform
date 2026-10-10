@@ -81,6 +81,10 @@ public class MainActivity extends Activity {
         s.setUseWideViewPort(true);
         s.setBuiltInZoomControls(false);
         s.setMediaPlaybackRequiresUserGesture(false);
+        // Draw the page just outside the screen ahead of time, so scrolling
+        // doesn't show blank areas or stutter while content is painted.
+        s.setOffscreenPreRaster(true);
+        s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setUserAgentString(s.getUserAgentString() + " SchoolOSApp/" + BuildConfig.VERSION_NAME);
 
         CookieManager.getInstance().setAcceptCookie(true);

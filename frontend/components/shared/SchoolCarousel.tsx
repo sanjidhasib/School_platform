@@ -165,8 +165,13 @@ export function SchoolCarousel({
               src={slide.image}
               alt={slide.alt}
               fill
-              sizes="(max-width: 768px) 100vw, (max-width: 1600px) 100vw, 1600px"
-              priority={position <= 2}
+              // Full-frame slides, and the next one (it grows into the full
+              // frame on the next move), need the full width. The cards further
+              // back are small, and hidden on phones, so they ask for a small
+              // file there instead of a full-screen photo each.
+              sizes={isFull || position === 2 ? '(max-width: 1600px) 100vw, 1600px' : '(max-width: 767px) 16px, 220px'}
+              // Only the photo on screen at first load is fetched up front.
+              priority={position === 1}
               className="object-cover"
             />
             {!isFull && position <= 4 && (
@@ -225,9 +230,11 @@ export function SchoolCarousel({
   );
 }
 
+// Fade and rise only: a blur filter repaints every frame of the animation,
+// which made the slide change stutter on phones.
 const rise = {
-  hidden: { opacity: 0, y: 40, filter: 'blur(16px)' },
-  shown: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  hidden: { opacity: 0, y: 32 },
+  shown: { opacity: 1, y: 0 },
 };
 
 function SlideContent({ slide, index, total }: { slide: CarouselSlide; index: number; total: number }) {
