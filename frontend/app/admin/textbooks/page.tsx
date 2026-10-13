@@ -157,8 +157,8 @@ export default function AdminTextbooksPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.classNumber || !form.subjectId || !file) {
-      toast.error(tr('Choose a class, a subject and a PDF'));
+    if (!form.classNumber || !form.subjectId || !form.title.trim() || !file) {
+      toast.error(tr('Enter a book name and choose a class, a subject and a PDF'));
       return;
     }
     const data = new FormData();
@@ -469,13 +469,14 @@ export default function AdminTextbooksPage() {
                 )}
               </Field>
 
-              <Field label={tr('Title')} description={tr('Optional. Leave empty to name it from the class and subject.')}>
+              <Field label={tr('Book name')} required>
                 {(p) => (
                   <Input
                     {...p}
+                    required
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder={tr('Science — Class 6 (Bangla version)')}
+                    placeholder={tr('Enter the book name')}
                   />
                 )}
               </Field>
@@ -505,7 +506,7 @@ export default function AdminTextbooksPage() {
               <Button type="button" variant="secondary" onClick={() => setOpen(false)} disabled={uploading}>
                 {tr('Cancel')}
               </Button>
-              <Button type="submit" loading={uploading} disabled={!file || !form.classNumber || !form.subjectId}>
+              <Button type="submit" loading={uploading} disabled={!file || !form.classNumber || !form.subjectId || !form.title.trim()}>
                 {tr('Upload')}
               </Button>
             </SheetFooter>

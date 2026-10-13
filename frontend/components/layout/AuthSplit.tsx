@@ -1,5 +1,5 @@
 'use client';
-
+import loginScreenshot from '../../src/Screenshot 2026-09-27 154346.png';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LogoMark } from './Logo';
@@ -22,13 +22,13 @@ export function AuthSplit({
     <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
       <aside className="relative hidden overflow-hidden bg-ink lg:block">
         <Image
-          src="/school-images/slide-1.jpg"
+          src={loginScreenshot}
           alt=""
           fill
           priority
           sizes="60vw"
           className="object-cover opacity-70"
-        />
+/>
         <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/40 to-ink/20" />
 
         <div className="relative flex h-full flex-col justify-between p-10">

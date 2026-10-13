@@ -1,31 +1,22 @@
 # SchoolOS Android app
 
-A small Android app (`android/`) that opens SchoolOS running on a laptop on
-the same Wi-Fi. No hosting needed. It adds what a browser tab would otherwise
-do: picking files to upload, saving report cards and attendance sheets to
-Downloads, the back button, and a "can't reach SchoolOS" screen where the
-server address can be changed on the phone.
+A small Android app (`android/`) that opens your hosted SchoolOS website.
+Works from anywhere with an internet connection — no same-WiFi or laptop
+required. It adds what a browser tab would otherwise handle: picking files to
+upload, saving report cards and attendance sheets to Downloads, the back
+button, and automatic dark/light status bar matching.
 
-## Run SchoolOS for phones (on the laptop)
+## First launch
 
-1. Backend: `cd backend && npm start`
-2. Website, in forwarding mode so phones can reach it. Create
-   `frontend/.env.production.local` (already done on this laptop):
-
-   ```
-   NEXT_PUBLIC_API_URL=/api
-   API_PROXY_TARGET=http://localhost:5000
-   ```
-
-   then `cd frontend && npm run build && npm run start:lan`
-3. The laptop's Wi-Fi address (`ipconfig`, e.g. `192.168.10.97`) plus `:3000`
-   is the server address. The laptop itself can keep using
-   http://localhost:3000.
+When the app is opened for the first time, it asks the user to enter the
+SchoolOS URL (e.g. `https://your-school.vercel.app`). The address is saved
+on the phone and can be changed later from the offline screen.
 
 ## Build and install the APK
 
-Set the default server address in `android/gradle.properties`
-(`schoolos.serverUrl`), then with the phone plugged in (USB debugging on):
+Optionally set a default server address in `android/gradle.properties`
+(`schoolos.serverUrl`). If left empty, the app will prompt for it on
+first launch. Then with the phone plugged in (USB debugging on):
 
 ```powershell
 cd mobile/android
@@ -39,5 +30,16 @@ also be copied to other phones and installed by hand ("install unknown
 apps" must be allowed). It is signed with the local debug key, which is fine
 for the school's own phones but not for the Play Store.
 
-If the laptop's IP changes, open the app, wait for "Can't reach SchoolOS",
-tap **Change server address** and enter the new one. No new APK needed.
+## Changing the server address
+
+If the URL changes, open the app, wait for the "Can't reach SchoolOS"
+screen, tap **Change server address** and enter the new one. No new APK
+needed.
+
+## Supported setups
+
+| Setup | URL example |
+|---|---|
+| Vercel + Render (hosted) | `https://your-school.vercel.app` |
+| Custom domain | `https://www.school.edu.bd` |
+| Laptop on same Wi-Fi (testing) | `http://192.168.10.97:3000` |

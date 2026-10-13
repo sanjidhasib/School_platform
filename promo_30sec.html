@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SchoolOS — 30 Second Feature Showcase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Hind+Siliguri:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1B2240;
+    --blue: #2446C9;
+    --blue-light: #5C7DEA;
+    --paper: #F6F7FA;
+    --surface: #FFFFFF;
+    --lavender: #EEF0FA;
+    --highlight: #F4C542;
+    --line: #E3E6EE;
+    --green: #0F7B57;
+    --red: #B4243C;
+  }
+
+  html, body {
+    width: 1920px; height: 1080px;
+    overflow: hidden;
+    font-family: 'Outfit', sans-serif;
+    background: var(--ink);
+  }
+
+  /* ─── SLIDE CONTAINER ─── */
+  #stage {
+    width: 1920px; height: 1080px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s cubic-bezier(.4,0,.2,1);
+  }
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  /* ─── PROGRESS BAR ─── */
+  #progressBar {
+    position: fixed;
+    bottom: 0; left: 0;
+    height: 5px;
+    background: var(--highlight);
+    z-index: 9999;
+    width: 0%;
+    transition: width linear;
+  }
+
+  /* ─── SLIDE COUNTER ─── */
+  #counter {
+    position: fixed;
+    bottom: 18px; right: 32px;
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.35);
+    z-index: 9999;
+    letter-spacing: 1px;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  /* ══════════════════════════════════════
+     SLIDE 1 — COLD OPEN
+  ══════════════════════════════════════ */
+  #s1 {
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+  }
+  .cold-line {
+    font-size: 64px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -1px;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+  .cold-line.show { opacity: 1; transform: translateY(0); }
+  .cold-line span { color: var(--highlight); }
+
+  /* ══════════════════════════════════════
+     SLIDE 2 — LOGO REVEAL
+  ══════════════════════════════════════ */
+  #s2 {
+    background: radial-gradient(ellipse at center, #1a2a6c 0%, #0d1228 60%, #000 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-glow {
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(36,70,201,0.7) 0%, transparent 70%);
+    position: absolute;
+    animation: pulse 2s ease-in-out infinite;
+    filter: blur(20px);
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1);opacity:.7} 50%{transform:scale(1.3);opacity:1} }
+  .logo-text {
+    font-size: 110px;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: -4px;
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 0 60px rgba(92,125,234,0.8);
+    animation: fadeInScale 0.8s ease forwards;
+  }
+  .logo-sub {
+    font-size: 24px;
+    font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    position: relative;
+    z-index: 1;
+    margin-top: 16px;
+    animation: fadeInScale 0.8s 0.3s ease both;
+  }
+  @keyframes fadeInScale {
+    from { opacity:0; transform: scale(0.85); }
+    to   { opacity:1; transform: scale(1); }
+  }
+
+  /* ══════════════════════════════════════
+     SHARED — FEATURE SLIDE LAYOUT
+  ══════════════════════════════════════ */
+  .feature-slide {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    height: 100%;
+  }
+  .feature-left {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 80px 56px;
+  }
+  .feature-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ── role badge ── */
+  .role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    width: fit-content;
+  }
+  .badge-admin  { background: rgba(36,70,201,0.15); color: #5C7DEA; border: 1px solid rgba(36,70,201,0.3); }
+  .badge-teacher{ background: rgba(15,123,87,0.15);  color: #2ecc8a; border: 1px solid rgba(15,123,87,0.3); }
+  .badge-student{ background: rgba(244,197,66,0.15); color: #F4C542; border: 1px solid rgba(244,197,66,0.3); }
+  .badge-guardian{background: rgba(180,36,60,0.12);  color: #e87090; border: 1px solid rgba(180,36,60,0.3); }
+  .badge-ai     { background: rgba(138,43,226,0.15); color: #c084fc; border: 1px solid rgba(138,43,226,0.3); }
+
+  .feature-headline {
+    font-size: 48px;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  .feature-desc {
+    font-size: 19px;
+    font-weight: 400;
+    line-height: 1.65;
+    opacity: 0.75;
+    margin-bottom: 36px;
+  }
+  .feature-bullets {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .feature-bullets li {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .bullet-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── mock UI card ── */
+  .mock-window {
+    background: #fff;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 1050px;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.06);
+    overflow: hidden;
+    animation: slideInRight 0.7s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes slideInRight {
+    from { opacity:0; transform:translateX(60px) scale(0.97); }
+    to   { opacity:1; transform:translateX(0) scale(1); }
+  }
+  .mock-titlebar {
+    background: #f0f2f8;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid #e3e6ee;
+  }
+  .dot { width:13px;height:13px;border-radius:50%; }
+  .dot-r{background:#ff5f57} .dot-y{background:#febc2e} .dot-g{background:#28c840}
+  .mock-url {
+    flex: 1;
+    background: #e8eaf2;
+    border-radius: 6px;
+    padding: 5px 14px;
+    font-size: 13px;
+    color: #6b7280;
+    font-family: monospace;
+    margin-left: 10px;
+  }
+  .mock-body { padding: 28px; }
+
+  /* ── stat cards ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--lavender);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid var(--line);
+  }
+  .stat-num { font-size: 36px; font-weight: 800; color: var(--blue); }
+  .stat-lbl { font-size: 13px; color: #6b7280; font-weight: 500; margin-top: 4px; }
+
+  /* ── timetable grid ── */
+  .timetable {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .tt-header {
+    display: grid;
+    grid-template-columns: 80px repeat(5,1fr);
+    background: #f0f2f8;
+  }
+  .tt-header div {
+    padding: 10px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    border-right: 1px solid var(--line);
+  }
+  .tt-row {
+    display: grid;
+    grid-template-columns: 80px repeat(5,1fr);
+    border-top: 1px solid var(--line);
+  }
+  .tt-time { padding: 12px 8px; text-align:center; font-size:12px; color:#9ca3af; font-weight:600; border-right:1px solid var(--line); }
+  .tt-cell {
+    padding: 8px;
+    border-right: 1px solid var(--line);
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .tt-cell.math { background:#E4EDF2; color:#1B2240; border-radius:6px; }
+  .tt-cell.eng  { background:#E6EAF4; color:#1B2240; border-radius:6px; }
+  .tt-cell.ban  { background:#F3E8E4; color:#1B2240; border-radius:6px; }
+  .tt-cell.sci  { background:#E4EFE6; color:#1B2240; border-radius:6px; }
+  .tt-cell.ict  { background:#E9E6F2; color:#1B2240; border-radius:6px; }
+  .tt-cell.now  { background:var(--highlight); color:#1B2240; border-radius:6px; position:relative; }
+  .tt-cell.now::after { content:'NOW'; position:absolute; top:4px;right:6px; font-size:9px; font-weight:800; opacity:.7; }
+
+  /* ── attendance ── */
+  .att-table { width:100%; border-collapse:collapse; }
+  .att-table th { text-align:left; padding:10px 14px; font-size:13px; color:#6b7280; font-weight:600; border-bottom:1px solid var(--line); }
+  .att-table td { padding:12px 14px; font-size:14px; font-weight:500; border-bottom:1px solid var(--line); }
+  .badge-present { background:#E7F5EF; color:#0F7B57; padding:4px 12px; border-radius:100px; font-size:12px; font-weight:700; }
+  .badge-absent  { background:#FCEAED; color:#B4243C; padding:4px 12px; border-radius:100px; font-size:12px; font-weight:700; }
+  .att-toggle { width:44px;height:24px; border-radius:100px; border:none; cursor:pointer; font-size:12px; font-weight:700; }
+  .toggle-on  { background:#E7F5EF; color:#0F7B57; }
+  .toggle-off { background:#FCEAED; color:#B4243C; }
+
+  /* ── homework table ── */
+  .hw-table { width:100%; border-collapse:collapse; }
+  .hw-table th { text-align:left; padding:10px 14px; font-size:13px; color:#6b7280; font-weight:600; border-bottom:1px solid var(--line); }
+  .hw-table td { padding:12px 14px; font-size:14px; border-bottom:1px solid var(--line); }
+  .sub-fraction { font-size:13px; font-weight:700; color:var(--blue); }
+  .due-tag { background:var(--lavender); color:var(--blue); padding:3px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+  .overdue-tag { background:#FCEAED; color:#B4243C; padding:3px 10px; border-radius:6px; font-size:12px; font-weight:600; }
+
+  /* ── results ── */
+  .results-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  .result-card { background:var(--lavender); border-radius:12px; padding:18px; border:1px solid var(--line); }
+  .result-subject { font-size:13px; font-weight:700; color:#6b7280; margin-bottom:10px; text-transform:uppercase; letter-spacing:.5px; }
+  .result-score { font-size:42px; font-weight:900; color:var(--ink); line-height:1; }
+  .result-grade { display:inline-block; padding:4px 14px; border-radius:100px; font-size:13px; font-weight:800; margin-top:8px; }
+  .grade-aplus { background:#E7F5EF; color:#0F7B57; }
+  .grade-a     { background:#e8f1f9; color:#1C5D93; }
+  .grade-b     { background:#FDF3E2; color:#9A6510; }
+
+  /* ── AI chat ── */
+  .ai-chat { display:flex; flex-direction:column; gap:16px; }
+  .ai-msg { display:flex; flex-direction:column; gap:6px; }
+  .ai-label { font-size:12px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; color:#9ca3af; }
+  .ai-bubble-user { background:var(--lavender); border-radius:12px 12px 2px 12px; padding:14px 18px; font-size:15px; color:var(--ink); max-width:80%; align-self:flex-end; font-family:'Hind Siliguri', sans-serif; }
+  .ai-bubble-bot  { background:#fff; border:1px solid var(--line); border-radius:12px 12px 12px 2px; padding:14px 18px; font-size:14px; color:var(--ink); line-height:1.7; }
+  .ai-chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:4px; }
+  .ai-chip  { border:1px solid var(--line); border-radius:8px; padding:4px 12px; font-size:12px; font-weight:600; color:var(--blue); background:var(--lavender); }
+  .ai-powered { display:flex; align-items:center; gap:6px; font-size:12px; color:#9ca3af; margin-top:8px; }
+
+  /* ── guardian ── */
+  .notif-list { display:flex; flex-direction:column; gap:10px; }
+  .notif-item { display:flex; align-items:flex-start; gap:14px; padding:14px; border-radius:10px; }
+  .notif-item.absent  { background:#FCEAED; border-left:4px solid #B4243C; }
+  .notif-item.hw      { background:#FDF3E2; border-left:4px solid #9A6510; }
+  .notif-item.present { background:#E7F5EF; border-left:4px solid #0F7B57; }
+  .notif-icon { font-size:22px; }
+  .notif-title { font-size:14px; font-weight:700; color:var(--ink); }
+  .notif-sub   { font-size:13px; color:#6b7280; margin-top:2px; }
+
+  /* ── child profile card ── */
+  .child-card { background: linear-gradient(135deg, var(--blue) 0%, #1a35b8 100%); border-radius:14px; padding:20px 24px; color:#fff; display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+  .child-avatar { width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800; }
+  .child-name { font-size:18px; font-weight:700; }
+  .child-class { font-size:13px; opacity:.75; margin-top:2px; }
+  .child-stat  { margin-left:auto; text-align:right; }
+  .child-stat-num { font-size:32px; font-weight:900; }
+  .child-stat-lbl { font-size:12px; opacity:.7; }
+
+  /* ══════════════════════════════════════
+     SLIDE BACKGROUNDS
+  ══════════════════════════════════════ */
+  #s3 { background: var(--ink); color:#fff; }
+  #s4 { background: #0e1526; color:#fff; }
+  #s5 { background: #0a1a14; color:#fff; }
+  #s6 { background: #0f0e1f; color:#fff; }
+  #s7 { background: #0e0f1a; color:#fff; }
+  #s8 { background: #150a14; color:#fff; }
+
+  /* ══════════════════════════════════════
+     SLIDE 9 — OUTRO
+  ══════════════════════════════════════ */
+  #s9 {
+    background: radial-gradient(ellipse at center, #1a2a6c 0%, #0d1228 60%, #000 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+  }
+  .outro-logo { font-size:96px; font-weight:900; color:#fff; letter-spacing:-3px; text-shadow:0 0 60px rgba(92,125,234,0.9); }
+  .outro-sub  { font-size:22px; color:rgba(255,255,255,0.55); letter-spacing:3px; text-transform:uppercase; }
+  .outro-pills { display:flex; gap:16px; margin-top:24px; }
+  .outro-pill { border:1px solid rgba(255,255,255,0.2); border-radius:100px; padding:10px 28px; font-size:15px; color:rgba(255,255,255,0.75); font-weight:600; }
+
+  /* decorative bg grid */
+  .bg-grid {
+    position:absolute; inset:0; pointer-events:none;
+    background-image: linear-gradient(rgba(36,70,201,0.04) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(36,70,201,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ── SLIDE 1: COLD OPEN ── -->
+  <div class="slide" id="s1">
+    <div class="cold-line" id="cl1">Every day.</div>
+    <div class="cold-line" id="cl2"><span>40,000</span> schools.</div>
+    <div class="cold-line" id="cl3"><span>10 million</span> students.</div>
+    <div class="cold-line" id="cl4">Still running on paper.</div>
+  </div>
+
+  <!-- ── SLIDE 2: LOGO REVEAL ── -->
+  <div class="slide" id="s2">
+    <div class="logo-glow"></div>
+    <div class="logo-text">SchoolOS</div>
+    <div class="logo-sub">The OS for Bangladesh's Schools</div>
+  </div>
+
+  <!-- ── SLIDE 3: ADMIN DASHBOARD ── -->
+  <div class="slide" id="s3">
+    <div class="bg-grid"></div>
+    <div class="feature-slide">
+      <div class="feature-left">
+        <div class="role-badge badge-admin">🔵 Admin Portal</div>
+        <div class="feature-headline">Total School<br/>Control</div>
+        <div class="feature-desc">Manage every aspect of your school from one dashboard.</div>
+        <ul class="feature-bullets">
+          <li><div class="bullet-dot" style="background:#5C7DEA"></div>215 students enrolled</li>
+          <li><div class="bullet-dot" style="background:#5C7DEA"></div>15 teachers managed</li>
+          <li><div class="bullet-dot" style="background:#5C7DEA"></div>Conflict-free timetabling</li>
+          <li><div class="bullet-dot" style="background:#5C7DEA"></div>School-wide announcements</li>
+        </ul>
+      </div>
+      <div class="feature-right">
+        <div class="mock-window">
+          <div class="mock-titlebar">
+            <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+            <div class="mock-url">localhost:3000/admin/dashboard</div>
+          </div>
+          <div class="mock-body">
+            <div class="stat-grid">
+              <div class="stat-card"><div class="stat-num">215</div><div class="stat-lbl">Students</div></div>
+              <div class="stat-card"><div class="stat-num">15</div><div class="stat-lbl">Teachers</div></div>
+              <div class="stat-card"><div class="stat-num">8</div><div class="stat-lbl">Classes</div></div>
+              <div class="stat-card"><div class="stat-num">6</div><div class="stat-lbl">Subjects</div></div>
+            </div>
+            <div class="timetable">
+              <div class="tt-header">
+                <div>Time</div><div>Sunday</div><div>Monday</div><div>Tuesday</div><div>Wednesday</div><div>Thursday</div>
+              </div>
+              <div class="tt-row">
+                <div class="tt-time">09:00</div>
+                <div><div class="tt-cell math">Mathematics</div></div>
+                <div><div class="tt-cell eng">English</div></div>
+                <div><div class="tt-cell ban">Bangla</div></div>
+                <div><div class="tt-cell sci">Science</div></div>
+                <div><div class="tt-cell ict">ICT</div></div>
+              </div>
+              <div class="tt-row">
+                <div class="tt-time">10:00</div>
+                <div><div class="tt-cell eng">English</div></div>
+                <div><div class="tt-cell now">Mathematics</div></div>
+                <div><div class="tt-cell sci">Science</div></div>
+                <div><div class="tt-cell ban">Bangla</div></div>
+                <div><div class="tt-cell math">Mathematics</div></div>
+              </div>
+              <div class="tt-row">
+                <div class="tt-time">11:00</div>
+                <div><div class="tt-cell sci">Science</div></div>
+                <div><div class="tt-cell ban">Bangla</div></div>
+                <div><div class="tt-cell ict">ICT</div></div>
+                <div><div class="tt-cell math">Mathematics</div></div>
+                <div><div class="tt-cell eng">English</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 4: TEACHER ATTENDANCE ── -->
+  <div class="slide" id="s4">
+    <div class="bg-grid"></div>
+    <div class="feature-slide">
+      <div class="feature-left">
+        <div class="role-badge badge-teacher">🟢 Teacher Portal</div>
+        <div class="feature-headline">Attendance<br/>in Seconds</div>
+        <div class="feature-desc">Replace the paper register. Mark the whole class in one go.</div>
+        <ul class="feature-bullets">
+          <li><div class="bullet-dot" style="background:#2ecc8a"></div>Batch attendance save</li>
+          <li><div class="bullet-dot" style="background:#2ecc8a"></div>Auto guardian notification</li>
+          <li><div class="bullet-dot" style="background:#2ecc8a"></div>Full history & analytics</li>
+        </ul>
+      </div>
+      <div class="feature-right">
+        <div class="mock-window">
+          <div class="mock-titlebar">
+            <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+            <div class="mock-url">localhost:3000/teacher/attendance</div>
+          </div>
+          <div class="mock-body">
+            <table class="att-table">
+              <thead><tr><th>#</th><th>Student Name</th><th>Roll</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr><td>1</td><td>Ahmed Rafi</td><td>01</td><td><span class="badge-present">Present</span></td></tr>
+                <tr><td>2</td><td>Sadia Islam</td><td>02</td><td><span class="badge-absent">Absent</span></td></tr>
+                <tr><td>3</td><td>Tanvir Hasan</td><td>03</td><td><span class="badge-present">Present</span></td></tr>
+                <tr><td>4</td><td>Nusrat Jahan</td><td>04</td><td><span class="badge-present">Present</span></td></tr>
+                <tr><td>5</td><td>Rakib Hossain</td><td>05</td><td><span class="badge-absent">Absent</span></td></tr>
+                <tr><td>6</td><td>Mitu Begum</td><td>06</td><td><span class="badge-present">Present</span></td></tr>
+              </tbody>
+            </table>
+            <div style="margin-top:20px;display:flex;gap:12px;align-items:center;">
+              <button style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:15px;font-weight:700;cursor:pointer;font-family:Outfit,sans-serif;">💾 Save Attendance</button>
+              <span style="font-size:14px;color:#6b7280;">28 / 32 present today</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 5: HOMEWORK GRADING ── -->
+  <div class="slide" id="s5">
+    <div class="bg-grid"></div>
+    <div class="feature-slide">
+      <div class="feature-left">
+        <div class="role-badge badge-teacher">🟢 Teacher Portal</div>
+        <div class="feature-headline">Homework<br/>Workflow</div>
+        <div class="feature-desc">Create, track submissions, and grade — all in one place.</div>
+        <ul class="feature-bullets">
+          <li><div class="bullet-dot" style="background:#2ecc8a"></div>Live submission tracking</li>
+          <li><div class="bullet-dot" style="background:#2ecc8a"></div>Per-student grading panel</li>
+          <li><div class="bullet-dot" style="background:#2ecc8a"></div>Missing homework alerts</li>
+        </ul>
+      </div>
+      <div class="feature-right">
+        <div class="mock-window">
+          <div class="mock-titlebar">
+            <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+            <div class="mock-url">localhost:3000/teacher/homework</div>
+          </div>
+          <div class="mock-body">
+            <table class="hw-table">
+              <thead><tr><th>Assignment</th><th>Class</th><th>Submitted</th><th>Due</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td style="font-weight:600">Chapter 3 — Photosynthesis</td>
+                  <td>Class 8</td>
+                  <td><span class="sub-fraction">24 / 30 turned in</span></td>
+                  <td><span class="due-tag">Today</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Algebra Practice Sheet</td>
+                  <td>Class 7</td>
+                  <td><span class="sub-fraction">18 / 24 turned in</span></td>
+                  <td><span class="overdue-tag">Overdue</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">Essay — My Country</td>
+                  <td>Class 9</td>
+                  <td><span class="sub-fraction">31 / 35 turned in</span></td>
+                  <td><span class="due-tag">Tomorrow</span></td>
+                </tr>
+                <tr>
+                  <td style="font-weight:600">ICT Lab Report</td>
+                  <td>Class 10</td>
+                  <td><span class="sub-fraction">20 / 28 turned in</span></td>
+                  <td><span class="due-tag">3 days</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 6: STUDENT RESULTS ── -->
+  <div class="slide" id="s6">
+    <div class="bg-grid"></div>
+    <div class="feature-slide">
+      <div class="feature-left">
+        <div class="role-badge badge-student">🟡 Student Portal</div>
+        <div class="feature-headline">Track Your<br/>Progress</div>
+        <div class="feature-desc">Results, grades, attendance — always up to date.</div>
+        <ul class="feature-bullets">
+          <li><div class="bullet-dot" style="background:#F4C542"></div>All subject grades</li>
+          <li><div class="bullet-dot" style="background:#F4C542"></div>Assessment breakdown</li>
+          <li><div class="bullet-dot" style="background:#F4C542"></div>Download PDF report</li>
+        </ul>
+      </div>
+      <div class="feature-right">
+        <div class="mock-window">
+          <div class="mock-titlebar">
+            <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+            <div class="mock-url">localhost:3000/student/results</div>
+          </div>
+          <div class="mock-body">
+            <div style="margin-bottom:18px;font-size:16px;font-weight:700;color:var(--ink);">📊 Term Results — Class 8 · 2026</div>
+            <div class="results-grid">
+              <div class="result-card"><div class="result-subject">Bangla</div><div class="result-score">88</div><span class="result-grade grade-aplus">A+</span></div>
+              <div class="result-card"><div class="result-subject">English</div><div class="result-score">82</div><span class="result-grade grade-aplus">A+</span></div>
+              <div class="result-card"><div class="result-subject">Mathematics</div><div class="result-score">91</div><span class="result-grade grade-aplus">A+</span></div>
+              <div class="result-card"><div class="result-subject">Science</div><div class="result-score">76</div><span class="result-grade grade-a">A</span></div>
+              <div class="result-card"><div class="result-subject">ICT</div><div class="result-score">85</div><span class="result-grade grade-aplus">A+</span></div>
+              <div class="result-card"><div class="result-subject">BGS</div><div class="result-score">73</div><span class="result-grade grade-b">B</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 7: AI TUTOR ── -->
+  <div class="slide" id="s7">
+    <div class="bg-grid"></div>
+    <div class="feature-slide">
+      <div class="feature-left">
+        <div class="role-badge badge-ai">🤖 AI Tutor</div>
+        <div class="feature-headline">24/7 AI<br/>Learning</div>
+        <div class="feature-desc">Powered by Google Gemini. Grounded in NCTB textbooks. Answers in Bangla & English.</div>
+        <ul class="feature-bullets">
+          <li><div class="bullet-dot" style="background:#c084fc"></div>Textbook-grounded answers</li>
+          <li><div class="bullet-dot" style="background:#c084fc"></div>Bangla & English support</li>
+          <li><div class="bullet-dot" style="background:#c084fc"></div>Chapter & page citations</li>
+          <li><div class="bullet-dot" style="background:#c084fc"></div>Powered by Google Gemini</li>
+        </ul>
+      </div>
+      <div class="feature-right">
+        <div class="mock-window">
+          <div class="mock-titlebar">
+            <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+            <div class="mock-url">localhost:3000/student/ai-learning</div>
+          </div>
+          <div class="mock-body">
+            <div class="ai-chat">
+              <div class="ai-msg">
+                <div class="ai-label">Student</div>
+                <div class="ai-bubble-user">আলোকসংশ্লেষণ কী? সহজ ভাষায় বুঝিয়ে দাও।</div>
+              </div>
+              <div class="ai-msg">
+                <div class="ai-label">SchoolOS AI</div>
+                <div class="ai-bubble-bot">
+                  আলোকসংশ্লেষণ হলো এমন একটি প্রক্রিয়া যেখানে সবুজ উদ্ভিদ সূর্যের আলো, পানি এবং কার্বন ডাই-অক্সাইড ব্যবহার করে নিজের খাদ্য তৈরি করে।
+                  <br/><br/>
+                  <strong>সূত্র:</strong> 6CO₂ + 6H₂O + আলো → C₆H₁₂O₆ + 6O₂
+                </div>
+                <div class="ai-chips">
+                  <div class="ai-chip">📖 Science Ch.4 · p.67</div>
+                  <div class="ai-chip">📖 Science Ch.5 · p.78</div>
+                </div>
+                <div class="ai-powered">✨ Powered by Google Gemini · NCTB Class 8 Science</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 8: GUARDIAN ── -->
+  <div class="slide" id="s8">
+    <div class="bg-grid"></div>
+    <div class="feature-slide">
+      <div class="feature-left">
+        <div class="role-badge badge-guardian">🟣 Guardian Portal</div>
+        <div class="feature-headline">Parents<br/>Stay Connected</div>
+        <div class="feature-desc">Real-time updates about your child — always in your pocket.</div>
+        <ul class="feature-bullets">
+          <li><div class="bullet-dot" style="background:#e87090"></div>Instant absence alerts</li>
+          <li><div class="bullet-dot" style="background:#e87090"></div>Homework & grades view</li>
+          <li><div class="bullet-dot" style="background:#e87090"></div>PDF progress reports</li>
+        </ul>
+      </div>
+      <div class="feature-right">
+        <div class="mock-window">
+          <div class="mock-titlebar">
+            <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+            <div class="mock-url">localhost:3000/guardian/notifications</div>
+          </div>
+          <div class="mock-body">
+            <div class="child-card">
+              <div class="child-avatar">R</div>
+              <div>
+                <div class="child-name">Rakib Hossain</div>
+                <div class="child-class">Class 8 · Roll 05 · Barishal Zilla School</div>
+              </div>
+              <div class="child-stat">
+                <div class="child-stat-num">88%</div>
+                <div class="child-stat-lbl">Attendance this month</div>
+              </div>
+            </div>
+            <div class="notif-list">
+              <div class="notif-item absent">
+                <div class="notif-icon">🔴</div>
+                <div>
+                  <div class="notif-title">Absent today — Wednesday, 30 Sep</div>
+                  <div class="notif-sub">Class 8 · Mathematics · 10:00 AM · Reported by Teacher Karim</div>
+                </div>
+              </div>
+              <div class="notif-item hw">
+                <div class="notif-icon">📝</div>
+                <div>
+                  <div class="notif-title">Homework not submitted — Algebra Practice Sheet</div>
+                  <div class="notif-sub">Due date passed · Class 7 · Mathematics</div>
+                </div>
+              </div>
+              <div class="notif-item present">
+                <div class="notif-icon">✅</div>
+                <div>
+                  <div class="notif-title">Science Essay submitted & graded — A+</div>
+                  <div class="notif-sub">Marked by Teacher Rahman · 29 Sep 2026</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SLIDE 9: OUTRO ── -->
+  <div class="slide" id="s9">
+    <div class="logo-glow"></div>
+    <div class="outro-logo">SchoolOS</div>
+    <div class="outro-sub">Turning every school into a smart school</div>
+    <div class="outro-pills">
+      <div class="outro-pill">🏫 Admin</div>
+      <div class="outro-pill">👩‍🏫 Teacher</div>
+      <div class="outro-pill">🎓 Student</div>
+      <div class="outro-pill">👨‍👩‍👧 Guardian</div>
+      <div class="outro-pill">🤖 AI Tutor</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- progress bar & counter -->
+<div id="progressBar"></div>
+<div id="counter">1 / 9</div>
+
+<script>
+  // ── TIMING (ms) for each slide ──
+  const DURATIONS = [
+    4000,  // s1 cold open
+    3000,  // s2 logo reveal
+    4500,  // s3 admin dashboard
+    4000,  // s4 attendance
+    4000,  // s5 homework
+    3500,  // s6 results
+    5000,  // s7 AI tutor
+    4000,  // s8 guardian
+    3500,  // s9 outro
+  ];
+
+  const slides = document.querySelectorAll('.slide');
+  const bar    = document.getElementById('progressBar');
+  const ctr    = document.getElementById('counter');
+  let current  = 0;
+  let elapsed  = 0;
+  const TOTAL  = DURATIONS.reduce((a,b)=>a+b,0);
+
+  function showSlide(idx) {
+    slides.forEach((s,i) => s.classList.toggle('active', i===idx));
+    ctr.textContent = `${idx+1} / ${slides.length}`;
+
+    // Cold open animation
+    if (idx === 0) {
+      const lines = document.querySelectorAll('.cold-line');
+      lines.forEach(l => l.classList.remove('show'));
+      setTimeout(()=>lines[0].classList.add('show'), 200);
+      setTimeout(()=>lines[1].classList.add('show'), 900);
+      setTimeout(()=>lines[2].classList.add('show'), 1600);
+      setTimeout(()=>lines[3].classList.add('show'), 2300);
+    }
+  }
+
+  function tick() {
+    elapsed += 50;
+    bar.style.width = (elapsed / TOTAL * 100) + '%';
+  }
+
+  showSlide(0);
+  setInterval(tick, 50);
+
+  let t = 0;
+  DURATIONS.forEach((dur, i) => {
+    setTimeout(() => {
+      if (i + 1 < slides.length) showSlide(i + 1);
+    }, t += dur);
+  });
+
+  // click to advance manually too
+  document.getElementById('stage').addEventListener('click', () => {
+    if (current < slides.length - 1) showSlide(++current);
+  });
+</script>
+</body>
+</html>

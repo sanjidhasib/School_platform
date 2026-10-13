@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The app talks to SchoolOS running on a laptop on the same Wi-Fi, which is
-  plain http (no certificate on a home/school network). Once the site is
-  hosted on https this can be tightened to cleartextTrafficPermitted="false".
+  Allow both HTTP (for local testing with a laptop IP) and HTTPS (for hosted
+  sites like Vercel or Render). Once you only use HTTPS hosting, you can
+  tighten this to cleartextTrafficPermitted="false".
 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true" />

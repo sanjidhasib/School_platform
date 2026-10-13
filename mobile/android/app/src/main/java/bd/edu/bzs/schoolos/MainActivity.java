@@ -31,16 +31,24 @@ import java.io.FileOutputStream;
 import java.io.OutputStream;
 
 /**
- * SchoolOS as a phone app: a full-screen WebView on the SchoolOS website that
- * runs on a laptop on the same Wi-Fi. Adds what a browser tab would otherwise
- * handle: picking files to upload, saving downloads, the back button, and a
- * screen for when the laptop can't be reached.
+ * SchoolOS as a phone app: a full-screen WebView on the hosted SchoolOS website.
+ * Works from anywhere with internet — no same-WiFi requirement. Also supports
+ * local laptop addresses for development/testing.
+ *
+ * On first launch (no URL configured), shows a setup screen where the user
+ * enters their school's SchoolOS address. After that, the app loads the site
+ * directly. If the server can't be reached, an offline screen appears with
+ * options to retry or change the address.
+ *
+ * Adds what a browser tab would otherwise handle: picking files to upload,
+ * saving downloads, the back button, and a screen for when the server
+ * can't be reached.
  */
 public class MainActivity extends Activity {
 
     private static final String PREFS = "schoolos";
     private static final String KEY_SERVER = "serverUrl";
-    private static final String OFFLINE_PAGE = "file:///android_asset/offline.html";
+    private static final String SETUP_PAGE = "file:///android_asset/offline.html";
     private static final int FILE_CHOOSER = 1;
 
     private WebView web;
@@ -87,6 +95,10 @@ public class MainActivity extends Activity {
         s.setCacheMode(WebSettings.LOAD_DEFAULT);
         s.setUserAgentString(s.getUserAgentString() + " SchoolOSApp/" + BuildConfig.VERSION_NAME);
 
+        // Allow mixed content so HTTPS pages can load local HTTP resources
+        // (useful during testing, and for sites that reference HTTP images)
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
+
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
 
@@ -96,17 +108,38 @@ public class MainActivity extends Activity {
         web.setDownloadListener((url, userAgent, contentDisposition, mimeType, length) ->
             downloadUrl(url, userAgent, contentDisposition, mimeType));
 
-        if (savedInstanceState != null) web.restoreState(savedInstanceState);
-        else web.loadUrl(serverUrl());
+        if (savedInstanceState != null) {
+            web.restoreState(savedInstanceState);
+        } else {
+            String url = serverUrl();
+            if (url.isEmpty()) {
+                // First launch: no URL configured — show setup screen
+                web.loadUrl(SETUP_PAGE);
+            } else {
+                web.loadUrl(url);
+            }
+        }
     }
 
+    /** Returns the saved server URL, or the build-time default, or empty string. */
     private String serverUrl() {
         String saved = getSharedPreferences(PREFS, MODE_PRIVATE).getString(KEY_SERVER, null);
-        return saved != null && !saved.isEmpty() ? saved : BuildConfig.SERVER_URL;
+        if (saved != null && !saved.isEmpty()) return saved;
+        // BuildConfig.SERVER_URL may be empty if not set in gradle.properties
+        String built = BuildConfig.SERVER_URL;
+        return built != null ? built : "";
     }
 
+    /** Returns the host part of the server URL, or null if not configured. */
     private String serverHost() {
-        return Uri.parse(serverUrl()).getHost();
+        String url = serverUrl();
+        if (url.isEmpty()) return null;
+        return Uri.parse(url).getHost();
+    }
+
+    /** Returns true if no server URL has been configured yet. */
+    private boolean needsSetup() {
+        return serverUrl().isEmpty();
     }
 
     // ---------------------------------------------------------------- browsing
@@ -116,10 +149,12 @@ public class MainActivity extends Activity {
         public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
             Uri uri = request.getUrl();
             String scheme = uri.getScheme();
+            String host = serverHost();
             // The school site stays in the app; anything else (maps, mail,
             // phone numbers, other websites) opens in the right phone app.
-            if (("http".equals(scheme) || "https".equals(scheme))
-                && uri.getHost() != null && uri.getHost().equals(serverHost())) {
+            if (host != null
+                && ("http".equals(scheme) || "https".equals(scheme))
+                && uri.getHost() != null && uri.getHost().equals(host)) {
                 return false;
             }
             try {
@@ -138,9 +173,9 @@ public class MainActivity extends Activity {
 
         @Override
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-            // Only the page itself failing means "can't reach the laptop";
+            // Only the page itself failing means "can't reach the server";
             // a missing picture shouldn't replace the whole screen.
-            if (request.isForMainFrame()) view.loadUrl(OFFLINE_PAGE);
+            if (request.isForMainFrame()) view.loadUrl(SETUP_PAGE);
         }
     }
 
@@ -246,10 +281,20 @@ public class MainActivity extends Activity {
             return serverUrl();
         }
 
+        /**
+         * Returns the mode for the offline/setup page:
+         * - "setup" if no URL has been configured (first launch)
+         * - "offline" if a URL is configured but the server can't be reached
+         */
+        @JavascriptInterface
+        public String getAppMode() {
+            return needsSetup() ? "setup" : "offline";
+        }
+
         @JavascriptInterface
         public void setServerUrl(String url) {
             String clean = url == null ? "" : url.trim();
-            if (!clean.startsWith("http://") && !clean.startsWith("https://")) clean = "http://" + clean;
+            if (!clean.startsWith("http://") && !clean.startsWith("https://")) clean = "https://" + clean;
             while (clean.endsWith("/")) clean = clean.substring(0, clean.length() - 1);
             SharedPreferences.Editor e = getSharedPreferences(PREFS, MODE_PRIVATE).edit();
             e.putString(KEY_SERVER, clean).apply();
@@ -259,7 +304,14 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void retry() {
-            runOnUiThread(() -> web.loadUrl(serverUrl()));
+            runOnUiThread(() -> {
+                String url = serverUrl();
+                if (url.isEmpty()) {
+                    web.loadUrl(SETUP_PAGE);
+                } else {
+                    web.loadUrl(url);
+                }
+            });
         }
     }
 
@@ -267,7 +319,7 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web.canGoBack() && !OFFLINE_PAGE.equals(web.getUrl())) web.goBack();
+        if (web.canGoBack() && !SETUP_PAGE.equals(web.getUrl())) web.goBack();
         else super.onBackPressed();
     }
 
