@@ -9,11 +9,13 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { t } from '@/lib/i18n';
 
-const LINKS = [
+/** Anchor links scroll within the home page; route links navigate to a full page. */
+const LINKS: { href: string; label: string; route?: boolean }[] = [
   { href: '#achievements', label: 'Achievements' },
   { href: '#news', label: 'News' },
   { href: '#upcoming', label: 'Upcoming' },
   { href: '#admission', label: 'Admission' },
+  { href: '/about', label: 'About Us', route: true },
 ];
 
 /**
@@ -54,15 +56,25 @@ export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logo
         </Link>
 
         <nav aria-label={t('Sections')} className="ml-auto hidden items-center gap-1 md:flex">
-          {LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              className="rounded-full px-3.5 py-2 text-dense font-medium text-ink-muted transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            >
-              {t(l.label)}
-            </a>
-          ))}
+          {LINKS.map((l) =>
+            l.route ? (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="rounded-full px-3.5 py-2 text-dense font-medium text-ink-muted transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                {t(l.label)}
+              </Link>
+            ) : (
+              <a
+                key={l.href}
+                href={l.href}
+                className="rounded-full px-3.5 py-2 text-dense font-medium text-ink-muted transition-colors hover:bg-wash hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                {t(l.label)}
+              </a>
+            )
+          )}
         </nav>
 
         {/* On phones these move into the menu, so the school name has room. */}
@@ -95,16 +107,27 @@ export function PublicNavbar({ schoolName, logoUrl }: { schoolName: string; logo
           aria-label={t('Sections')}
           className="animate-fade-in border-t border-line bg-surface px-4 pb-4 pt-2 shadow-popover md:hidden"
         >
-          {LINKS.map((l) => (
-            <a
-              key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="block rounded-btn px-3 py-3 text-body font-medium text-ink transition-colors hover:bg-wash"
-            >
-              {t(l.label)}
-            </a>
-          ))}
+          {LINKS.map((l) =>
+            l.route ? (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="block rounded-btn px-3 py-3 text-body font-medium text-ink transition-colors hover:bg-wash"
+              >
+                {t(l.label)}
+              </Link>
+            ) : (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className="block rounded-btn px-3 py-3 text-body font-medium text-ink transition-colors hover:bg-wash"
+              >
+                {t(l.label)}
+              </a>
+            )
+          )}
           <div className="mt-2 flex items-center justify-between gap-3 border-t border-line px-3 pt-3 sm:hidden">
             <LanguageToggle />
             <ThemeToggle className="h-10 w-10 rounded-full" />
